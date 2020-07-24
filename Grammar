@@ -1,0 +1,190 @@
+﻿--
+--#### demarcates sections
+--Major sections are: Grammar, Spaces, Space Objects & Operations, Grammar Rule->Object+Operation Map, (Unimplemented yet) AST+Annotation->DSL Map, (Unimplemented yet) AST->D Object/Operation Map
+
+--Grammar begins here
+--Begin _ indicates "don't generate code for this production"
+--Begin + generates code
+
+--must add frames into this
+
+_tPROGRAM @PhysProgram,Program,globalprog@ :=
+	tSEQ *sGLOBALSTMT @PhysGlobalCommand,Seq,globalseq@ ~A Compound Global Statement
+
+_fGLOBALSTMT :=
+--	SEQ *GLOBALSTMT @PhysGlobalCommand,Seq,globalseq@ | ~A Compound Global Statement
+	fMAIN +STMT @PhysGlobalCommand,Main,globalmain@ | ~Main Body
+	fFUNCTION +STMT @PhysGlobalCommand,Function,globalfn@ ~Function Body
+
+_STMT := 
+	=ASSIGNMENT | ~An Assignment Statement
+	=DECLARE | ~A Declaration Statement
+	=EXPR |	~An Expression
+	=IFCOND | ~An If Condition
+	COMPOUND *STMT @PhysCommand,Seq,seq@ ~A Compound Statement
+
+_IFCOND :=
+	IFTHEN +EXPR +STMT | ~An If-Then Statement
+	IFTHENELSEIF +EXPR +STMT +IFCOND | ~An If-Then-Else-If Statement 
+	IFTHENELSE +EXPR +STMT +STMT ~An If-Then-Else Statement
+	
+_EXPR :=
+	>REAL3_EXPR | ~An expression evaluating to a tuple with 3 real (floating point) values
+	>REAL1_EXPR | ~An expression evaluating to a real (floating point) value
+	>REALMATRIX_EXPR | ~An expression evaluating to a matrix with real (floating point) entries
+	>REAL4_EXPR ~An expression evaluating to a tuple with 4 real (floating point) values
+
+_ASSIGNMENT := 
+	ASSIGN +REAL1_VAR +REAL1_EXPR <$OP$NAME$LOC> <B,⊢=⊢,Command> | ~Assignment : R1 Var = R1 Expression;
+	ASSIGN +REAL3_VAR +REAL3_EXPR <$OP$NAME$LOC> <B,⊢=⊢,Command> | ~Assignment : R3 Var = R3 Expression;
+	ASSIGN +REAL4_VAR +REAL4_EXPR <$OP$NAME$LOC> <B,⊢=⊢,Command> | ~Assignment : R4 Var = R4 Expression;
+	ASSIGN +REALMATRIX_VAR +REALMATRIX_EXPR <$OP$NAME$LOC> <B,⊢=⊢,Command> ~Assignment : Matrix Var = Matrix Expression;
+
+_DECLARE :=
+	DECL +REAL1_VAR +REAL1_EXPR <$NAME$LOC> <B,⊢=⊢,Command> | ~ Declaration : Declare R1 Var = R1 Expression;
+	DECL +REAL3_VAR +REAL3_EXPR <$NAME$LOC> <B,⊢=⊢,Command> | ~ Declaration : Declare R3 Var = R3 Expression;
+	DECL +REAL4_VAR +REAL4_EXPR <$NAME$LOC> <B,⊢=⊢,Command> | ~ Declaration : Declare R4 Var = R4 Expression;
+	DECL +REALMATRIX_VAR +REALMATRIX_EXPR <$NAME$LOC> <B,⊢=⊢,Command> | ~ Declaration : Declare Matrix Var = Matrix Expression;
+	DECL +REAL1_VAR | ~ Declaration : Declare R1 Var;
+	DECL +REAL3_VAR | ~ Declaration : Declare R3 Var;
+	DECL .REAL4_VAR | ~ Declaration : Declare R4 Var;
+	DECL +REALMATRIX_VAR ~ Declaration : Declare Matrix Var;
+
+
++REAL1_EXPR := 
+	PAREN +REAL1_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression : (R1 Expression)
+	INV +REAL1_EXPR <$OP$LOC> <A,⁻¹,Expression> | ~ Inverse Expression : R1 Expression⁻¹
+	NEG +REAL1_EXPR <$OP$LOC> <P,-,Expression> | ~Negation Expression : -R1 Expression
+	ADD +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,+,Expression> | ~Addition Expression : R1 Expression + R1 Expression
+	SUB +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,-,Expression> | ~Subtraction Expression : R1 Expression - R1 Expression
+	MUL +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,⬝,Expression> | ~Multiplication Expression : R1 Expression * R1 Expression
+	DIV +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,/,Expression> | ~Division Expression : R1 Expression / R1 Expression
+	REF .REAL1_VAR <$OP$NAME$LOC> <P,%,Expression> | ~Var Expression : R1 Variable As R-Value
+	=REAL1_LITERAL
+
++REAL3_EXPR := 
+	PAREN +REAL3_EXPR <$OP$LOC> <P,$,Expression> | ~Paren Expression : (R3 Expression)
+	ADD +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,+,Expression> | ~Addition Expression : R3 Expression + R3 Expression
+	SUB +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <I,-,Expression> | ~Subtraction Expression : R3 Expression - R3 Expression
+	INV +REAL3_EXPR <$OP$NAME$LOC> <A,⁻¹,Expression> | ~ Inverse Expression : R3 Expression⁻¹
+	NEG +REAL3_EXPR <$OP$LOC> <P,-,Expression> | ~Negation Expression : -R3 Expression
+	MUL +REAL3_EXPR +REAL1_EXPR <$OP$LOC> <I,⬝,Expression> | ~Multiplication Expression: R3 Expression * R1 Expression
+	MUL +REALMATRIX_EXPR +REAL3_EXPR <$OP$LOC> <I,⬝,Expression> |  ~Multiplication Expression : Matrix Expression * R3 Expression
+	DIV +REAL3_EXPR +REAL1_EXPR <$OP$LOC> <I,/,Expression> | ~Division Expression : R3 Expression / R1 Expression
+	REF .REAL3_VAR <$OP$NAME$LOC> <P,%,Expression> |  ~Var Expression : R3 Variable As R-Value
+	=REAL3_LITERAL
+
++REAL4_EXPR :=
+	PAREN +REAL4_EXPR <$OP$LOC> <P,$,Expression> | ~Paren Expression : (R4 Expression)
+	ADD +REAL4_EXPR +REAL4_EXPR <$OP$LOC> <I,+,Expression> |  ~Addition Expression : R4 Expression + R4 Expression
+	MUL +REAL4_EXPR +REAL1_EXPR <$OP$LOC> <I,⬝,Expression> | ~Multiplication Expression : R4 Expression * R1 Expression
+	REF .REAL4_VAR <$OP$NAME$LOC> <P,%,Expression> | ~Var Expression : R4 Variable As R-Value
+	=REAL4_LITERAL 
+
++REALMATRIX_EXPR :=
+	PAREN +REALMATRIX_EXPR <$OP$LOC> <P,$,Expression> | ~Paren Expression : (Matrix Expression)
+	MUL +REALMATRIX_EXPR +REALMATRIX_EXPR <$OP$LOC> <P,*,Expression> |   ~Multiplication Expression : Matrix Expression * Matrix Expression
+	REF_EXPR +REALMATRIX_VAR <$OP$NAME$LOC> <P,%,Expression> | ~Var Expression : Matrix Variable As R-Value
+	=REALMATRIX_LITERAL 
+
+
+1REAL1_VAR := 
+	IDENT <$NAME> <P,!I,Var> ~R1 Variable Identifier
+1REAL3_VAR := 
+	IDENT <$NAME> <P,!I,Var> ~R3 Variable Identifier
+1REAL4_VAR := 
+	IDENT <$NAME> <P,!I,Var>  ~R4 Variable Identifier
+1REALMATRIX_VAR := 
+	IDENT <$NAME> <P,!I,Var> ~Matrix Variable Identifier
+
+
++REAL1_LITERAL := 
+	FLOAT <$OP$LOC> <P,⬝D,Expression> ~ R1 Literal From Real Value
++REAL3_LITERAL := 
+	REAL3_LIT +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,⬝,Expression> | ~R3 Literal From 3 R1 Expressions
+	FLOAT FLOAT FLOAT <$OP$LOC> <I,⬝D,Expression> ~R3 Literal From 3 Real Values
++REAL4_LITERAL := 
+	REAL4_LIT +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,⬝,Expression> | ~R4 Literal From 4 R1 Expressions
+	FLOAT FLOAT FLOAT FLOAT <$OP$LOC> <P,%D,Expression> ~ R4 Literal From 4 Real Values
++REALMATRIX_LITERAL := 
+	REALMATRIX_LIT +REAL3_EXPR +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <I,⬝,Expression> | ~ Matrix Literal From 3 R3 Expressions
+	REALMATRIX_LIT +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,⬝,Expression> | ~ Matrix Literal From 9 R1 Expressions
+	FLOAT FLOAT FLOAT FLOAT FLOAT FLOAT FLOAT FLOAT FLOAT <$OP$LOC> <I,⬝D,Expression> ~ Matrix Literal from 9 Real Values
+
+####
+
+--Define instantiable spaces
+
+{
+	EuclideanGeometry, Euclidean,{Name-Dimension},EuclideanGeometry3
+	ClassicalTime, Affine, {Name},ClassicalTime
+	ClassicalVelocity, Vector, {Name-Dimension},ClassicalVelocity3
+}
+--Define instances
+{
+	EuclideanGeometry,geom3d,{worldGeometry-3}
+	ClassicalTime,time,{worldTime},
+	ClassicalVelocity,vel,{worldVelocity-3}
+}
+
+####
+
+--Define instantiable objects & operations contingent on space type 
+--Code is generated for these
+--These turn into annotations, for example, Euclidean Geometry is Euclidean with prefix Geometric -} generate annotation GeometricAddAddVector
+
+Vector={fVector,Scalar,tBasisChange,tScaling,tShear}
+Affine={tFrameChange,fPoint,HomogenousPoint},Vector
+Euclidean={Rotation,Orientation,Angle},Affine
+
+--etc
+--do operations go here or just objects?
+--and operations are resolved in Lean...?
+
+####
+
+--not checking for operational consistency here. should i be?
+--these are the "CATEGORIES" referred to in email
+
+
+{
+	REAL1_EXPR={Euclidean.Angle,Vector.Scalar}
+	REAL1_LITERAL={Euclidean.Angle,Vector.Scalar}
+	REAL1_VAR={Euclidean.Angle,Vector.Scalar}
+	REAL3_EXPR={Euclidean.Rotation,Euclidean.Orientation,Vector.Vector,Affine.Point}
+	REAL3_VAR={Euclidean.Rotation,Euclidean.Orientation,Vector.Vector,Affine.Point}
+	REAL3_LITERAL={Euclidean.Rotation,Euclidean.Orientation,Vector.Vector,Affine.Point}
+	REALMATRIX_EXPR={Vector.Scaling,Vector.Shear,Vector.BasisChange, Affine.FrameChange, Euclidean.Rotation}
+	REALMATRIX_LITERAL={Vector.Scaling,Vector.Shear,Vector.BasisChange, Affine.FrameChange, Euclidean.Rotation}
+	REALMATRIX_VAR={Vector.Scaling,Vector.Shear,Vector.BasisChange, Affine.FrameChange, Euclidean.Rotation}
+	REAL4_EXPR={Euclidean.Rotation,Euclidean.Orientation,Affine.HomogenousPoint}
+	REAL4_LITERAL={Euclidean.Rotation,Euclidean.Orientation,Affine.HomogenousPoint}
+	REAL4_VAR={Euclidean.Rotation,Euclidean.Orientation,Affine.HomogenousPoint}
+}
+
+####
+
+--here are rules from (AST Grammar Rule)x(Space,Annotation)-}LeanDSL
+--just an example for now, this can be filled out quickly
+--these demonstrate the "CATEGORIES" referred ot in email - MERGE WITH PREVIOUS SECTION?
+--Also need to dump Spaces into Lean as a "HEADER"
+{
+	REAL1_EXPR = {(EuclideanGeometry,GeometricScalar, "define "%GeometricScalar.Name"%" : peirce.geom3d.scalar = "%GeometricScalar.Value )}
+}
+####
+
+--when it's time to revisit AST parsing, consider this
+--set of rules for "Ds" when initializing annotations
+{
+	tf.Vector3 : {EuclideanGeometry, Euclidean.Vector }
+	geometry_msgs/Accel.linear : {ClassicalAcceleration,Vector.Vector}
+	tf.Point : {EuclideanGeometry,Euclidean.Point}
+}
+
+####
+
+--1 = $name
+
+--2 = $OP_$BEG_$END
+
+--####

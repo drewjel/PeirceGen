@@ -1,0 +1,6 @@
+C:\Users\msfti\source\repos\givemeros\PeirceGen\obj\Debug\PeirceGen.csprojAssemblyReference.cache
+C:\Users\msfti\source\repos\givemeros\PeirceGen\bin\Debug\PeirceGen.exe.config
+C:\Users\msfti\source\repos\givemeros\PeirceGen\bin\Debug\PeirceGen.exe
+C:\Users\msfti\source\repos\givemeros\PeirceGen\bin\Debug\PeirceGen.pdb
+C:\Users\msfti\source\repos\givemeros\PeirceGen\obj\Debug\PeirceGen.exe
+C:\Users\msfti\source\repos\givemeros\PeirceGen\obj\Debug\PeirceGen.pdb
