@@ -13,8 +13,8 @@ namespace PeirceGen.Generators
         {
 
             GenHeader();
-            if (!Directory.Exists(@"C:\Users\msfti\OneDrive\Desktop\myoutput"))
-                Directory.CreateDirectory(@"C:\Users\msfti\OneDrive\Desktop\myoutput");
+            if (!Directory.Exists(@"/peirce/PeirceGen/symlinkme"))
+                Directory.CreateDirectory(@"/peirce/PeirceGen/symlinkme");
             System.IO.File.WriteAllText(this.GetHeaderLoc(), this.HeaderFile);
         }
 
@@ -139,7 +139,7 @@ using RealScalar = double;
 
         public string GetHeaderLoc()
         {
-            return @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\AST.h";
+            return @"/peirce/PeirceGen/symlinkme/AST.h";
         }
     }
 }

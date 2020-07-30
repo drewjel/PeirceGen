@@ -346,12 +346,12 @@ private:
 
         public override string GetCPPLoc()
         {
-            return @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\Oracle_AskAll.cpp";
+            return @"/peirce/PeirceGen/symlinkme/Oracle_AskAll.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\Oracle_AskAll.h";
+            return @"/peirce/PeirceGen/symlinkme/Oracle_AskAll.h";
         }
 
         public void GenBaseHeaderFile()
@@ -417,7 +417,7 @@ public:";
 
         public string GetBaseHeaderLoc()
         {
-            return @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\Oracle.h";
+            return @"/peirce/PeirceGen/symlinkme/Oracle.h";
         }
     }
 }

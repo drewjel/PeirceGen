@@ -8,20 +8,20 @@
 
 --must add frames into this
 
-_tPROGRAM @PhysProgram,Program,globalprog@ :=
-	tSEQ *sGLOBALSTMT @PhysGlobalCommand,Seq,globalseq@ ~A Compound Global Statement
+--_tPROGRAM @PhysProgram,Program,globalprog@ :=
+--	tSEQ *GLOBALSTMT @PhysGlobalCommand,Seq,globalseq@ ~A Compound Global Statement
 
-_fGLOBALSTMT :=
+--_fGLOBALSTMT :=
 --	SEQ *GLOBALSTMT @PhysGlobalCommand,Seq,globalseq@ | ~A Compound Global Statement
-	fMAIN +STMT @PhysGlobalCommand,Main,globalmain@ | ~Main Body
-	fFUNCTION +STMT @PhysGlobalCommand,Function,globalfn@ ~Function Body
+--	fMAIN +STMT @PhysGlobalCommand,Main,globalmain@ | ~Main Body
+--	fFUNCTION +STMT @PhysGlobalCommand,Function,globalfn@ ~Function Body
 
 _STMT := 
 	=ASSIGNMENT | ~An Assignment Statement
 	=DECLARE | ~A Declaration Statement
 	=EXPR |	~An Expression
 	=IFCOND | ~An If Condition
-	COMPOUND *STMT @PhysCommand,Seq,seq@ ~A Compound Statement
+	COMPOUND *sSTMT @PhysCommand,Seq,seq@ ~A Compound Statement
 
 _IFCOND :=
 	IFTHEN +EXPR +STMT | ~An If-Then Statement
@@ -123,8 +123,8 @@ _DECLARE :=
 --Define instances
 {
 	EuclideanGeometry,geom3d,{worldGeometry-3}
-	ClassicalTime,time,{worldTime},
-	ClassicalVelocity,vel,{worldVelocity-3}
+--	ClassicalTime,time,{worldTime},
+--	ClassicalVelocity,vel,{worldVelocity-3}
 }
 
 ####

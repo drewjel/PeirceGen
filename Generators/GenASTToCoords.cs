@@ -11,12 +11,12 @@ namespace PeirceGen.Generators
 
         public override string GetCPPLoc()
         {
-            return @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\ASTToCoords.cpp";
+            return @"/peirce/PeirceGen/symlinkme/ASTToCoords.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\ASTToCoords.h";
+            return @"/peirce/PeirceGen/symlinkme/ASTToCoords.h";
         }
 
         public override void GenCpp()

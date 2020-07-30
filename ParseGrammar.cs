@@ -384,6 +384,12 @@ namespace PeirceGen
         }
     }
 
+    public class MonoHack
+    {
+        public Space Item1 {get; set;}
+        public Space.SpaceObject Item2 {get; set;}
+    }
+
     public class Peirce
     {
         public Peirce()
@@ -392,7 +398,7 @@ namespace PeirceGen
             Grammar = new Grammar();
             Spaces = new List<Space>();
             SpaceToObjectMap = new Dictionary<Space, Space.SpaceObject>();
-            GrammarRuleToSpaceObjectMap = new Dictionary<Grammar.Production, List<(Space, Space.SpaceObject)>>();
+            GrammarRuleToSpaceObjectMap = new Dictionary<Grammar.Production, List<MonoHack>>();
             SpaceInstances = new List<Space.SpaceInstance>();
             Categories = new List<Space.SpaceCategory>();
         }
@@ -406,12 +412,12 @@ namespace PeirceGen
 
         public Dictionary<Space, Space.SpaceObject> SpaceToObjectMap;
 
-        public Dictionary<Grammar.Production, List<(Space, Space.SpaceObject)>> GrammarRuleToSpaceObjectMap { get; set; }
+        public Dictionary<Grammar.Production, List<MonoHack>> GrammarRuleToSpaceObjectMap { get; set; }
     }
 
     public class ParsePeirce
     {
-        public const string GrammarFile = "C:\\Users\\msfti\\source\\repos\\givemeros\\PeirceGen\\Grammar";
+        public static readonly string GrammarFile = @"/peirce/PeirceGen/Grammar";
 
         public static readonly Peirce Instance = new Peirce();
         
@@ -441,6 +447,23 @@ namespace PeirceGen
 
         static ParsePeirce()
         {
+            Console.WriteLine("HELLO WORLD");
+            Console.WriteLine("HELLO WORLD");
+            Console.WriteLine("HELLO WORLD");
+            Console.WriteLine("HELLO WORLD");
+            Console.WriteLine("HELLO WORLD");
+            Console.WriteLine("HELLO WORLD");
+            Console.WriteLine("HELLO WORLD");
+            Console.WriteLine("HELLO WORLD");
+            Console.WriteLine("HELLO WORLD");
+            Console.WriteLine("HELLO WORLD");
+            Console.WriteLine(ParsePeirce.GrammarFile);
+            Console.WriteLine(ParsePeirce.GrammarFile);
+            Console.WriteLine(ParsePeirce.GrammarFile);
+            Console.WriteLine(ParsePeirce.GrammarFile);
+            Console.WriteLine(ParsePeirce.GrammarFile);
+            Console.WriteLine(ParsePeirce.GrammarFile);
+            Console.WriteLine(ParsePeirce.GrammarFile);
             /*
              * {
             ,
@@ -690,7 +713,7 @@ namespace PeirceGen
              * 
              * */
 
-            var remaining_config = File.ReadAllLines(GrammarFile).ToList();
+            var remaining_config = File.ReadAllLines(ParsePeirce.GrammarFile).ToList();
 
             var next_split = remaining_config.IndexOf("####");
 
@@ -1172,8 +1195,8 @@ namespace PeirceGen
 
 
                                 var spaceObjDict = Space.RetrieveInheritedObjects(sp, obj, Instance.Spaces);
-                                Instance.GrammarRuleToSpaceObjectMap[prod] = Instance.GrammarRuleToSpaceObjectMap.ContainsKey(prod) ? Instance.GrammarRuleToSpaceObjectMap[prod]: new List<(Space, Space.SpaceObject)>();
-                                spaceObjDict.Keys.ToList().ForEach(key => Instance.GrammarRuleToSpaceObjectMap[prod].Add((key, spaceObjDict[key])));
+                                Instance.GrammarRuleToSpaceObjectMap[prod] = Instance.GrammarRuleToSpaceObjectMap.ContainsKey(prod) ? Instance.GrammarRuleToSpaceObjectMap[prod]: new List<MonoHack>();
+                                spaceObjDict.Keys.ToList().ForEach(key => Instance.GrammarRuleToSpaceObjectMap[prod].Add(new MonoHack(){Item1=key, Item2=spaceObjDict[key]}));
                             }
                         }
                     }

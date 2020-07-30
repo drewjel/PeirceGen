@@ -10,12 +10,12 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-            return @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\Interp.cpp";
+            return @"/peirce/PeirceGen/symlinkme/Interp.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\Interp.h";
+            return @"/peirce/PeirceGen/symlinkme/Interp.h";
         }
         public override void GenCpp()
         {
@@ -49,7 +49,7 @@ std::string Space::toString() const {
         retval += ""def "" + dc->getName() + ""var : " + sp_.Prefix + @"SpaceVar := (!"" + std::to_string(++GLOBAL_INDEX) + "")"" + ""\n"";
         retval += " + ((hasName && hasDim) ? @"""def "" + dc->getName() + ""sp := (" + sp_.Name + @""" + std::to_string(dc->getDimension()) +  ""SpaceExpression." + sp_.Name + @""" + std::to_string(dc->getDimension()) +  ""Literal ( Build" + sp_.Name +@"Space \"""" + dc->getName() + ""\"" "" + std::to_string(dc->getDimension()) +  ""))\n"";; " : 
                         hasName ? @"""def "" + dc->getName() + ""sp :=  (" + sp_.Name + @"SpaceExpression." + sp_.Name + @"Literal ( Build" + sp_.Name + @"Space \"""" + dc->getName() + ""\"" ))\n"";; " : "") + @"
-        retval += ""def "" + dc->getName() + "" := PhysGlobalCommand.GlobalSpace (⊢"" + dc->getName() + ""var) (⊢"" + dc->getName() + ""sp)\n"";
+        retval += ""def "" + dc->getName() + "" := PhysCommand.SpaceAssignment (⊢"" + dc->getName() + ""var) (⊢"" + dc->getName() + ""sp)\n"";
     }"; })) + @"
 
     if(!found){
@@ -80,7 +80,7 @@ std::string Frame::toString() const {
             retval += ""def "" + dc->getName()+"".""+f_->getName() + ""fr := " + sp_.Prefix + @"FrameExpression.FrameLiteral ( Get" + sp_.Name + @"StandardFrame (Eval"+sp_.Prefix+@"SpaceExpression "" + dc->getName()+""sp))\n"";
     
         }
-        retval += ""def "" + dc->getName()+"".""+f_->getName() + "" := PhysGlobalCommand.GlobalFrame (⊢"" + dc->getName()+"".""+f_->getName() + ""var) (⊢"" + dc->getName()+"".""+f_->getName() + ""fr)\n"";
+        retval += ""def "" + dc->getName()+"".""+f_->getName() + "" := PhysCommand.FrameAssignment (⊢"" + dc->getName()+"".""+f_->getName() + ""var) (⊢"" + dc->getName()+"".""+f_->getName() + ""fr)\n"";
     }";
                         })) + @"
 
@@ -295,10 +295,59 @@ std::string " + prod.Name + @"::toString() const {
                                 file += "\nstd::string " + pcase.Name + @"::toStringLinked(std::vector<interp::Space*> links, std::vector<std::string> names, std::vector<interp::Frame*> framelinks, std::vector<string> framenames, bool before) { 
     //std::string toStr = this->toString();
     std::string retval = """";
-        string cmdvalstart = ""::[]"";
-        string cmdval = """";
+    std::string cmdwrapper = """ + pcase.Command.ToLeanConstructor() + @""";
+    string cmdvalstart = ""::[]"";
+    string cmdval = """";
     int i = 0;
+    int count = this->operands_.size() + links.size() + framelinks.size();
     if(before)
+    {
+        bool prev;
+
+        for(auto op: links){
+            if(prev){
+                retval += ""\n"" + op->toString() + ""\n"";
+                cmdval = ""("" + cmdwrapper + "" "" + names[i++] + "" "" + cmdval + "")"";
+            }
+            else{
+                retval += ""\n"" + op->toString() + ""\n"";
+                cmdval = names[i++];
+                prev = true;
+            }
+        }
+        i = 0;
+        for(auto op: framelinks){
+            if(prev){
+                retval += ""\n"" + op->toString() + ""\n"";
+                cmdval = ""("" + cmdwrapper + "" "" + framenames[i++] + "" "" + cmdval + "")"";
+            }
+            else{
+                retval += ""\n"" + op->toString() + ""\n"";
+                cmdval = framenames[i++];
+                prev = true;
+            }
+        }
+
+        bool start = true;
+        for(auto op: this->operands_){ 
+            if(prev){
+                retval += ""\n"" + op->toString() + ""\n"";
+                cmdval = ""("" + cmdwrapper + "" "" + op->coords_->toString() + "" "" + cmdval + "")"";
+            }
+            else{
+                retval += ""\n"" + op->toString() + ""\n"";
+                cmdval = op->coords_->toString();
+                prev = true;
+            }
+            //retval += ""\n"" + op->toString() + ""\n"";
+            //cmdval = cmdval + (!start?""::"":"""") + op->coords_->toString();
+            //start = false;
+        }
+        
+    }
+
+
+    /*if(before)
     {
         
         for(auto op: links){
@@ -338,19 +387,19 @@ std::string " + prod.Name + @"::toString() const {
             cmdval = framenames[i++] + ""::"" + cmdval;
         }
 
-    }
+    }*/
     cmdval += """"; " + (
         pcase.Command is Grammar.Command && prod.Command is Grammar.Command ? @"
-    cmdval = ""\ndef "" + this->coords_->toString() + """ + pcase.Command.NameSuffix + "" + @" : " + pcase.Command.Production + @" := " + pcase.Command.Production + '.' + pcase.Command.Case + @" ("" + cmdval + cmdvalstart + "")"";
+    cmdval = ""\ndef "" + this->coords_->toString() + """ + pcase.Command.NameSuffix + "" + @" : " + pcase.Command.Production + @" := " + @" ("" + cmdval + "")"";
 
 " + @"
-    cmdval += ""\ndef "" + this->coords_->toString() + """ + "" + @" : " + prod.Command.Production + @" := " + prod.Command.Production + '.' + prod.Command.Case + @" "" + this->coords_->toString() + """ + pcase.Command.NameSuffix + "\"" + @";
+    cmdval += ""\ndef "" + this->coords_->toString() + """ + "" + @" : " + prod.Command.Production + @" := " +  @" "" + this->coords_->toString() + """ + "\"" + @";
 
 "
         :
     ((
         pcase.Command is Grammar.Command ? @"
-    cmdval = ""\ndef "" + this->coords_->toString() + """ + "" + @" : " + pcase.Command.Production + @" := " + pcase.Command.Production + '.' + pcase.Command.Case + @" "" + cmdval;
+    cmdval = ""\ndef "" + this->coords_->toString() + """ + "" + @" : " + pcase.Command.Production + @" := " +  @" "" + cmdval;
 
 " : ""
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,12 +11,13 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-            return @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\Interpretation.cpp";
+
+            return @"/peirce/PeirceGen/symlinkme/Interpretation.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\Interpretation.h";
+            return @"/peirce/PeirceGen/symlinkme/Interpretation.h";
         }
         public override void GenCpp()
         {
@@ -387,12 +389,17 @@ std::vector<std::string> Interpretation::getFrameNames() {
             file += @"    
 void Interpretation::buildDefaultSpaces(){
     " + string.Join("\n\t", (ParsePeirce.Instance.SpaceInstances.Select(inst => {
-                var fv = inst.FieldValues.Prepend(inst.InstanceName).ToArray();//ANDREW -- FIX YOUR CODE ! WOW. WHAT ON EARTH... 
+                var monomono = new List<string>();
+                
+                monomono.Add(inst.InstanceName);
+                monomono.AddRange(inst.FieldValues);
 
-                fv[0] = @""""+ fv[0] + @"""";
-                fv[1] = @"""" + fv[1] + @"""";
+                //var fv = inst.FieldValues.Prepend(inst.InstanceName).ToArray();//ANDREW -- FIX YOUR CODE ! WOW. WHAT ON EARTH... 
 
-                return "auto " + inst.FieldValues[0] + "= domain_->mk" + inst.TypeName + "(" + string.Join(",", fv) + @");
+                monomono[0] = @""""+ monomono[0] + @"""";
+                monomono[1] = @"""" + monomono[1] + @"""";
+
+                return "auto " + inst.FieldValues[0] + "= domain_->mk" + inst.TypeName + "(" + string.Join(",", monomono) + @");
     auto i" + inst.FieldValues[0] + @" = new interp::Space(" + inst.FieldValues[0] + @");
     interp2domain_->putSpace(i" + inst.FieldValues[0] + @", " + inst.FieldValues[0] + @");
     auto standard_frame" + inst.FieldValues[0] + @" = " + inst.FieldValues[0] + @"->getFrames()[0];
