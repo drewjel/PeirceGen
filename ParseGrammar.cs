@@ -447,23 +447,6 @@ namespace PeirceGen
 
         static ParsePeirce()
         {
-            Console.WriteLine("HELLO WORLD");
-            Console.WriteLine("HELLO WORLD");
-            Console.WriteLine("HELLO WORLD");
-            Console.WriteLine("HELLO WORLD");
-            Console.WriteLine("HELLO WORLD");
-            Console.WriteLine("HELLO WORLD");
-            Console.WriteLine("HELLO WORLD");
-            Console.WriteLine("HELLO WORLD");
-            Console.WriteLine("HELLO WORLD");
-            Console.WriteLine("HELLO WORLD");
-            Console.WriteLine(ParsePeirce.GrammarFile);
-            Console.WriteLine(ParsePeirce.GrammarFile);
-            Console.WriteLine(ParsePeirce.GrammarFile);
-            Console.WriteLine(ParsePeirce.GrammarFile);
-            Console.WriteLine(ParsePeirce.GrammarFile);
-            Console.WriteLine(ParsePeirce.GrammarFile);
-            Console.WriteLine(ParsePeirce.GrammarFile);
             /*
              * {
             ,
