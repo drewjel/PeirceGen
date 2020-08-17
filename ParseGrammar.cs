@@ -9,6 +9,12 @@ using System.Threading.Tasks;
 namespace PeirceGen
 {
    // public class 
+    public class MonoHack
+    {
+        public Space Item1;
+        public Space.SpaceObject Item2;
+    }
+
 
     public class Peirce
     {
@@ -24,7 +30,7 @@ namespace PeirceGen
             Grammar = new Grammar();
             Spaces = new List<Space>();
             SpaceToObjectMap = new Dictionary<Space, Space.SpaceObject>();
-            GrammarRuleToSpaceObjectMap = new Dictionary<Grammar.Production, List<(Space, Space.SpaceObject)>>();
+            GrammarRuleToSpaceObjectMap = new Dictionary<Grammar.Production, List<MonoHack>>();
            // SpaceInstances = new List<Space.SpaceInstance>();
             Categories = new List<Space.SpaceCategory>();
             MatcherProductions = new List<MatcherProduction>();
@@ -39,14 +45,14 @@ namespace PeirceGen
 
         public Dictionary<Space, Space.SpaceObject> SpaceToObjectMap;
 
-        public Dictionary<Grammar.Production, List<(Space, Space.SpaceObject)>> GrammarRuleToSpaceObjectMap { get; set; }
+        public Dictionary<Grammar.Production, List<MonoHack>> GrammarRuleToSpaceObjectMap { get; set; }
 
         public List<MatcherProduction> MatcherProductions;
     }
 
     public class ParsePeirce
     {
-        public static readonly string GrammarFile = Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\GrammarEmpty";
+        public static readonly string GrammarFile = "/peirce/PeirceGen/GrammarEmpty";
 
         public static readonly Peirce Instance = new Peirce();
         
@@ -886,8 +892,8 @@ namespace PeirceGen
 
 
                                 var spaceObjDict = Space.RetrieveInheritedObjects(sp, obj, Instance.Spaces);
-                                Instance.GrammarRuleToSpaceObjectMap[prod] = Instance.GrammarRuleToSpaceObjectMap.ContainsKey(prod) ? Instance.GrammarRuleToSpaceObjectMap[prod]: new List<(Space, Space.SpaceObject)>();
-                                spaceObjDict.Keys.ToList().ForEach(key => Instance.GrammarRuleToSpaceObjectMap[prod].Add((key, spaceObjDict[key])));
+                                Instance.GrammarRuleToSpaceObjectMap[prod] = Instance.GrammarRuleToSpaceObjectMap.ContainsKey(prod) ? Instance.GrammarRuleToSpaceObjectMap[prod]: new List<MonoHack>();
+                                spaceObjDict.Keys.ToList().ForEach(key => Instance.GrammarRuleToSpaceObjectMap[prod].Add(new MonoHack(){Item1 =key, Item2=spaceObjDict[key]}));
                             }
                         }
                     }

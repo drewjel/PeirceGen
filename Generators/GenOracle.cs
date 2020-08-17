@@ -540,12 +540,12 @@ private:
 
         public override string GetCPPLoc()
         {
-            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Oracle_AskAll.cpp";
+            return "/peirce/PeirceGen/symlinkme/Oracle_AskAll.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Oracle_AskAll.h";
+            return "/peirce/PeirceGen/symlinkme/Oracle_AskAll.h";
         }
 
         public void GenBaseHeaderFile()
@@ -611,7 +611,7 @@ public:";
 
         public string GetBaseHeaderLoc()
         {
-            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Oracle.h";
+            return "/peirce/PeirceGen/symlinkme/Oracle.h";
         }
     }
 }

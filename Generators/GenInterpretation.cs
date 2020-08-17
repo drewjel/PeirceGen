@@ -11,12 +11,12 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Interpretation.cpp";
+            return "/peirce/PeirceGen/symlinkme/Interpretation.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Interpretation.h";
+            return "/peirce/PeirceGen/symlinkme/Interpretation.h";
         }
         public override void GenCpp()
         {

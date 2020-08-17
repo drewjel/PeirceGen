@@ -18,8 +18,8 @@ namespace PeirceGen.Generators
         {
             GenHeader();
             GenCpp();
-            if (!Directory.Exists(Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme"))
-                Directory.CreateDirectory(Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme");
+            if (Directory.Exists("/peirce/PeirceGen/symlinkme"))
+                Directory.CreateDirectory("/peirce/PeirceGen/symlinkme");
             System.IO.File.WriteAllText(this.GetHeaderLoc(), this.HeaderFile);
             System.IO.File.WriteAllText(this.GetCPPLoc(), this.CppFile);
         }
