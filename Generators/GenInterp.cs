@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,12 +11,12 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/Interp.cpp";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Interp.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/Interp.h";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Interp.h";
         }
         public override void GenCpp()
         {
@@ -26,12 +27,23 @@ namespace PeirceGen.Generators
 #include <g3log/g3log.hpp>
 
 #include <algorithm>
+#include <unordered_map>
 
 using namespace g3; 
 
 namespace interp{
 
 int GLOBAL_INDEX = 0;
+std::unordered_map<Interp*,int> GLOBAL_IDS;
+int ENV_INDEX = 0;
+
+std::string getEnvName(){
+    return ""env"" + std::to_string(++ENV_INDEX);
+};
+
+std::string getLastEnv(){
+    return ""env"" + std::to_string(ENV_INDEX - 1);
+};
 
 Interp::Interp(coords::Coords* c, domain::DomainObject* d) : coords_(c), dom_(d){
 }
@@ -39,18 +51,21 @@ Interp::Interp(coords::Coords* c, domain::DomainObject* d) : coords_(c), dom_(d)
 std::string Space::toString() const {
     std::string retval = """";
     bool found = false;
-" + string.Join("",ParsePeirce.Instance.Spaces.Select(sp_ => {
+    
+    int id = GLOBAL_IDS.count(const_cast<Space*>(this)) ? GLOBAL_IDS[const_cast<Space*>(this)] : GLOBAL_IDS[const_cast<Space*>(this)] = ++GLOBAL_INDEX + ++GLOBAL_INDEX - GLOBAL_INDEX; 
+    
+" + string.Join("",ParsePeirce.Instance.Spaces.Where(sp_=>!sp_.IsDerived).Select(sp_ => {
 
-    var hasName = sp_.MaskContains(Space.FieldType.Name);
-    var hasDim = sp_.MaskContains(Space.FieldType.Dimension);
-                //PhysSpaceExpression.ClassicalTimeLiteral (ClassicalTimeSpaceExpression.ClassicalTimeLiteral
-                return "\n\tif(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(s_)){
-        found = true;
-        retval += ""def "" + dc->getName() + ""var : " + sp_.Prefix + @"SpaceVar := (!"" + std::to_string(++GLOBAL_INDEX) + "")"" + ""\n"";
-        retval += " + ((hasName && hasDim) ? @"""def "" + dc->getName() + ""sp := (" + sp_.Name + @""" + std::to_string(dc->getDimension()) +  ""SpaceExpression." + sp_.Name + @""" + std::to_string(dc->getDimension()) +  ""Literal ( Build" + sp_.Name +@"Space \"""" + dc->getName() + ""\"" "" + std::to_string(dc->getDimension()) +  ""))\n"";; " : 
-                        hasName ? @"""def "" + dc->getName() + ""sp :=  (" + sp_.Name + @"SpaceExpression." + sp_.Name + @"Literal ( Build" + sp_.Name + @"Space \"""" + dc->getName() + ""\"" ))\n"";; " : "") + @"
-        retval += ""def "" + dc->getName() + "" := PhysCommand.SpaceAssignment (⊢"" + dc->getName() + ""var) (⊢"" + dc->getName() + ""sp)\n"";
-    }"; })) + @"
+                    return "\n\tif(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(s_)){
+            found = true;
+           // retval += ""def "" + dc->getName() + ""var : lang." + sp_.Prefix + @".var := lang." + sp_.Prefix + @".var.mk "" + std::to_string(id) + """" + ""\n"";
+            //retval += " + (sp_.DimensionType == Space.DimensionType_.ANY ? @"""\ndef "" + dc->getName() + ""sp := lang." + sp_.Prefix + @".expr.lit (" + sp_.Prefix + @".mk "" + std::to_string(id-1) + "" "" + std::to_string(dc->getDimension()) + "")""; " :
+                             @"""\ndef "" + dc->getName() + ""sp := lang." + sp_.Prefix + @".expr.lit (" + sp_.Prefix + @".mk "" + std::to_string(id) + "")""; ") + @"
+            retval += ""\ndef "" + dc->getName() + "" := cmd." + sp_.Prefix + @"Assmt (lang." + sp_.Prefix + @".var.mk "" + std::to_string(id) + "") (" + 
+                (sp_.DimensionType == Space.DimensionType_.ANY ? @"lang." + sp_.Prefix + @".expr.lit(" + sp_.Prefix + @".mk "" + std::to_string(id) + "" "" + std::to_string(dc->getDimension()) + "")""" : @"lang." + sp_.Prefix + @".expr.lit(" + sp_.Prefix + @".mk "" + std::to_string(id-1) + "")""") + @""")\n"";
+            retval += ""\n def "" + getEnvName() + "" := cmdEval "" + dc->getName() + "" "" + getLastEnv();
+    }";
+            })) + @"
 
     if(!found){
         //retval = ""--Unknown space type - Translation Failed!"";
@@ -58,6 +73,64 @@ std::string Space::toString() const {
 
     return retval;
 };
+
+std::string Space::getVarExpr() const {
+    " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => {
+                return "\n\tif(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(s_)){
+            int id = GLOBAL_IDS.count(const_cast<Space*>(this)) ? GLOBAL_IDS[const_cast<Space*>(this)] : GLOBAL_IDS[const_cast<Space*>(this)] = ++GLOBAL_INDEX + ++GLOBAL_INDEX - GLOBAL_INDEX; 
+    
+            return ""lang." + sp_.Prefix + @".expr.var (lang." + sp_.Prefix + @".var.mk "" + std::to_string(id) + "")"";
+
+    }";
+
+            })) + @"
+}
+
+std::string Space::getEvalExpr() const {
+    auto lastEnv = getLastEnv();
+
+" + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => {
+                return "\n\tif(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(s_)){
+            int id = GLOBAL_IDS.count(const_cast<Space*>(this)) ? GLOBAL_IDS[const_cast<Space*>(this)] : GLOBAL_IDS[const_cast<Space*>(this)] = ++GLOBAL_INDEX + ++GLOBAL_INDEX - GLOBAL_INDEX; 
+    
+            return ""(lang." + sp_.Prefix + @".eval (lang." + sp_.Prefix + @".expr.var (lang." + sp_.Prefix + @".var.mk "" + std::to_string(id) + "")) (" + sp_.Prefix + @"Get "" + lastEnv + "") )"";
+
+    }";
+
+            })) + @"
+
+}
+
+std::string DerivedSpace::toString() const {
+    std::string retval = """";
+    bool found = false;
+    
+    int id = GLOBAL_IDS.count(const_cast<DerivedSpace*>(this)) ? GLOBAL_IDS[const_cast<DerivedSpace*>(this)] : GLOBAL_IDS[const_cast<DerivedSpace*>(this)] = ++GLOBAL_INDEX + ++GLOBAL_INDEX - GLOBAL_INDEX; 
+    
+" + string.Join("", ParsePeirce.Instance.Spaces.Where(sp_ => sp_.IsDerived).Select(sp_ => {
+                    return "\n\tif(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(s_)){
+            found = true;
+            auto currentEnv = getEnvName();
+            //retval += ""def "" + dc->getName() + ""var : lang." + sp_.Prefix + @".var := lang." + sp_.Prefix + @".var.mk "" + std::to_string(id) + """" + ""\n"";
+            //retval += " + (sp_.DimensionType == Space.DimensionType_.ANY ? @"""\ndef "" + dc->getName() + ""sp := lang." + sp_.Prefix + @".expr.lit (" + sp_.Prefix + @".mk "" + std::to_string(id) + "" "" + dc->getBase1()->getName() + "" "" + dc->getBase2()->getName() +  "")""; " :
+                             @"""\ndef "" + dc->getName() + ""sp := lang." + sp_.Prefix + @".expr.lit (" + sp_.Prefix + @".mk "" + std::to_string(id) + "")""; ") + @"
+            retval += ""\ndef "" + dc->getName() + "" := cmd." + sp_.Prefix + @"Assmt \n\t\t(lang." + sp_.Prefix + @".var.mk "" + std::to_string(id) + "") \n\t\t(lang." + sp_.Prefix + @".expr.lit (" + sp_.Prefix + @".mk "" + std::to_string(id-1) + "" \n\t\t\t"" + this->base_1->getEvalExpr() + "" \n\t\t\t"" + this->base_2->getEvalExpr() +  ""))\n"";
+            retval += ""\n def "" + currentEnv + "" := cmdEval "" + dc->getName() + "" "" + getLastEnv();
+    }";
+
+              
+            })) + @"
+
+    if(!found){
+        //retval = ""--Unknown space type - Translation Failed!"";
+    }
+
+    return retval;
+
+
+};
+
+
 
 std::string Frame::toString() const {
     std::string retval = """";
@@ -67,8 +140,8 @@ std::string Frame::toString() const {
         return retval;
 " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => {
 
-                            var hasName = sp_.MaskContains(Space.FieldType.Name);
-                            var hasDim = sp_.MaskContains(Space.FieldType.Dimension);
+                         //   var hasName = sp_.MaskContains(Space.FieldType.Name);
+                           // var hasDim = sp_.MaskContains(Space.FieldType.Dimension);
                             //PhysSpaceExpression.ClassicalTimeLiteral (ClassicalTimeSpaceExpression.ClassicalTimeLiteral
                             return "\n\tif(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(f_->getSpace())){
         found = true;
@@ -80,7 +153,7 @@ std::string Frame::toString() const {
             retval += ""def "" + dc->getName()+"".""+f_->getName() + ""fr := " + sp_.Prefix + @"FrameExpression.FrameLiteral ( Get" + sp_.Name + @"StandardFrame (Eval"+sp_.Prefix+@"SpaceExpression "" + dc->getName()+""sp))\n"";
     
         }
-        retval += ""def "" + dc->getName()+"".""+f_->getName() + "" := PhysCommand.FrameAssignment (⊢"" + dc->getName()+"".""+f_->getName() + ""var) (⊢"" + dc->getName()+"".""+f_->getName() + ""fr)\n"";
+        retval += ""def "" + dc->getName()+"".""+f_->getName() + "" := PhysGlobalCommand.GlobalFrame (⊢"" + dc->getName()+"".""+f_->getName() + ""var) (⊢"" + dc->getName()+"".""+f_->getName() + ""fr)\n"";
     }";
                         })) + @"
 
@@ -125,7 +198,7 @@ std::string VecIdent::toString() const {
   ret += coords_->toString() + "_var";
   ret += " : @peirce.vector_variable " + ident_->getSpaceContainer()->toString();
   ret += " := @peirce.vector_variable.mk ";
-  ret += ident_->getSpaceContainer()->toString() + " " + std::to_string(++index);
+  ret += ident_->getSpaceContainer()->toString() + " " + std::to_string(++GLOBAL_INDEX);
 //  ret += " )";
   return ret; 
 }
@@ -133,10 +206,11 @@ std::string VecIdent::toString() const {
              * */
             foreach (var prod in ParsePeirce.Instance.Grammar.Productions)
             {
-                if (true || prod.ProductionType != Grammar.ProductionType.Single)
+                if (prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
                 {
                     var prodcons = "\n" +
-    @"" + prod.Name + @"::" + prod.Name + @"(coords::" + prod.Name + @"* c, domain::DomainObject* d) : " + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Inherits is Grammar.Production ? prod.Inherits.Name : "Interp") + @"(c,d) {}
+    @"" + prod.Name + @"::" + prod.Name + @"(coords::" + prod.Name + @"* c, domain::DomainObject* d) : " 
+        + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Inherits is Grammar.Production ? prod.Inherits.Name : "Interp") + @"(c,d) {}
                     ";
                     file += prodcons;
 
@@ -146,17 +220,19 @@ std::string " + prod.Name + @"::toString() const {
     bool found = false;
     
     //  ret += ""("";
-    //ret += ""def var_"" + std::to_string(++index) + "":= 1"";" +
+    //ret += ""def var_"" + std::to_string(++GLOBAL_INDEX) + "":= 1"";" +
     string.Join("",
     ParsePeirce.Instance.GrammarRuleToSpaceObjectMap.ContainsKey(prod) ? 
     ParsePeirce.Instance.GrammarRuleToSpaceObjectMap[prod].Select(sppair =>
     {
-        var spInstances = ParsePeirce.Instance.SpaceInstances;
+      //  var spInstances = ParsePeirce.Instance.SpaceInstances;
 
         var retval = @"
-    if(auto dc = dynamic_cast<domain::" + sppair.Item1.Prefix + sppair.Item2.Name + @"*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::" + sppair.Item1.Name + sppair.Item2.Name + @"" +
+                            (prod.HasValueContainer() ?
+                                "<" + prod.GetPriorityValueContainer().ValueType + "," + prod.GetPriorityValueContainer().ValueCount + ">" : "") + @"*>(this->dom_)){
         found = true;
-        " + (prod.ProductionType == Grammar.ProductionType.Single ? prod.Cases[0].InterpTranslation(prod, sppair.Item1, sppair.Item2, ParsePeirce.Instance.SpaceInstances[0]) : @"std::cout<<""Warning - Calling toString on a production rather than a case\n;"";") + @"
+        " + (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle ? prod.Cases[0].InterpTranslation(prod, sppair.Item1, sppair.Item2) : @"std::cout<<""Warning - Calling toString on a production rather than a case\n;"";") + @"
     }
 ";      return retval;
 
@@ -174,9 +250,11 @@ std::string " + prod.Name + @"::toString() const {
                     ParsePeirce.Instance.GrammarRuleToSpaceObjectMap[prod].Select(sppair_ =>
                     {
                         var retval_ = @"
-            if(auto dc = dynamic_cast<domain::" + sppair_.Item1.Prefix + sppair_.Item2.Name + @"*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::" + sppair_.Item1.Name + sppair_.Item2.Name +@"" +
+                            (prod.HasValueContainer() ?
+                                "<" + prod.GetPriorityValueContainer().ValueType + "," + prod.GetPriorityValueContainer().ValueCount + ">" : "") + @"*>(cont->getValue())){
                 found = true;
-                " + (prod.ProductionType == Grammar.ProductionType.Single ? prod.Cases[0].InterpTranslation(prod, sppair_.Item1, sppair_.Item2, ParsePeirce.Instance.SpaceInstances[0]) : @"std::cout<<""Warning - Calling toString on a production rather than a case\n;"";") + @"
+                " + (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle ? prod.Cases[0].InterpTranslation(prod, sppair_.Item1, sppair_.Item2) : @"std::cout<<""Warning - Calling toString on a production rather than a case\n;"";") + @"
             }";
                         return retval_;
                     }
@@ -187,10 +265,10 @@ std::string " + prod.Name + @"::toString() const {
 
     if(!found){
         //ret = """";
-        " + (prod.ProductionType == Grammar.ProductionType.Single ? prod.Cases[0].InterpTranslation(prod, null, null, ParsePeirce.Instance.SpaceInstances[0]) : @"std::cout<<""Warning - Calling toString on a production rather than a case\n;"";") + @"
+        " + (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle ? prod.Cases[0].InterpTranslation(prod, null, null) : @"std::cout<<""Warning - Calling toString on a production rather than a case\n;"";") + @"
     }
     std::replace(retval.begin(), retval.end(), '_', '.');
-    int index;
+    std::size_t index;
     string sub_str = "": _"";
     string singleperiod = "".a"";
     while ((index = retval.find("": ."")) != string::npos)
@@ -212,6 +290,35 @@ std::string " + prod.Name + @"::toString() const {
                 ";
                     file += prodstr;
                 }
+
+                if(prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
+                {
+                    var i = 0;
+                    var j = 0;
+                    var k = 0;
+
+                    var casecons =
+"\n" + prod.Name + @"::" + prod.Name + @"(coords::" + prod.Name + @"* c, domain::DomainObject* d" 
++ (prod.Cases[0].Productions.Count > 0 ? "," + string.Join(",", prod.Cases[0].Productions.Select(p_ => "interp::" + p_.Name + " * operand" + ++i)) : "") 
++ @" ) : " + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Inherits is Grammar.Production ? prod.Inherits.Name : "Interp") + @"(c,d)
+   " + (prod.Cases[0].Productions.Count > 0 ? "," + string.Join(",", prod.Cases[0].Productions.Select(p_ => "operand_" + ++k + "(operand" + k + ")")) : "")
+   + @" {}
+";
+                    var casestr = @"
+std::string " + prod.Name + @"::toString() const {
+    std::string ret = """";
+    //  ret += ""("";
+    ret += ""def var_"" + std::to_string(++GLOBAL_INDEX) + "":= 1"";
+     return ret;
+}
+
+";
+
+                    file += "\n" + casecons;
+                    file += casestr + "\n";
+                }
+                if (prod.ProductionType == Grammar.ProductionType.CaptureSingle || prod.ProductionType == Grammar.ProductionType.Single)
+                    continue;
 
                 foreach (var pcase in prod.Cases)
                 {
@@ -273,7 +380,7 @@ std::string " + prod.Name + @"::toString() const {
     " : "") + @"
 
     //std::replace(retval.begin(), retval.end(), '_', '.');
-    int index;
+    std::size_t index;
     string sub_str = "": _"";
     string singleperiod = "".a"";
     while ((index = retval.find("": ."")) != string::npos)
@@ -295,12 +402,15 @@ std::string " + prod.Name + @"::toString() const {
                                 file += "\nstd::string " + pcase.Name + @"::toStringLinked(std::vector<interp::Space*> links, std::vector<std::string> names, std::vector<interp::Frame*> framelinks, std::vector<string> framenames, bool before) { 
     //std::string toStr = this->toString();
     std::string retval = """";
-    std::string cmdwrapper = """ + pcase.Command.ToLeanConstructor() + @""";
     string cmdvalstart = ""::[]"";
     string cmdval = """";
     int i = 0;
+
+    std::string cmdwrapper = """ + pcase.Command.Production + '.' + pcase.Command.Case + @""";
+
     int count = this->operands_.size() + links.size() + framelinks.size();
-    if(before)
+    int actualcount = 0;
+    if(true)
     {
         bool prev;
 
@@ -313,10 +423,12 @@ std::string " + prod.Name + @"::toString() const {
                 retval += ""\n"" + op->toString() + ""\n"";
                 cmdval = names[i++];
                 prev = true;
+                
             }
+            actualcount++;
         }
         i = 0;
-        for(auto op: framelinks){
+        /*for(auto op: framelinks){
             if(prev){
                 retval += ""\n"" + op->toString() + ""\n"";
                 cmdval = ""("" + cmdwrapper + "" "" + framenames[i++] + "" "" + cmdval + "")"";
@@ -326,18 +438,20 @@ std::string " + prod.Name + @"::toString() const {
                 cmdval = framenames[i++];
                 prev = true;
             }
-        }
+        }*/
 
         bool start = true;
         for(auto op: this->operands_){ 
-            if(prev){
+            if(prev and op->coords_->codegen()){
                 retval += ""\n"" + op->toString() + ""\n"";
                 cmdval = ""("" + cmdwrapper + "" "" + op->coords_->toString() + "" "" + cmdval + "")"";
+                actualcount++;
             }
-            else{
+            else if (op->coords_->codegen()){
                 retval += ""\n"" + op->toString() + ""\n"";
                 cmdval = op->coords_->toString();
                 prev = true;
+                actualcount++;
             }
             //retval += ""\n"" + op->toString() + ""\n"";
             //cmdval = cmdval + (!start?""::"":"""") + op->coords_->toString();
@@ -388,34 +502,35 @@ std::string " + prod.Name + @"::toString() const {
         }
 
     }*/
-    cmdval += """"; " + (
+    //cmdval += """"; " + (
         pcase.Command is Grammar.Command && prod.Command is Grammar.Command ? @"
-    cmdval = ""\ndef "" + this->coords_->toString() + """ + pcase.Command.NameSuffix + "" + @" : " + pcase.Command.Production + @" := " + @" ("" + cmdval + "")"";
+    //cmdval = ""\ndef "" + this->coords_->toString() + """ + pcase.Command.NameSuffix + "" + @" : " + pcase.Command.Production + @" := " + pcase.Command.Production + '.' + pcase.Command.Case + @" ("" + cmdval + cmdvalstart + "")"";
 
 " + @"
-    cmdval += ""\ndef "" + this->coords_->toString() + """ + "" + @" : " + prod.Command.Production + @" := " +  @" "" + this->coords_->toString() + """ + "\"" + @";
+    cmdval += ""\ndef "" + this->coords_->toString() + """ + "" + @" : " + prod.Command.Production + @" := " + prod.Command.Production + '.' + prod.Command.Case + @" "" + this->coords_->toString() + """ + pcase.Command.NameSuffix + "\"" + @";
 
 "
         :
     ((
         pcase.Command is Grammar.Command ? @"
-    cmdval = ""\ndef "" + this->coords_->toString() + """ + "" + @" : " + pcase.Command.Production + @" := " +  @" "" + cmdval;
+    //cmdval = ""\ndef "" + this->coords_->toString() + """ + "" + @" : " + pcase.Command.Production + @" := " + pcase.Command.Production + '.' + pcase.Command.Case + @" "" + cmdval;
 
 " : ""
 
     ) + (
         prod.Command is Grammar.Command ? @"
-    cmdval = ""\ndef "" + this->coords_->toString() + """ + "" + @" : " + prod.Command.Production + @" := " + prod.Command.Production + '.' + prod.Command.Case + @" "" + cmdval;
+    //cmdval = ""\ndef "" + this->coords_->toString() + """ + "" + @" : " + prod.Command.Production + @" := " + prod.Command.Production + '.' + prod.Command.Case + @" "" + cmdval;
 
 
 " : ""
     ))) + (
         (pcase.Command is Grammar.Command || prod.Command is Grammar.Command) ? @"
-    retval += ""\n"" + cmdval + ""\n"";
+    if(actualcount>1)
+        retval += ""\ndef "" + this->coords_->toString() + """ + "" + @" : " + pcase.Command.Production + @" :="" + cmdval + ""\n"";
     " : "") + @"
 
     //std::replace(retval.begin(), retval.end(), '_', '.');
-    int index;
+    std::size_t index;
     string sub_str = "": _"";
     string singleperiod = "".a"";
     while ((index = retval.find("": ."")) != string::npos)
@@ -461,7 +576,7 @@ std::string " + prod.Name + @"::toString() const {
 std::string " + prod.Name + @"::toString() const {
     std::string ret = """";
     //  ret += ""("";
-    ret += ""def var_"" + std::to_string(++index) + "":= 1"";
+    ret += ""def var_"" + std::to_string(++GLOBAL_INDEX) + "":= 1"";
      return ret;
 }
 
@@ -490,17 +605,19 @@ std::string " + pcase.Name + @"::toString() const {
 
     + @"
     //  ret += ""("";
-    //ret += ""def var_"" + std::to_string(++index) + "":= 1"";" +
+    //ret += ""def var_"" + std::to_string(++GLOBAL_INDEX) + "":= 1"";" +
    string.Join("",
     ParsePeirce.Instance.GrammarRuleToSpaceObjectMap.ContainsKey(prod) ?
     ParsePeirce.Instance.GrammarRuleToSpaceObjectMap[prod].Select(sppair =>
     {
-        var spInstances = ParsePeirce.Instance.SpaceInstances;
+       // var spInstances = ParsePeirce.Instance.SpaceInstances;
 
         var retval = @"
-    if(auto dc = dynamic_cast<domain::" + sppair.Item1.Prefix + sppair.Item2.Name + @"*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::" + sppair.Item1.Name + sppair.Item2.Name + @"" +
+                            (prod.HasValueContainer() ?
+                                "<" + prod.GetPriorityValueContainer().ValueType + "," + prod.GetPriorityValueContainer().ValueCount + ">" : "") + @"*>(this->dom_)){
         found = true;
-        " + pcase.InterpTranslation(prod, sppair.Item1, sppair.Item2, ParsePeirce.Instance.SpaceInstances[0]) + @"
+        " + pcase.InterpTranslation(prod, sppair.Item1, sppair.Item2) + @"
     }
 "; return retval;
 
@@ -518,9 +635,11 @@ std::string " + pcase.Name + @"::toString() const {
                     ParsePeirce.Instance.GrammarRuleToSpaceObjectMap[prod].Select(sppair_ =>
                     {
                         var retval_ = @"
-            if(auto dc = dynamic_cast<domain::" + sppair_.Item1.Prefix + sppair_.Item2.Name + @"*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::" + sppair_.Item1.Name + sppair_.Item2.Name + @"" +
+                            (prod.HasValueContainer() ?
+                                "<" + prod.GetPriorityValueContainer().ValueType + "," + prod.GetPriorityValueContainer().ValueCount + ">" : "") + @"*>(cont->getValue())){
                 found = true;
-                " + pcase.InterpTranslation(prod, sppair_.Item1, sppair_.Item2, ParsePeirce.Instance.SpaceInstances[0]) + @"
+                " + pcase.InterpTranslation(prod, sppair_.Item1, sppair_.Item2) + @"
             }";
                         return retval_;
                     }
@@ -531,10 +650,10 @@ std::string " + pcase.Name + @"::toString() const {
 
     if(!found){
         //retval = """";
-        " + (prod.ProductionType == Grammar.ProductionType.Single ? prod.Cases[0].InterpTranslation(prod, null, null, ParsePeirce.Instance.SpaceInstances[0]) : pcase.InterpTranslation(prod, null, null, null)/*@"std::cout<<""Warning - Calling toString on a production rather than a case\n;"";") */)+ @"
+        " + (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle ? prod.Cases[0].InterpTranslation(prod, null, null) : pcase.InterpTranslation(prod, null, null)/*@"std::cout<<""Warning - Calling toString on a production rather than a case\n;"";") */)+ @"
     }
     std::replace(retval.begin(), retval.end(), '_', '.');
-    int index;
+    std::size_t index;
     string sub_str = "": _"";
     string singleperiod = "".a"";
     while ((index = retval.find("": ."")) != string::npos)
@@ -581,19 +700,26 @@ std::string " + pcase.Name + @"::toString() const {
 
 namespace interp{
 
+std::string getEnvName();
+std::string getLastEnv();
+
 class Interp;
 class Space;
+class DerivedSpace;
 class Frame;
 ";
             var file = header;
 
             foreach (var prod in ParsePeirce.Instance.Grammar.Productions)
             {
-                if (prod.ProductionType != Grammar.ProductionType.Single)
+                if (true || prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
                 {
                     file += "\n";
                     file += "class " + prod.Name + ";";
                 }
+
+                if (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
+                    continue;
 
                 foreach (var pcase in prod.Cases)
                 {
@@ -631,9 +757,30 @@ class Space : public Interp
 {
 public:
     Space(domain::Space* s) : s_(s) {};
-    std::string toString() const;
+    virtual std::string toString() const;
+    virtual std::string getVarExpr() const;
+    virtual std::string getEvalExpr() const;
 protected:
     domain::Space* s_;
+};
+
+class DerivedSpace : public Space
+{
+public:
+    DerivedSpace(domain::DerivedSpace* s, Space* base1, Space* base2) : Space(s), base_1(base1), base_2(base2) {};
+    virtual std::string toString() const;
+
+    Space* getBase1() const {
+        return this->base_1;
+    }
+
+    Space* getBase2() const {
+        return this->base_2;
+    }
+
+protected:
+    interp::Space *base_1,*base_2;
+
 };
 
 class Frame : public Interp
@@ -650,7 +797,7 @@ protected:
 
             foreach (var prod in ParsePeirce.Instance.Grammar.Productions)
             {
-                if (true || prod.ProductionType != Grammar.ProductionType.Single)
+                if (prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
                 {
                     var prodStr =
 @"
@@ -665,6 +812,35 @@ public:
 ";
                     file += prodStr;
                 }
+                else
+                {
+                    int x = 0;
+                    int p = 0;
+                    var caseStr = @"
+
+class " + prod.Name + @" : public " + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Inherits is Grammar.Production ? prod.Inherits.Name : "Interp") + @" {
+public:
+    " + prod.Name + @"(coords::" + prod.Name + @"* coords, domain::DomainObject* dom " + (prod.Cases[0].Productions.Count > 0 ? "," 
+        + string.Join(",", prod.Cases[0].Productions.Select(p_ => "interp::" + p_.Name + " *operand" + ++p)) : "") + @" );
+    virtual std::string toString() const;
+    " +
+
+           // string.Join("\n", pcase.Productions.Select(p_ => "Interp::" + p_.Name + " *getOperand" + ++i) + "(); ")
+         
+
+           "\nprotected:\n\t" +
+           string.Join("\n\t", prod.Cases[0].Productions.Select(p_ => "interp::" + p_.Name + " *operand_" + ++x + ";"))
+           +
+           @"
+};
+
+";
+                    file += caseStr;
+                }
+
+                if (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
+                    continue;
+
                 foreach (var pcase in prod.Cases)
                 {
                     if (pcase.CaseType == Grammar.CaseType.Passthrough || pcase.CaseType == Grammar.CaseType.Inherits)

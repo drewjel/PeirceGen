@@ -12,6 +12,8 @@ namespace PeirceGen
         {
             var Peirce = ParsePeirce.Instance;
 
+            //var tt = Peirce.Grammar.Productions.SelectMany(p => p.Cases.Where(c_ => c_.CaseType == Grammar.CaseType.Pure));
+
             var Coords = new Generators.GenCoords();
             var Interp = new Generators.GenInterp();
             var Domain = new Generators.GenDomain();
@@ -22,6 +24,9 @@ namespace PeirceGen
             var Interpretation = new Generators.GenInterpretation();
             var Oracle = new Generators.GenOracle();
             var AST = new Generators.GenAST(42);
+            Peirce.MatcherProductions.ForEach(prod => new Generators.GenMatcher(prod));
+            Generators.GenMatcher.GenTopLevelMatchers();
+
 
 
             /*

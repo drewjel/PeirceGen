@@ -53,8 +53,12 @@
     <Compile Include="Generators\GenInterp.cs" />
     <Compile Include="Generators\GenInterpretation.cs" />
     <Compile Include="Generators\GenInterpToDomain.cs" />
+    <Compile Include="Generators\GenMatcher.cs" />
     <Compile Include="Generators\GenOracle.cs" />
+    <Compile Include="Grammar.cs" />
+    <None Include="GrammarEmpty" />
     <Compile Include="ParseGrammar.cs" />
+    <Compile Include="ParseMatchers.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -65,7 +69,6 @@
   <ItemGroup>
     <None Include="GrammarOld" />
   </ItemGroup>
-  <ItemGroup />
   <ItemGroup>
     <Content Include="symlinkme\AST.h" />
     <Content Include="symlinkme\ASTToCoords.cpp" />
@@ -89,6 +92,40 @@
     <Content Include="symlinkme\OracleAskAll.h" />
     <Content Include="symlinkme\Oracle_AskAll.cpp" />
     <Content Include="symlinkme\Oracle_AskAll.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFMatrixMatcher.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFMatrixMatcher.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFMatrixStampedMatcher.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFMatrixStampedMatcher.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFPointMatcher.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFPointMatcher.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFPointStamped.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFPointStamped.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFPoseMatcher.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFPoseMatcher.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFPoseStampedMatcher.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFPoseStampedMatcher.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFQuaternionMatcher.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFQuaternionMatcher.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFQuaternionStampedMatcher.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFQuaternionStampedMatcher.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFScalarMatcher.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFScalarMatcher.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFTransformMatcher.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFTransformMatcher.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFTransformStampedMatcher.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFTransformStampedMatcher.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFVector3Matcher.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFVector3Matcher.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFVector3Stamped.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFVector3Stamped.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFVectorMatcher.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFVectorMatcher.h" />
+    <Content Include="symlinkme\ros_matchers\ROSTFVectorStamped.cpp" />
+    <Content Include="symlinkme\ros_matchers\ROSTFVectorStamped.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="symlinkme\orig\" />
+    <Folder Include="symlinkme\physics\" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

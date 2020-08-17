@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,12 +11,12 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/CoordsToInterp.cpp";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\CoordsToInterp.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/CoordsToInterp.h";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\CoordsToInterp.h";
         }
 
         public override void GenCpp()
@@ -34,31 +35,63 @@ using namespace coords2interp;
 
             foreach (var prod in ParsePeirce.Instance.Grammar.Productions)
             {
-                if (prod.ProductionType != Grammar.ProductionType.Single)
+                if (prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
                 {
                     var getintprod = @"interp::" + prod.Name + @" *CoordsToInterp::get" + prod.Name + @"(coords::" + prod.Name + @" *c) const
     {
-        interp::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @"*interp = NULL;
+        interp::" + prod.GetTopPassthrough().Name + @"*interp = NULL;
         try {
-            interp = coords2interp_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @".at(c);
+            interp = coords2interp_" + prod.GetTopPassthrough().Name + @".at(c);
         }
         catch (std::out_of_range &e) {
             interp = NULL;
         }
-        return (interp::" + (prod.Name) + @"*)interp;
+        return (interp::" + prod.Name + @"*)interp;
     }";
                     var getcooprod = @"coords::" + prod.Name + @" *CoordsToInterp::get" + prod.Name + @"(interp::" + prod.Name + @" *i) const
     {
-        coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @" *coords = NULL;
+        coords::" + prod.GetTopPassthrough().Name + @" *coords = NULL;
         try {
-            coords = interp2coords_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @".at(i);
+            coords = interp2coords_" + prod.GetTopPassthrough().Name + @".at(i);
         }
         catch (std::out_of_range &e) {
             coords = NULL;
         }
-        return (coords::" + (prod.Name) + @"*)coords;
+        return (coords::" + prod.Name + @"*)coords;
     }";
                     file += "\n" + getcooprod + "\n" + getintprod + "\n";
+                }
+                else if(prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
+                {
+                    var getintprod = @"interp::" + prod.Name + @" *CoordsToInterp::get" + prod.Name + @"(coords::" + prod.Name + @" *c) const
+    {
+        interp::" + prod.GetTopPassthrough().Name + @"*interp = NULL;
+        try {
+            interp = coords2interp_" + prod.GetTopPassthrough().Name + @".at(c);
+        }
+        catch (std::out_of_range &e) {
+            interp = NULL;
+        }
+        return (interp::" + prod.Name + @"*)interp;
+    }";
+                    var getcooprod = @"coords::" + prod.Name + @" *CoordsToInterp::get" + prod.Name + @"(interp::" + prod.Name + @" *i) const
+    {
+        coords::" + prod.GetTopPassthrough().Name + @" *coords = NULL;
+        try {
+            coords = interp2coords_" + prod.GetTopPassthrough().Name + @".at(i);
+        }
+        catch (std::out_of_range &e) {
+            coords = NULL;
+        }
+        return (coords::" + prod.Name + @"*)coords;
+    }";
+                    var put = @"void CoordsToInterp::put" + prod.Name + @"(coords::" + prod.Name + @"* c, interp::" + prod.Name + @"* i)
+{
+    coords2interp_" + prod.GetTopPassthrough().Name + @"[c] = (interp::" + prod.GetTopPassthrough().Name + @"*)i;
+    interp2coords_" + prod.GetTopPassthrough().Name + @"[(interp::" + prod.GetTopPassthrough().Name + @"*)i] = c;
+}";
+
+                    file += "\n" + put + "\n" + getcooprod + "\n" + getintprod + "\n";
                 }
 
                 foreach (var pcase in prod.Cases)
@@ -66,18 +99,19 @@ using namespace coords2interp;
 
                     if (pcase.CaseType == Grammar.CaseType.Passthrough || pcase.CaseType == Grammar.CaseType.Inherits)
                         continue;
-                    else if (prod.ProductionType == Grammar.ProductionType.Single)
+                    else if (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                     {
+                        continue;
                         var put = @"void CoordsToInterp::put" + prod.Name + @"(coords::" + prod.Name + @"* c, interp::" + prod.Name + @"* i)
 {
-    coords2interp_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @"[c] = (interp::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @"*)i;
-    interp2coords_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @"[(interp::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @"*)i] = c;
+    coords2interp_" + prod.GetTopPassthrough().Name + @"[c] = (interp::" + prod.GetTopPassthrough().Name + @"*)i;
+    interp2coords_" + prod.GetTopPassthrough().Name + @"[(interp::" + prod.GetTopPassthrough().Name + @"*)i] = c;
 }";
                         var getcoo = @"coords::" + prod.Name + @"* CoordsToInterp::get" + prod.Name + @"(interp::" + prod.Name + @"* i) const
 {
-    coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @"* coo = NULL;
+    coords::" + prod.GetTopPassthrough().Name + @"* coo = NULL;
     try {
-        coo = interp2coords_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @".at((interp::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @"*)i);
+        coo = interp2coords_" + prod.GetTopPassthrough().Name + @".at((interp::" + prod.GetTopPassthrough().Name + @"*)i);
     }
     catch (std::out_of_range &e) {
         coo = NULL;
@@ -86,14 +120,14 @@ using namespace coords2interp;
 }";
                         var getint = @"interp::" + prod.Name + @"* CoordsToInterp::get" + prod.Name + @"(coords::" + prod.Name + @"* c) const
 {
-    interp::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @" *interp = NULL;
+    interp::" + prod.GetTopPassthrough().Name + @" *interp = NULL;
     try {
-        interp = coords2interp_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @".at(c);
+        interp = coords2interp_" + prod.GetTopPassthrough().Name + @".at(c);
     }
     catch (std::out_of_range &e) {
         interp = NULL;
     }
-    return static_cast<interp::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Name) + @"*>(interp);
+    return static_cast<interp::" + prod.Name + @"*>(interp);
 }";
                         file += "\n" + put + "\n" + getcoo + "\n" + getint + "\n";
                     }
@@ -102,14 +136,14 @@ using namespace coords2interp;
 
                         var put = @"void CoordsToInterp::put" + pcase.Name + @"(coords::" + pcase.Name + @"* c, interp::" + pcase.Name + @"* i)
 {
-    coords2interp_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"[c] = (interp::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"*)i;
-    interp2coords_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"[(interp::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"*)i] = c;
+    coords2interp_" + prod.GetTopPassthrough().Name + @"[c] = (interp::" + prod.GetTopPassthrough().Name + @"*)i;
+    interp2coords_" + prod.GetTopPassthrough().Name + @"[(interp::" + prod.GetTopPassthrough().Name + @"*)i] = c;
 }";
                         var getcoo = @"coords::" + pcase.Name + @"* CoordsToInterp::get" + pcase.Name + @"(interp::" + pcase.Name + @"* i) const
 {
-    coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"* coo = NULL;
+    coords::" + prod.GetTopPassthrough().Name + @"* coo = NULL;
     try {
-        coo = interp2coords_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at((interp::" + prod.Name + @"*)i);
+        coo = interp2coords_" + prod.GetTopPassthrough().Name + @".at((interp::" + prod.Name + @"*)i);
     }
     catch (std::out_of_range &e) {
         coo = NULL;
@@ -118,9 +152,9 @@ using namespace coords2interp;
 }";
                         var getint = @"interp::" + pcase.Name + @"* CoordsToInterp::get" + pcase.Name + @"(coords::" + pcase.Name + @"* c) const
 {
-    interp::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @" *interp = NULL;
+    interp::" + prod.GetTopPassthrough().Name + @" *interp = NULL;
     try {
-        interp = coords2interp_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at(c);
+        interp = coords2interp_" + prod.GetTopPassthrough().Name + @".at(c);
     }
     catch (std::out_of_range &e) {
         interp = NULL;
@@ -158,7 +192,7 @@ public:
 
             foreach (var prod in ParsePeirce.Instance.Grammar.Productions)
             {
-                if (prod.ProductionType != Grammar.ProductionType.Single)
+                if (prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
                 {
 
                     var getintprod = @"interp::" + prod.Name + @"* get" + prod.Name + "(coords::" + prod.Name + "* c) const;";
@@ -166,6 +200,17 @@ public:
 
                     file += "\n\t" + getintprod + "\n\t" + getcooprod + "\n";
                 }
+                else
+                {
+                    var put = @"void put" + prod.Name + "(coords::" + prod.Name + "* key, interp::" + prod.Name + "* val);";
+                    var getint = @"interp::" + prod.Name + "* get" + prod.Name + "(coords::" + prod.Name + "* c) const;";
+                    var getcoo = @"coords::" + prod.Name + "* get" + prod.Name + "(interp::" + prod.Name + "* i) const;";
+
+                    file += "\n\t" + put + "\n\t" + getint + "\n\t" + getcoo + "\n";
+                }
+
+                if (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
+                    continue;
 
                 foreach (var pcase in prod.Cases)
                 {
@@ -175,7 +220,7 @@ public:
                     else if(pcase.CaseType == Grammar.CaseType.Ident)
                     {
 
-
+                        break;
                         var put = @"void put" + prod.Name + "(coords::" + prod.Name + "* key, interp::" + prod.Name + "* val);";
                         var getint = @"interp::" + prod.Name + "* get" + prod.Name + "(coords::" + prod.Name + "* c) const;";
                         var getcoo = @"coords::" + prod.Name + "* get" + prod.Name + "(interp::" + prod.Name + "* i) const;";

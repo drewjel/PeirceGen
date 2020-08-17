@@ -8,416 +8,45 @@ using System.Threading.Tasks;
 
 namespace PeirceGen
 {
-    public class Grammar
-    {
-        //public string 
-
-        public class Command
-        {
-            public string Production { get; set; }
-            public string Case { get; set; }
-
-            public string NameSuffix { get; set; }
-
-            public string ToLeanConstructor() { return this.Production + '.' + this.Case;  }
-        }
-
-        public List<Production> Productions = new List<Production>();
-
-        public static Dictionary<char, ProductionType> TokenToProductionTypeMap = new Dictionary<char, ProductionType>()
-        {
-            { '+', ProductionType.Capture },
-            { '_', ProductionType.Throw },
-            { '=', ProductionType.Passthrough },
-            { '*', ProductionType.Array },
-            { '1', ProductionType.Single },
-            { '>', ProductionType.Inherits },
-            { '.', ProductionType.Hidden }
-        };
-
-
-        public enum ProductionType
-        {
-            Capture,
-            Throw,
-            Passthrough,
-            Inherits,
-            Array,
-            Single,
-            Hidden
-        }
-
-        public enum CaseType
-        { 
-            Ident,
-            Real,
-            Op,
-            Pure,
-            Passthrough,
-            Array,
-            ArrayOp,
-            Inherits,
-            Hidden
-        }
-
-        public static CaseType TokenToCaseTypeMap(List<string> toks)
-        {
-            return
-                toks.Count > 1 && toks[1][0] == '.' ? CaseType.Hidden :
-                toks.Count > 0 && toks[0][0] == '>' ? CaseType.Inherits :
-                toks.Count > 0 && toks[0][0] == '*' ? CaseType.Array :
-                toks.Count > 1 && toks[1][0] == '*' ? CaseType.ArrayOp :
-                toks[0] == "IDENT" ? CaseType.Ident :
-                toks[0] == "FLOAT" ? CaseType.Real :
-                toks.Count > 0 && TokenToProductionTypeMap.Keys.Contains(toks[0][0]) && TokenToProductionTypeMap[toks[0][0]] == ProductionType.Passthrough ? CaseType.Passthrough :
-                toks.Count > 1 && TokenToProductionTypeMap.Keys.Contains(toks[0][0]) ? CaseType.Pure :
-                CaseType.Op;
-        }
-
-        public static bool IsProduction(string candidate)
-        {
-            return TokenToProductionTypeMap.Keys.Contains(candidate[0]);
-        }
-
-        public static string TrimProductionType(string candidate)
-        {
-            return IsProduction(candidate) ? candidate.Substring(1) : candidate;
-        }
-
-        public class Production
-        {
-            public List<Case> Cases = new List<Case>();
-            public ProductionType ProductionType;
-            public string Name { get; set; }
-
-            public string Description { get; set; }
-
-            public bool HasPassthrough { get; set; }
-            public Production Passthrough;
-            public bool HasInherits { get; set; }
-            public Production Inherits { get; set; }
-
-
-            public Command Command { get; set; }
-
-            public bool IsTranslationDeclare { get; set; }
-            public bool IsVarDeclare { get; set; }
-            public bool IsFuncDeclare { get; set; }
-        }
-
-        public class Case
-        {
-            public CaseType CaseType;
-            public string Name { get; set; }
-
-            public string Description { get; set; }
-
-            public List<Production> Productions = new List<Production>();
-            public List<string> ProductionRefs = new List<string>();
-
-            public Func<Production, string> CoordsToString { get; set; }
-
-            public Func<Production, Space, Space.SpaceObject, Space.SpaceInstance, string> InterpTranslation { get; set; }
-
-            public Command Command { get; set; }
-
-            public bool IsTranslationDeclare { get; set; }
-            public bool IsVarDeclare { get; set; }
-            public bool IsFuncDeclare { get; set; }
-
-            public bool LinkSpace { get; set; }
-
-            public void ParseCoordsToString(bool fromCommand)
-            {
-                /*
-                 * std::string file_id_;
-                    std::string file_name_;
-                    std::string file_path_;
-
-                    std::string name_; //only used for Decl. possibly subclass this, or else this property is unused elsewhere
-
-                    int begin_line_no_;
-                    int begin_col_no_;
-                    int end_line_no_;
-                    int end_col_no_;
-
-                 * */
-                var retval = "std::string(\"\")";
-                if (true)
-                    retval += @"+" + @" ""COMMAND.B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)";
-                this.CoordsToString = (prod) => { return @"(this->getIndex() > 0 ? ""INDEX""+std::to_string(this->getIndex())+""."":"""")+"+"\"" + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name).Replace("_", ".") + "\" + " + retval; };
-            }
-
-            public void ParseCoordsToString(string toParse)
-            {
-                /*
-                 * std::string file_id_;
-                    std::string file_name_;
-                    std::string file_path_;
-
-                    std::string name_; //only used for Decl. possibly subclass this, or else this property is unused elsewhere
-
-                    int begin_line_no_;
-                    int begin_col_no_;
-                    int end_line_no_;
-                    int end_col_no_;
-
-                 * */
-                var retval = "std::string(\"\")";
-                if (toParse.Contains("$NAME"))
-                    retval += @" + state_->name_";
-                if (toParse.Contains("$LOC"))
-                    retval += @"+" + @" "".B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)";
-                this.CoordsToString = (prod) => { return @"(this->getIndex() > 0 ? ""INDEX""+std::to_string(this->getIndex())+""."":"""")+" + "\"" + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name).Replace("_", ".") + "\" + " + retval; };
-            }
-
-            public void ParseInterpTranslation(bool fromCommand)
-            {
-                this.InterpTranslation = (prod, sp, spobj, spinst) =>
-                {
-                    int i = 0;
-                    var retval = @"
-            auto case_coords = dynamic_cast<coords::" + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name) + @"*>(this->coords_);";
-                    if(this.Command is Grammar.Command && prod.Command is Grammar.Command)
-                    {
-                        retval += @"
-            retval += ""def " + @""" + case_coords->toString() + """ + this.Command.NameSuffix + "" + @" : " + this.Command.Production + " := " + this.Command.ToLeanConstructor() + @" " + @""" + " + (this.Productions.Count > 0 ? string.Join(" + ", (this.Productions.Select(p_ => "operand_" + ++i + "->coords_->toString()"))) : "\"\"") + @";
-";
-                        retval += @"
-            retval += ""def " + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name) + @""" + case_coords->toString() + """ + "" + @" : " + prod.Command.Production + " := " + prod.Command.ToLeanConstructor() + @" " + @""" + case_coords->toString() + """ + this.Command.NameSuffix + "\";";
-
-                    }
-                    else if (this.Command is Grammar.Command)
-                    {
-                        retval += @"
-            retval += ""def " + @""" + case_coords->toString() + """ + "" + @" : " + this.Command.Production + " := " + this.Command.ToLeanConstructor() + @" " + @""" + " + (this.Productions.Count > 0 ? string.Join(" + ", (this.Productions.Select(p_ => "operand_" + ++i + "->coords_->toString()"))) : "\"\"") + @";
-";
-                    }
-                    else if (prod.Command is Grammar.Command)
-                    {
-                        retval += @"
-            retval += ""def " + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name) + @""" + case_coords->toString() + """ + "" + @" : " + prod.Command.Production + " := " + prod.Command.ToLeanConstructor() + @" " + @""" + " + (this.Productions.Count > 0 ? string.Join(" + ", (this.Productions.Select(p_ => "operand_" + ++i + "->coords_->toString()"))) : "\"\"") + @";
-";
-
-                    }
-                    return retval;
-                };
-            }
-
-            public void ParseInterpTranslation(string toParse)
-            {
-                /*{1=2,Command}*/
-                toParse = toParse.Replace("<", "").Replace(">", "");
-
-                var spl = toParse.Split(',');
-
-                var parsed = Regex.Match(spl[0], @"(?:(\d*)([^0-9]*))*");
-
-                this.InterpTranslation = (prod, sp, spobj, spinst) =>
-                {
-                    var defaultStr = (sp == default(Space) || spobj == default(Space.SpaceObject)) ? "_" : sp.Prefix + spobj.Name + "Default";
-                    var hasDefault = spl[1].Contains("D");
-                    var hasIndex = spl[1].Contains("I");
-                    int i = 0;
-                    var retval = "";
-                    if (sp == default(Space) || spobj == default(Space.SpaceObject))
-                    {
-                        retval = @"
-            auto case_coords = dynamic_cast<coords::" + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name) + @"*>(this->coords_);
-            retval += ""def " + @""" + case_coords->toString() + "" : ^ := ""
-             + " + (hasDefault ? "\" " + spl[1][0] + defaultStr + " \"" :
-                            hasIndex ? "\"" + spl[1][0] + "\"" + "+ std::to_string(++GLOBAL_INDEX)" :
-                                            spl[0] == "I" ?
-                                                string.Join("+ \"" + spl[1] + "\" +", this.Productions.Select(p_ => "\"(" + "\" + operand_" + ++i + "->coords_->toString() + \")\"")) :
-                                            spl[0] == "B" ? "+ \"(" + spl[1][0] + "(\"+this->operand_1->coords_->toString()+\"))"+spl[1][1]+"(" + spl[1][2]+"(\"+this->operand_2->coords_->toString()+\"))\";" :
-                                            spl[0] == "A" ?
-                                                string.Join(" ", this.Productions.Select(p_ => "\" (" + "\" + operand_" + ++i + "->coords_->toString() + \") + \"")) + " + \"" + spl[1] + "\"" :
-                                                "\"" + spl[1] + "\" " + string.Join(" ", this.Productions.Select(p_ => "+ \"("  + "\" + operand_" + ++i + "->coords_->toString() + \")\""))) + @";
-            //return retval;
-    ";
-                    }
-                    else
-                    {
-                        retval = @"
-            auto case_coords = dynamic_cast<coords::" + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name) + @"*>(this->coords_);
-            retval += ""def " + @""" + case_coords->toString() + "" : " + sp.Prefix + spobj.Name + spl[2] + @" "" +  "" := ""
-             + " + (hasDefault ? "\" " + spl[1][0] + "(" + defaultStr + " (Eval"+ sp.Prefix +"SpaceExpression " + spinst.FieldValues[0] + "sp)) \"" :
-                            hasIndex ? "\" " + spl[1][0] + "\"" + "+ std::to_string(++GLOBAL_INDEX)" :
-                                            (spl[0] == "I" ?
-                                                string.Join("+ \"" + spl[1] + "\" +", this.Productions.Select(p_ => "\"(" + "\" + operand_" + ++i + "->coords_->toString() + \") \"")) :
-                                            spl[0] == "A" ?
-                                                string.Join(" ", this.Productions.Select(p_ => "\"(" + "\" + operand_" + ++i + "->coords_->toString() + \") \" + ")) + "\" " + spl[1] + " \"" :
-                                                "\" " + spl[1] + "\" " + string.Join(" ", this.Productions.Select(p_ => "+ \"(" + "\" + operand_" + ++i + "->coords_->toString() + \")\"")))) + @";
-            //return retval;
-    ";
-                    }
-                    if (this.Command is Grammar.Command && prod.Command is Grammar.Command)
-                    {
-                        retval += @"
-            retval += ""def " + @""" + case_coords->toString() + """ + this.Command.NameSuffix + "" + @" : " + this.Command.Production + " := " + this.Command.ToLeanConstructor() + @" " + @""" + " + (this.Productions.Count > 0 ? string.Join(" + ", (this.Productions.Select(p_ => "operand_" + ++i + "->coords_->toString()"))) : "\"\"") + @";
-";
-                        retval += @"
-            retval += ""def " + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name) + @""" + case_coords->toString() + """ + "" + @" : " + prod.Command.Production + " := " + prod.Command.ToLeanConstructor() + @" " + @""" + case_coords->toString() + """ + this.Command.NameSuffix + "\";";
-
-                    }
-                    else if (this.Command is Grammar.Command)
-                    {
-                        retval += @"
-            retval += ""def " + @""" + case_coords->toString() + """ + "" + @" : " + this.Command.Production + " := " + this.Command.ToLeanConstructor() + @" " + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name) + @""" + case_coords->toString();
-";
-                    }
-                    else if(prod.Command is Grammar.Command)
-                    {
-                        retval += @"
-            retval += ""def " + @""" + case_coords->toString() + """ + "" + @" : " + prod.Command.Production + " := " + prod.Command.ToLeanConstructor() + @" " + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name) + @""" + case_coords->toString();
-";
-
-                    }
-
-
-                    return retval;
-                };
-            }
-        }
-
-    }
-
-    /*
-     * 
---Define instantiable spaces
-
-{	
-	EuclideanGeometry, Euclidean,{Name,Dimension},Geometric
-	ClassicalTime, Affine, {Name},Time
-	ClassicalVelocity, Vector, {Name,Dimension},Velocity
-},
---Define instances
-{
-	EuclideanGeometry,{geom3d,3}
-	ClassicalTime,{time},
-	ClassicalVelocity,{vel,3}
-}
-     * 
-     * */
-
-    public class Space
-    {
-        public string Name { get; set; }
-        public SpaceCategory Category { get; set; }
-
-        public enum FieldType
-        {
-            Name = 1,
-            Dimension = 2
-        }
-
-        public int FieldMask { get; set; }
-
-        public bool MaskContains(FieldType ft)
-        {
-            return (this.FieldMask & (int)ft) == (int)ft;
-        }
-
-        public string Prefix { get; set; }
-
-        public SpaceCategory Inherits { get; set; }
-
-
-        public class SpaceCategory
-        {
-            public string Category { get; set; }
-
-            public List<SpaceObject> Objects = new List<SpaceObject>();
-
-            public void Add(SpaceObject o)
-            {
-                if (!Objects.Any(o_ => o_.Name == o.Name))
-                    this.Objects.Add(o);
-            }
-
-        }
-
-        public class SpaceObject
-        {
-            public string Name { get; set; }
-
-            public bool HasFrame { get; set; }
-
-            public bool IsTransform { get; set; }
-
-            public bool IsMap { get; set; }
-        }
-
-        public static void PropagateInheritance(List<Space> curSpaces, List<Space> allSpaces)
-        {
-            foreach(var sp in curSpaces)
-            {
-                if (sp.Inherits != default(SpaceCategory))
-                    sp.Inherits.Objects.ForEach(o_ => sp.Category.Add(o_));
-                PropagateInheritance(allSpaces.Where(sp_ => sp_.Inherits == sp.Category).ToList(), allSpaces);
-            }
-        }
-
-        public static Dictionary<Space, SpaceObject> RetrieveInheritedObjects(Space sp, SpaceObject obj, List<Space> allSpaces)
-        {
-            Dictionary<Space, SpaceObject> curLevel = new Dictionary<Space, SpaceObject>();
-
-            curLevel[sp] = obj;
-
-            foreach(var child in allSpaces.Where(sp_ => sp_.Inherits == sp.Category))
-            {
-                curLevel.Add(child, child.Category.Objects.Single(ob_ => ob_ == obj));
-
-                var next = RetrieveInheritedObjects(child, obj, allSpaces);
-
-                next.Keys.ToList().ForEach(key => curLevel[key] = next[key] );
-            }
-
-            return curLevel;
-        }
-
-        public class SpaceInstance
-        {
-            public string TypeName { get; set; }
-            public string InstanceName { get; set; }
-            public List<string> FieldValues = new List<string>();
-        }
-    }
-
-    public class MonoHack
-    {
-        public Space Item1 {get; set;}
-        public Space.SpaceObject Item2 {get; set;}
-    }
+   // public class 
 
     public class Peirce
     {
+        public static string Join<JoinType>(string joinstr, IEnumerable<JoinType> args, Func<JoinType, string> mapper) 
+            //where JoinType : new()
+        {
+            return string.Join(joinstr, args.Select(mapper));
+        }
+
         public Peirce()
         {
 
             Grammar = new Grammar();
             Spaces = new List<Space>();
             SpaceToObjectMap = new Dictionary<Space, Space.SpaceObject>();
-            GrammarRuleToSpaceObjectMap = new Dictionary<Grammar.Production, List<MonoHack>>();
-            SpaceInstances = new List<Space.SpaceInstance>();
+            GrammarRuleToSpaceObjectMap = new Dictionary<Grammar.Production, List<(Space, Space.SpaceObject)>>();
+           // SpaceInstances = new List<Space.SpaceInstance>();
             Categories = new List<Space.SpaceCategory>();
+            MatcherProductions = new List<MatcherProduction>();
         }
 
         public Grammar Grammar { get; set; }
         public List<Space> Spaces { get; set; }
 
-        public List<Space.SpaceInstance> SpaceInstances { get; set; }
+       // public List<Space.SpaceInstance> SpaceInstances { get; set; }
 
         public List<Space.SpaceCategory> Categories { get; set; }
 
         public Dictionary<Space, Space.SpaceObject> SpaceToObjectMap;
 
-        public Dictionary<Grammar.Production, List<MonoHack>> GrammarRuleToSpaceObjectMap { get; set; }
+        public Dictionary<Grammar.Production, List<(Space, Space.SpaceObject)>> GrammarRuleToSpaceObjectMap { get; set; }
+
+        public List<MatcherProduction> MatcherProductions;
     }
 
     public class ParsePeirce
     {
-        public static readonly string GrammarFile = @"/peirce/PeirceGen/Grammar";
+        public static readonly string GrammarFile = Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\GrammarEmpty";
 
         public static readonly Peirce Instance = new Peirce();
         
@@ -696,7 +325,7 @@ namespace PeirceGen
              * 
              * */
 
-            var remaining_config = File.ReadAllLines(ParsePeirce.GrammarFile).ToList();
+            var remaining_config = File.ReadAllLines(GrammarFile).ToList();
 
             var next_split = remaining_config.IndexOf("####");
 
@@ -738,6 +367,13 @@ namespace PeirceGen
             next_split = remaining_config.IndexOf("####");
 
             var ast_to_default_domain_object_map = remaining_config.ToList();
+
+            remaining_config = remaining_config.Skip(next_split + 1).ToList();
+            next_split = remaining_config.IndexOf("####");
+
+            var matcherconfig = remaining_config.ToList();
+
+            ParseMatchers.ParseRaw(matcherconfig);
         }
     
 
@@ -798,7 +434,6 @@ namespace PeirceGen
 	                            +REAL4_EXPR |
 	                            +MATRIX_EXPR
                          * */
-                        var ct = Grammar.TokenToCaseTypeMap(toks);
 
                         bool isFuncDeclare = toks[0][0] == 'f';
                         if (isFuncDeclare)
@@ -806,33 +441,48 @@ namespace PeirceGen
                         bool isTransDeclare = toks[0][0] == 't';
                         if (isTransDeclare)
                             toks[0] = toks[0].Substring(1);
-                   
-
+                        bool isVarDeclare = toks[0][0] == 'v';
+                        if (isVarDeclare)
+                            toks[0] = toks[0].Substring(1);
 
                         var linkSpace = (toks.Count > 1 && toks[1][1] == 's');
                         if(linkSpace)
                         {
                             toks[1] = toks[1][0] + toks[1].Substring(2);
                         }
+                        var ct = Grammar.TokenToCaseTypeMap(toks);
+
 
                         curCase = new Grammar.Case()
                         {
                             CaseType = ct,
-                            Name = ct == 
-                                Grammar.CaseType.Real ? curProd.Name + (toks.Count) : 
-                                ct == Grammar.CaseType.Ident ? "IDENT" : 
+                            Name = //ct == 
+                               // Grammar.CaseType.Value ? curProd.Name + (valueCount) : 
+                                 //? "IDENT" : 
                                 ct == Grammar.CaseType.Pure || ct == Grammar.CaseType.Pure ? curProd.Name + "_" + string.Join("_", toks.Select(t_ => Grammar.TrimProductionType(t_))) :
                                 string.Join("_", toks.Select(t_ => Grammar.TrimProductionType(t_))),
-                            ProductionRefs = ct == Grammar.CaseType.Hidden || ct == Grammar.CaseType.Op || ct == Grammar.CaseType.ArrayOp ? toks.Skip(1).ToList() : ct == Grammar.CaseType.Inherits || ct == Grammar.CaseType.Array || ct == Grammar.CaseType.Pure || ct == Grammar.CaseType.Real || ct == Grammar.CaseType.Passthrough ? toks : new List<string>(),
+                            ProductionRefs = 
+                                ct == Grammar.CaseType.Hidden || 
+                                ct == Grammar.CaseType.Op || 
+                                ct == Grammar.CaseType.ArrayOp ? toks.Skip(1).ToList() : ct == Grammar.CaseType.Inherits || 
+                                ct == Grammar.CaseType.Array || 
+                                ct == Grammar.CaseType.Pure || 
+                               // ct == Grammar.CaseType.Value || 
+                                ct == Grammar.CaseType.Passthrough ? toks 
+                                    : new List<string>(),
                             Productions = new List<Grammar.Production>(), //fix this.... these need to "resolve" incrementally
                             Description = captionmatch.Groups.Count > 2 ? captionmatch.Groups[3].Value : ""
                             , CoordsToString = (p) => { return "\"Not implemented\";"; },
-                             InterpTranslation = (p, s, sp, spi) => { return "\"Not implemented\";"; },
+                             InterpTranslation = (p, s, sp) => { return "\"Not implemented\";"; },
+                              Production = curProd,
                               Command = cmd,
                               IsTranslationDeclare = isTransDeclare,
                               IsFuncDeclare = isFuncDeclare,
-                              LinkSpace = linkSpace
-                               
+                               IsVarDeclare = isVarDeclare,
+                              LinkSpace = linkSpace,
+                              // ValueType = valueType,
+                              // ValueCount = valueCount,
+                              // ValueDefault = valueDefault
                         };
 
                         if (coordsandinterp.Count == 2) {
@@ -874,17 +524,42 @@ namespace PeirceGen
                         bool isTransDeclare = fixedline[1] == 't';
                         if (isTransDeclare)
                             fixedline = fixedline[0] + fixedline.Substring(2);
+                        bool isVarDeclare = fixedline[1] == 'v';
+                        if (isVarDeclare)
+                            fixedline = fixedline[0] + fixedline.Substring(2);
+                        //Console.WriteLine(fixedline);
+
+                        var toksvcheck = fixedline.Replace(" :=", "").Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries).ToList();
+
+                        var valueType = "";
+                        var valueCount = 0;
+                        var valueDefault = "";
+                        Grammar.ValueContainer vc = default(Grammar.ValueContainer);
+                        if (toksvcheck.Count > 1)
+                        {
+                            var vstr = toksvcheck[1].Substring(toksvcheck[1].IndexOf("(") + 1, toksvcheck[1].Length - toksvcheck[1].IndexOf("(") - 2).Split(',');
+                            valueType = vstr[0];
+                            valueCount = int.Parse(vstr[1]);
+                            if (vstr.Length > 2)
+                                valueDefault = vstr[2];
+
+                            vc = new Grammar.ValueContainer() { ValueCount = valueCount, ValueDefault = valueDefault, ValueType = valueType };
+                        }
 
                         curProd = new Grammar.Production()
                         {
                             ProductionType = Grammar.TokenToProductionTypeMap[fixedline[0]],
 
-                            Name = Grammar.TrimProductionType(fixedline.Substring(0, last)).Trim(),
+                            Name = Grammar.TrimProductionType(toksvcheck[0]).Trim(),
                             HasPassthrough = false,
                             Passthrough = default(Grammar.Production),
                              Command = cmd,
                             IsTranslationDeclare = isTransDeclare,
-                            IsFuncDeclare = isFuncDeclare
+                            IsFuncDeclare = isFuncDeclare,
+                             IsVarDeclare = isVarDeclare,
+                              Cases = new List<Grammar.Case>(),
+                               ValueContainer = vc
+                               
                         };
 
                         Instance.Grammar.Productions.Add(curProd);
@@ -893,20 +568,20 @@ namespace PeirceGen
                 var t = default(List<Grammar.Production>);
                 foreach (var prod in Instance.Grammar.Productions)
                 {
-                    if(prod.ProductionType == Grammar.ProductionType.Single)
+                    if(prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                     {
                         prod.Name = prod.Name + "_" + prod.Cases[0].Name;
                     }
 
                     foreach (var pcase in prod.Cases)
                     {
-                        if (pcase.CaseType == Grammar.CaseType.Real)
-                            continue;
+                        //if (pcase.CaseType == Grammar.CaseType.Value)
+                        //    continue;
 
                         foreach (var pref in pcase.ProductionRefs)
                         {
                             t = Instance.Grammar.Productions.Where(p_ => p_.Name == Grammar.TrimProductionType(pref)).ToList();
-
+                            Console.WriteLine(pcase.Name + " " + pref);
                             pcase.Productions.Add(Instance.Grammar.Productions.Single(p_ => p_.Name == Grammar.TrimProductionType(pref)));
                         }
 
@@ -926,7 +601,7 @@ namespace PeirceGen
                 }
             }
             catch(Exception ex) {
-                Console.WriteLine(ex.Message);
+                Console.WriteLine(ex.StackTrace);
             }
         }
 
@@ -981,14 +656,16 @@ namespace PeirceGen
                         status = exSpace;
                     else if (status == space && !string.IsNullOrEmpty(fixedline))
                     {
-                        //EuclideanGeometry, Euclidean,{Name,Dimension},Geometric
+                        //EuclideanGeometry, Euclidean,{Dimension=*},Geometric
                         var stripped = Regex.Replace(fixedline, @"\s+", "");
                         var spl = stripped.Split(',');
 
 
                         var pattern = Regex.Escape("{") + "(.*)" + Regex.Escape("}");
                         var fieldsmatch = Regex.Match(spl[2], pattern).Groups[1].Value.Split('-').ToList();
-                        var fields = fieldsmatch.Select(f => Enum.Parse(typeof(Space.FieldType), f));
+
+
+                        //var fields = fieldsmatch.Select(f => Enum.Parse(typeof(Space.FieldType), f));
 
 
                         if (!Instance.Categories.Any(c => c.Category == spl[1]))
@@ -1001,7 +678,37 @@ namespace PeirceGen
                              
                         };
 
-                        fields.ToList().ForEach(f => sp.FieldMask = sp.FieldMask | (int)f);
+                        if (fieldsmatch.Any(x => x.Contains("Dimension")))
+                        {
+                            var dimmatch = fieldsmatch.Single(x => x.Contains("Dimension"));
+                            var dimval = dimmatch.Split('=')[1];
+                            if (dimval == "*")
+                            {
+                                sp.DimensionType = Space.DimensionType_.ANY;
+                            }
+                            else
+                            {
+                                sp.DimensionType = Space.DimensionType_.Fixed;
+                                sp.FixedDimension = int.Parse(dimval);
+                            }
+                        }
+                        else
+                        {
+                            sp.DimensionType = Space.DimensionType_.ANY;
+                        }
+                        
+                        if (fieldsmatch.Any(x => x.Contains("Derived")))
+                        {
+                            var dimmatch = fieldsmatch.Single(x => x.Contains("Derived"));
+                            var dimval = bool.Parse(dimmatch.Split('=')[1]);
+                            sp.IsDerived = dimval;
+                        }
+                        else
+                        {
+                            sp.IsDerived = false;
+                        }
+
+                        //fields.ToList().ForEach(f => sp.FieldMask = sp.FieldMask | (int)f);
 
                         Instance.Spaces.Add(sp);
 
@@ -1021,14 +728,14 @@ namespace PeirceGen
                         var fieldsmatch = Regex.Match(spl[2], pattern).Groups[1].Value.Split('-').ToList();
                         var fields = fieldsmatch;// fieldsmatch.Select(f => Enum.Parse(typeof(Space.FieldType), f));
 
-
+                        /*
                         //EuclideanGeometry,{geom3d,3}
                         Instance.SpaceInstances.Add(new Space.SpaceInstance()
                         {
                             TypeName = spl[0],
                             InstanceName = spl[1],
                             FieldValues = fields
-                        });
+                        });*/
                     }
                     else if (status == instance && end(fixedline))
                         break;
@@ -1161,7 +868,8 @@ namespace PeirceGen
 
                         var prodName = Grammar.TrimProductionType(stripped.Split('=')[0]);
 
-                        var prod = Instance.Grammar.Productions.Single(prod_ => prod_.Name == prodName || (prod_.ProductionType == Grammar.ProductionType.Single) && prod_.Name.Contains(prodName));
+                        var prod = Instance.Grammar.Productions.Single(prod_ => prod_.Name == prodName || 
+                            (prod_.ProductionType == Grammar.ProductionType.Single || prod_.ProductionType == Grammar.ProductionType.CaptureSingle) && prod_.Name.Contains(prodName));
 
                         var match = Regex.Match(stripped.Split('=')[1], pattern).Groups[1].Value;
 
@@ -1178,8 +886,8 @@ namespace PeirceGen
 
 
                                 var spaceObjDict = Space.RetrieveInheritedObjects(sp, obj, Instance.Spaces);
-                                Instance.GrammarRuleToSpaceObjectMap[prod] = Instance.GrammarRuleToSpaceObjectMap.ContainsKey(prod) ? Instance.GrammarRuleToSpaceObjectMap[prod]: new List<MonoHack>();
-                                spaceObjDict.Keys.ToList().ForEach(key => Instance.GrammarRuleToSpaceObjectMap[prod].Add(new MonoHack(){Item1=key, Item2=spaceObjDict[key]}));
+                                Instance.GrammarRuleToSpaceObjectMap[prod] = Instance.GrammarRuleToSpaceObjectMap.ContainsKey(prod) ? Instance.GrammarRuleToSpaceObjectMap[prod]: new List<(Space, Space.SpaceObject)>();
+                                spaceObjDict.Keys.ToList().ForEach(key => Instance.GrammarRuleToSpaceObjectMap[prod].Add((key, spaceObjDict[key])));
                             }
                         }
                     }
@@ -1195,6 +903,12 @@ namespace PeirceGen
             //var initial = Instance.Spaces.Where(s_ => s_.Inherits == default(Space.SpaceCategory)).ToList();
 
            // Space.PropagateInheritance(initial, Instance.Spaces);
+        }
+    
+    
+        static void MatcherMaps()
+        {
+
         }
     }
 }

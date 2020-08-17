@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -29,6 +30,7 @@ namespace PeirceGen.Generators
 # include <iostream>
 # include <g3log/g3log.hpp>
 # include <vector>
+#include <memory>
 
 //using namespace std;
 using namespace oracle;
@@ -62,23 +64,22 @@ using namespace oracle;
 domain::DomainObject* Oracle_AskAll::getInterpretation(coords::Coords* coords, domain::DomainObject* dom){
 
 ";
-            var spInstances = ParsePeirce.Instance.SpaceInstances;
 
             var ifstub = "\tif(false){}";
 
            // file += getinterpretation + "\n\t" + ifstub + "\n\t";
 
-            //TOPOLOGICAL SORT AND CRAWL UP TREE
             var prodcopy = default(List<Grammar.Production>);
 
             prodcopy = new List<Grammar.Production>(ParsePeirce.Instance.Grammar.Productions);
             file += getinterpretation + ifstub;
             var getters = "";
-            foreach(var prod in ParsePeirce.Instance.Grammar.Productions.Where(p_ => p_.HasPassthrough == false))
+            foreach(var prod in ParsePeirce.Instance.Grammar.Productions.Where(p_ => p_.ProductionType == Grammar.ProductionType.Capture || p_.ProductionType == Grammar.ProductionType.CaptureSingle))
             {
                 var cur = prod;
 
-                while(cur != default(Grammar.Production) && prodcopy.Any(p_ => p_.Name == cur.Name))
+                while(cur != default(Grammar.Production) && prodcopy.Any(p_ => p_.Name == cur.Name)
+                    && (cur.ProductionType == Grammar.ProductionType.Capture || cur.ProductionType == Grammar.ProductionType.CaptureSingle))
                 {
                     prodcopy.Remove(cur);
 
@@ -125,26 +126,26 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                             var selectFrame = 
 
                             choices += "" + @"
-    std::cout<<""(" + ++i + @")""<<""@@" + sppair.Item1.Prefix + sppair.Item2.Name + "(" + inst.InstanceName + @")\n"";";
+    std::cout<<""(" + ++i + @")""<<""@@" + sppair.Item1.Name + sppair.Item2.Name + "(" + inst.InstanceName + @")\n"";";
                         cases += @"
             case " + ++j + @" : 
             {
             domain::" + sppair.Item1.Name + @"* " + inst.InstanceName + @" = (domain::"+sppair.Item1.Name+@"*)this->domain_->getSpace(""" + inst.InstanceName + @""");
-            auto ret = this->domain_->mk" + sppair.Item1.Prefix + sppair.Item2.Name + "(" + inst.InstanceName + @");" + 
+            auto ret = this->domain_->mk" + sppair.Item1.Name + sppair.Item2.Name + "(" + inst.InstanceName + @");" + 
                 (sppair.Item2.HasFrame ? @"
-            auto frame = (domain::" + sppair.Item1.Prefix + @"Frame*)this->getFrame(" + inst.InstanceName + @"); 
+            auto frame = (domain::" + sppair.Item1.Name + @"Frame*)this->getFrame(" + inst.InstanceName + @"); 
             ret->setFrame(frame);" : "")
             + @"
             }"; 
                         });*/
 
                         choices += @"
-    std::cout<<""(" + ++i + @")""<<""@@" + sppair.Item1.Prefix + sppair.Item2.Name + "(" + @")\n"";";
+    std::cout<<""(" + ++i + @")""<<""@@" + sppair.Item1.Name + sppair.Item2.Name + "(" + @")\n"";";
                         cases += @"
             case " + ++j + @" : 
             {
                 std::vector<domain::" + sppair.Item1.Name + @"*> spaces = this->domain_->get" + sppair.Item1.Name + @"Spaces();
-                while(true){
+                while(spaces.size()>0){
                     int sp_choice = 0;
                     int index = 0;
 
@@ -161,9 +162,70 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                     if(sp_choice >0 and sp_choice <= index){
                         auto sp = index_to_sp[sp_choice];" +
                             (sppair.Item2.HasFrame ? @"
-                        auto ret = this->domain_->mk" + sppair.Item1.Prefix + sppair.Item2.Name + @"(sp);
-                        auto frame = (domain::" + sppair.Item1.Prefix + @"Frame*)this->getFrame(sp); 
-                        ret->setFrame(frame);
+                        " + (cur.HasValueContainer() ? "std::shared_ptr<"+cur.GetPriorityValueContainer().ValueType + "> cp[" + cur.GetPriorityValueContainer().ValueCount + @"];
+                                auto vals = ((coords::ValueCoords<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + @">*)coords)->getValues();
+                                for(int idx = 0;idx < " + cur.GetPriorityValueContainer().ValueCount + @";idx++){
+                                    cp[idx] = vals[idx] ? std::make_shared<" + cur.GetPriorityValueContainer().ValueType + @">(*vals[idx]) : nullptr;
+                                }
+                    " : "") + @"
+
+                        auto ret = this->domain_->mk" + sppair.Item1.Name + sppair.Item2.Name + 
+                            (cur.HasValueContainer() ? 
+                                "<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + ">" : "") 
+                                + @"(sp" + (cur.HasValueContainer() ? ",cp" : "") + @");
+                        //delete[] cp;
+                        auto frame = (domain::" + sppair.Item1.Name + @"Frame*)this->getFrame(sp); 
+                        ret->setFrame(frame);"
++ (cur.HasValueContainer() ? new List<string>() {"one" }.Select(x =>
+{
+                            var query = @"
+                        std::cout<<""Provide Values For Interpretation? (1) Yes(2) No\n"";
+                        try{
+                            int vchoice = 0;
+                            std::cin >> vchoice;
+                            if (vchoice == 1)
+                            {
+                                for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
+                                {
+                                    std::cout << ""Enter Value "" << i << "":\n"";
+                                    " + cur.GetPriorityValueContainer().ValueType + @" val = 4;
+                                    std::cin >> val;
+                                    //" + cur.GetPriorityValueContainer().ValueType + @"* vc = new float(valvc);
+                                    ret->setValue(val, i);
+                                    //delete vc;
+                                }
+                            }
+                        }
+                        catch(std::exception ex){
+                            return ret;
+                        }
+/*
+    while (true){
+                            std::cout<<""Provide Values For Interpretation? (1) Yes (2) No\n"";
+                            int vchoice = 0;
+                            std::cin>>vchoice;
+                            if(vchoice == 1){
+                                for(int i = 0; i<" + cur.GetPriorityValueContainer().ValueCount + @";i++){
+                                    std::cout<<""Enter Value ""<<i<<"":\n"";
+                                    " + cur.GetPriorityValueContainer().ValueType + @" valvc;
+                                    std::cin>>valvc;
+                                    " + cur.GetPriorityValueContainer().ValueType + @"* vc;
+                                    ret->setValue(vc, i);
+                                    delete vc;
+                                }
+                                break;
+                            }
+                            else if(vchoice == 0){
+                                break;
+                            }
+                            else if(vchoice != 0)
+                                continue;
+                        }*/
+                        ";
+
+
+                            return query;
+                        }).First() : "") +@"
                         return ret;" : 
                             sppair.Item2.IsTransform ? @"
                         while(true){
@@ -191,18 +253,150 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
 
                             if(dom_choice >0 and dom_choice <= dom_index and cod_choice >0 and cod_choice <= cod_index){
                                 auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
-                                auto ret = this->domain_->mk" + sppair.Item1.Prefix + sppair.Item2.Name + @"(mapsp);
+                                " + (cur.HasValueContainer() ? "std::shared_ptr<" + cur.GetPriorityValueContainer().ValueType + "> cp[" + cur.GetPriorityValueContainer().ValueCount + @"];
+                                auto vals = ((coords::ValueCoords<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + @">*)coords)->getValues();
+                                for(int idx = 0;idx < " + cur.GetPriorityValueContainer().ValueCount + @";idx++){
+                                    cp[idx] = vals[idx] ? std::make_shared<" + cur.GetPriorityValueContainer().ValueType + @">(*vals[idx]) : nullptr;
+                                }" : "") + @"
+
+                                auto ret = this->domain_->mk" + sppair.Item1.Name + sppair.Item2.Name + (cur.HasValueContainer() ?
+                                "<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + ">" : "") + @"(mapsp" 
+                                    + (cur.HasValueContainer() ?
+                                        ",cp" : "") + @");
+                               // delete[] cp;
+"
++ (cur.HasValueContainer() ? new List<string>() { "one" }.Select(x =>
+{
+    var query = @"
+                        std::cout<<""Provide Values For Interpretation? (1) Yes(2) No\n"";
+                        try{
+                            int vchoice = 0;
+                            std::cin >> vchoice;
+                            if (vchoice == 1)
+                            {
+                                for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
+                                {
+                                    std::cout << ""Enter Value "" << i << "":\n"";
+                                    " + cur.GetPriorityValueContainer().ValueType + @" val = 4;
+                                    std::cin >> val;
+                                    //" + cur.GetPriorityValueContainer().ValueType + @"* vc = new float(valvc);
+                                    ret->setValue(val, i);
+                                    //delete vc;
+                                }
+                            }
+                        }
+                        catch(std::exception ex){
+                            return ret;
+                        }
+/*
+    while (true){
+                            std::cout<<""Provide Values For Interpretation? (1) Yes (2) No\n"";
+                            int vchoice = 0;
+                            std::cin>>vchoice;
+                            if(vchoice == 1){
+                                for(int i = 0; i<" + cur.GetPriorityValueContainer().ValueCount + @";i++){
+                                    std::cout<<""Enter Value ""<<i<<"":\n"";
+                                    " + cur.GetPriorityValueContainer().ValueType + @" valvc;
+                                    std::cin>>valvc;
+                                    " + cur.GetPriorityValueContainer().ValueType + @"* vc;
+                                    ret->setValue(vc, i);
+                                    delete vc;
+                                }
+                                break;
+                            }
+                            else if(vchoice == 0){
+                                break;
+                            }
+                            else if(vchoice != 0)
+                                continue;
+                        }*/
+                                ";
+
+
+    return query;
+}).First() : "") + @"
                                 return ret;
 
                             }
                         
                         }
                         " : @"
-                        auto ret = this->domain_->mk" + sppair.Item1.Prefix + sppair.Item2.Name + @"(sp);
+                        " + (cur.HasValueContainer() ? "std::shared_ptr<" + cur.GetPriorityValueContainer().ValueType + "> cp[" + cur.GetPriorityValueContainer().ValueCount + @"];
+                                auto vals = ((coords::ValueCoords<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + @">*)coords)->getValues();
+                                for(int idx = 0;idx < " + cur.GetPriorityValueContainer().ValueCount + @";idx++){
+                                    cp[idx] = vals[idx] ? std::make_shared<" + cur.GetPriorityValueContainer().ValueType + @">(*vals[idx]) : nullptr;
+                                }" : "") + @"
+
+                        auto ret = this->domain_->mk" + sppair.Item1.Name + sppair.Item2.Name +
+                            (cur.HasValueContainer() ? 
+                                "<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + ">" : "") 
+                                     + @"(sp" + (cur.HasValueContainer() ?
+                                        ",cp" : "") + @"); 
+                        //delete[] cp;
+" 
+                        
++ (cur.HasValueContainer() ? new List<string>() {"one" }.Select(x =>
+{
+    var query = @"
+                        std::cout<<""Provide Values For Interpretation? (1) Yes(2) No\n"";
+                        try{
+                            int vchoice = 0;
+                            std::cin >> vchoice;
+                            if (vchoice == 1)
+                            {
+                                for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
+                                {
+                                    std::cout << ""Enter Value "" << i << "":\n"";
+                                    " + cur.GetPriorityValueContainer().ValueType + @" val = 4;
+                                    std::cin >> val;
+                                    //" + cur.GetPriorityValueContainer().ValueType + @"* vc = new float(valvc);
+                                    ret->setValue(val, i);
+                                    //delete vc;
+                                }
+                            }
+                        }
+                        catch(std::exception ex){
+                            return ret;
+                        }
+/*
+    while (true){
+                            std::cout<<""Provide Values For Interpretation? (1) Yes (2) No\n"";
+                            int vchoice = 0;
+                            std::cin>>vchoice;
+                            if(vchoice == 1){
+                                for(int i = 0; i<" + cur.GetPriorityValueContainer().ValueCount + @";i++){
+                                    std::cout<<""Enter Value ""<<i<<"":\n"";
+                                    " + cur.GetPriorityValueContainer().ValueType + @" valvc;
+                                    std::cin>>valvc;
+                                    " + cur.GetPriorityValueContainer().ValueType + @"* vc;
+                                    ret->setValue(vc, i);
+                                    delete vc;
+                                }
+                                break;
+                            }
+                            else if(vchoice == 0){
+                                break;
+                            }
+                            else if(vchoice != 0)
+                                continue;
+                        }*/
+                        ";
+
+
+    return query;
+}).First() : "") + @"
+                        
                         return ret;")
                         + @"
             
                     }
+                }
+                if(spaces.size() == 0){
+                    std::cout<<""Invalid Annotation: No Available " + sppair.Item1.Name + @" Spaces!\n"";
+                    return nullptr;
+
+                    std::cout<<""Provide Another Intepretation\n"";
+                    goto choose;
                 }
             }";
                     }
@@ -225,7 +419,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                     //file += choices;
                     //file += ifclose;
                     END:
-                    cur = cur.Passthrough;
+                    cur = cur.GetTopPassthrough();
                 }
 
 
@@ -310,7 +504,7 @@ public:
                 //if (pcase.CaseType == Grammar.CaseType.Passthrough)
                 //  continue;
 
-                if (prod.ProductionType == Grammar.ProductionType.Single)
+                if (prod.ProductionType == Grammar.ProductionType.Capture || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                 {
 
 
@@ -321,7 +515,7 @@ public:
                 }
                 else
                 {
-
+                    continue;
                     var getstr = @"
     virtual domain::DomainObject* getInterpretationFor" + prod.Name + @"(coords::" + prod.Name + @"* coords, domain::DomainObject* dom);
 ";
@@ -346,12 +540,12 @@ private:
 
         public override string GetCPPLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/Oracle_AskAll.cpp";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Oracle_AskAll.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/Oracle_AskAll.h";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Oracle_AskAll.h";
         }
 
         public void GenBaseHeaderFile()
@@ -385,7 +579,7 @@ public:";
                 //{
                 //if (pcase.CaseType == Grammar.CaseType.Passthrough)
                 //  continue;
-                if (prod.ProductionType == Grammar.ProductionType.Single)
+                if (prod.ProductionType ==  Grammar.ProductionType.Capture || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                 {
                     var getstr = @"
     virtual domain::DomainObject* getInterpretationFor" + prod.Name + @"(coords::" + prod.Name + @"* coords, domain::DomainObject* dom) = 0;
@@ -395,7 +589,7 @@ public:";
                 }
                 else
                 {
-
+                    continue;
                     var getstr = @"
     virtual domain::DomainObject* getInterpretationFor" + prod.Name + @"(coords::" + prod.Name + @"* coords, domain::DomainObject* dom) = 0;
 ";
@@ -417,7 +611,7 @@ public:";
 
         public string GetBaseHeaderLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/Oracle.h";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Oracle.h";
         }
     }
 }

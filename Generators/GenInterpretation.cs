@@ -11,13 +11,12 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-
-            return @"/peirce/PeirceGen/symlinkme/Interpretation.cpp";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Interpretation.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/Interpretation.h";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Interpretation.h";
         }
         public override void GenCpp()
         {
@@ -48,7 +47,7 @@ Establish interpretations for AST nodes:
 
 //#include <g3log/g3log.hpp>
 #include <unordered_map>
-
+#include <memory>
 using namespace interp;
 
 Interpretation::Interpretation() { 
@@ -63,6 +62,21 @@ Interpretation::Interpretation() {
     interp2domain_ = new interp2domain::InterpToDomain();
     checker_ = new Checker(this);
 }
+
+std::string Interpretation::toString_AST(){
+    //this should technically be in Interp but OKAY this second
+    std::string math = """";
+
+    math += ""import .lang.imperative_DSL.physlang\n\n"";
+    math += ""noncomputable theory\n\n"";
+            math += ""def "" + interp::getEnvName() + "" := init_env"";
+            //math += interp->toString_Spaces();
+            //math += interp->toString_PROGRAMs();
+            math += this->toString_COMPOUND_STMTs();
+
+            return math;
+        };
+
 
 ";
             /*
@@ -93,18 +107,21 @@ Interpretation::Interpretation() {
 
                     switch (prod.ProductionType)
                     {
+                        case Grammar.ProductionType.CaptureSingle:
                         case Grammar.ProductionType.Single:
                             {
                                 int i = 0, j = 0, k = 0, l = 0, m = 0, n = 0, o = 0, p = 0;
                                 var mkstr =
 
             @"void Interpretation::mk" + prod.Name + @"(const ast::" + prod.Name + @" * ast " + (pcase.Productions.Count > 0 ? "," +
-            string.Join(",", pcase.Productions.Select(p_ => "ast::" + p_.Name + "* operand" + ++i)) : "") + @") {
+            string.Join(",", pcase.Productions.Select(p_ => "ast::" + p_.Name + "* operand" + ++i)) : "") + (prod.HasValueContainer() ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "std::shared_ptr<" + prod.GetPriorityValueContainer().ValueType + "> value" + v /*+ "=nullptr"*/) : "") + @") {
 " + (pcase.Productions.Count > 0 ? "\n\t" +
             string.Join(";\n\t", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++j + "_coords = static_cast<coords::" + p_.Name + "*>(ast2coords_->" + ( p_.ProductionType == Grammar.ProductionType.Single || (p_.IsVarDeclare || p_.IsTranslationDeclare || p_.IsFuncDeclare) ? "getDeclCoords" : "getStmtCoords" ) + @"(operand" + j + "));")) : "") + @"
 
     coords::" + prod.Name + @"* coords = ast2coords_->mk" + prod.Name + @"(ast, context_ " + (pcase.Productions.Count > 0 ? "," +
-            string.Join(",", pcase.Productions.Select(p_ => "operand" + ++k + "_coords")) : "") + @");
+            string.Join(",", pcase.Productions.Select(p_ => "operand" + ++k + "_coords")) : "") + (prod.HasValueContainer() ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "value" + v) : "") + @");
 " + (pcase.Productions.Count > 0 ? "\n\t" +
             string.Join("\n\t", pcase.Productions.Select(p_ => "domain::DomainObject* operand" + ++l + "_dom = coords2dom_->get" + p_.Name + "(operand" + l + "_coords);")) : "") + @"
     domain::DomainObject* dom = domain_->mkDefaultDomainContainer({" + string.Join(",", pcase.Productions.Select(p_ => "operand" + ++p + "_dom")) + @"});
@@ -137,12 +154,22 @@ Interpretation::Interpretation() {
                                             var mkstr =
 
                         @"void Interpretation::mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast " + (pcase.Productions.Count > 0 ? "," +
-                        string.Join(",", pcase.Productions.Select(p_ => "ast::" + p_.Name + "* operand" + ++i)) : "") + @") {
-" + (pcase.Productions.Count > 0 ? "\n\t" +
-                        string.Join(";\n\t", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++j + "_coords = static_cast<coords::" + p_.Name + "*>(ast2coords_->" + ( p_.ProductionType == Grammar.ProductionType.Single || (p_.IsVarDeclare || p_.IsTranslationDeclare || p_.IsFuncDeclare)  ? "getDeclCoords" : "getStmtCoords" ) + @"(operand" + j + "));")) : "") + @"
+                        string.Join(",", pcase.Productions.Select(p_ => "ast::" + p_.Name + "* operand" + ++i)) : "") +
+                        (prod.HasValueContainer() ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "std::shared_ptr<" + prod.GetPriorityValueContainer().ValueType + "> value" + v /* + "=nullptr"*/) : "") + @") {
+"   /*+
+    (prod.HasValueContainer() ? 
+                        Peirce.Join("", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => prod.GetPriorityValueContainer().ValueType + "value" + v + "=value"+v+"?value"+v+":new "+ prod.GetPriorityValueContainer().ValueType+"();") : "")
+                        */
+
+    + (pcase.Productions.Count > 0 ? "\n\t" +
+                        string.Join(";\n\t", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++j + "_coords = static_cast<coords::" 
+                            + p_.Name + "*>(ast2coords_->" + ( p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle || (p_.IsVarDeclare || p_.IsTranslationDeclare || p_.IsFuncDeclare)  ? "getDeclCoords" : "getStmtCoords" ) + @"(operand" + j + "));")) : "") + @"
 
     coords::" + pcase.Name + @"* coords = ast2coords_->mk" + pcase.Name + @"(ast, context_ " + (pcase.Productions.Count > 0 ? "," +
-                        string.Join(",", pcase.Productions.Select(p_ => "operand" + ++k + "_coords")) : "") + @");
+                        string.Join(",", pcase.Productions.Select(p_ => "operand" + ++k + "_coords")) : "") +
+                        (prod.HasValueContainer() ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "value" + v) : "") + @");
 " + (pcase.Productions.Count > 0 ? "\n\t" +
                         string.Join("\n\t", pcase.Productions.Select(p_ => "domain::DomainObject* operand" + ++l + "_dom = coords2dom_->get" + p_.Name + "(operand" + l + "_coords);")) : "") + @"
     domain::DomainObject* dom =  domain_->mkDefaultDomainContainer({" + string.Join(",", pcase.Productions.Select(p_ => "operand" + ++p + "_dom")) + @"});
@@ -172,7 +199,8 @@ Interpretation::Interpretation() {
 
 void Interpretation::mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast , std::vector <ast::" + pcase.Productions[0].Name + @"*> operands) {
 //const ast::COMPOUND_STMT * ast , std::vector < ast::STMT *> operands 
-	//coords::" + pcase.Productions[0].Name + @"* operand1_coords = static_cast<coords::" + pcase.Productions[0].Name + @"*>(ast2coords_->" + (pcase.Productions[0].ProductionType == Grammar.ProductionType.Single || (pcase.IsVarDeclare || pcase.IsTranslationDeclare || pcase.IsFuncDeclare) ? "getDeclCoords" : "getStmtCoords") + @"(operands));
+	//coords::" + pcase.Productions[0].Name + @"* operand1_coords = static_cast<coords::" + pcase.Productions[0].Name + @"*>(ast2coords_->" 
++ (pcase.Productions[0].ProductionType == Grammar.ProductionType.Single || pcase.Productions[0].ProductionType == Grammar.ProductionType.CaptureSingle || (pcase.IsVarDeclare || pcase.IsTranslationDeclare || pcase.IsFuncDeclare) ? "getDeclCoords" : "getStmtCoords") + @"(operands));
 
     vector<coords::" + pcase.Productions[0].Name + @"*> operand_coords;
 
@@ -238,18 +266,21 @@ void Interpretation::mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast 
 
                                             break;
                                         }
-                                    case Grammar.CaseType.Real:
+                                    /*case Grammar.CaseType.Value:
                                         {
                                             int i = 0, j = 0, k = 0, l = 0, m = 0, n = 0, o = 0, p = 0;
                                             var mkstr =
 
-                        @"void Interpretation::mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast " + (pcase.Productions.Count > 0 ? "," +
-                        string.Join(",", pcase.Productions.Select(p_ => "ast::" + p_.Name + "* operand" + ++i)) : "") + @") {
+                        @"void Interpretation::mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast " + (pcase.ValueCount > 0 ? "," +
+                        Peirce.Join(",",Enumerable.Range(0, pcase.ValueCount),v=>pcase.ValueType + " operand"+v ):"") + @") {
 " + (pcase.Productions.Count > 0 ? "\n\t" +
-                        string.Join(";\n\t", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++j + "_coords = static_cast<coords::" + p_.Name + "*>(ast2coords_->" + (p_.ProductionType == Grammar.ProductionType.Single || (p_.IsVarDeclare || p_.IsTranslationDeclare || p_.IsFuncDeclare) ? "getDeclCoords" : "getStmtCoords") + @"(operand" + j + "));")) : "") + @"
+                        string.Join(";\n\t", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++j + "_coords = static_cast<coords::" + p_.Name + "*>(ast2coords_->" 
+                        + (p_.ProductionType == Grammar.ProductionType.Single || 
+                        p_.ProductionType == Grammar.ProductionType.CaptureSingle ||
+                        (p_.IsVarDeclare || p_.IsTranslationDeclare || p_.IsFuncDeclare) ? "getDeclCoords" : "getStmtCoords") + @"(operand" + j + "));")) : "") + @"
 
     coords::" + pcase.Name + @"* coords = ast2coords_->mk" + pcase.Name + @"(ast, context_ " + (pcase.ProductionRefs.Count > 0 ? "," +
-                        string.Join(",", pcase.ProductionRefs.Select(p_ => "" + ++k)) : "") + @");
+                        Peirce.Join(",", Enumerable.Range(0, pcase.ValueCount), v =>"operand"+v) : "") + @");
 " + (pcase.Productions.Count > 0 ? "\n\t" +
                         string.Join("\n\t", pcase.Productions.Select(p_ => "domain::DomainObject* operand" + ++l + "_dom = coords2dom_->get" + p_.Name + "(operand" + l + "_coords);")) : "") + @"
     domain::DomainObject* dom = domain_->mkDefaultDomainContainer({" + string.Join(",", pcase.Productions.Select(p_ => "operand" + ++p + "_dom")) + @"});
@@ -266,7 +297,7 @@ void Interpretation::mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast 
 
                                             file += mkstr + "\n\n";
                                             break;
-                                        }
+                                        }*/
                                 }
 
                                 break;
@@ -388,24 +419,19 @@ std::vector<std::string> Interpretation::getFrameNames() {
             //string.Join("\n\t", (ParsePeirce.Instance.SpaceInstances.Select(inst => "domain::"+inst.TypeName + " " + inst.InstanceName + string.Join(",",inst.FieldValues)))) 
             file += @"    
 void Interpretation::buildDefaultSpaces(){
-    " + string.Join("\n\t", (ParsePeirce.Instance.SpaceInstances.Select(inst => {
-                var monomono = new List<string>();
-                
-                monomono.Add(inst.InstanceName);
-                monomono.AddRange(inst.FieldValues);
+    " +/* string.Join("\n\t", (ParsePeirce.Instance.SpaceInstances.Select(inst => {
+                var fv = inst.FieldValues.Prepend(inst.InstanceName).ToArray();//ANDREW -- FIX YOUR CODE ! WOW. WHAT ON EARTH... 
 
-                //var fv = inst.FieldValues.Prepend(inst.InstanceName).ToArray();//ANDREW -- FIX YOUR CODE ! WOW. WHAT ON EARTH... 
+                fv[0] = @""""+ fv[0] + @"""";
+                fv[1] = @"""" + fv[1] + @"""";
 
-                monomono[0] = @""""+ monomono[0] + @"""";
-                monomono[1] = @"""" + monomono[1] + @"""";
-
-                return "auto " + inst.FieldValues[0] + "= domain_->mk" + inst.TypeName + "(" + string.Join(",", monomono) + @");
+                return "auto " + inst.FieldValues[0] + "= domain_->mk" + inst.TypeName + "(" + string.Join(",", fv) + @");
     auto i" + inst.FieldValues[0] + @" = new interp::Space(" + inst.FieldValues[0] + @");
     interp2domain_->putSpace(i" + inst.FieldValues[0] + @", " + inst.FieldValues[0] + @");
     auto standard_frame" + inst.FieldValues[0] + @" = " + inst.FieldValues[0] + @"->getFrames()[0];
     auto interp_frame" + inst.FieldValues[0] + @" = new interp::Frame(standard_frame" + inst.FieldValues[0] + @");
     interp2domain_->putFrame(interp_frame" + inst.FieldValues[0] + @", " + inst.FieldValues[0] + @"->getFrames()[0]);";
-            }))) +
+            }))) +*/
     @"
 
 
@@ -422,7 +448,7 @@ void Interpretation::buildSpace(){
     while((choice <= 0 or choice > size)){ 
         std::cout<<""Available types of Spaces to build:\n"";
         " +
-        string.Join("\n\t\t", (ParsePeirce.Instance.Spaces.Select(sp_=> "std::cout <<\"(\"<<std::to_string(++index)<<\")\"<<\"" +sp_.Name + "\";")))
+        string.Join("\n\t\t", (ParsePeirce.Instance.Spaces.Select(sp_=> "std::cout <<\"(\"<<std::to_string(++index)<<\")\"<<\"" +sp_.Name + "\\n\";")))
         +   @"
         std::cin>>choice;
     }
@@ -430,24 +456,90 @@ void Interpretation::buildSpace(){
     " + 
     string.Join("\n\t", ParsePeirce.Instance.Spaces.Select(sp_=>
     {
-        bool hasName = sp_.MaskContains(Space.FieldType.Name);
-        bool hasDim = sp_.MaskContains(Space.FieldType.Dimension);
+        //bool hasName = sp_.MaskContains(Space.FieldType.Name);
+        //bool hasDim = sp_.MaskContains(Space.FieldType.Dimension);
+        if (sp_.IsDerived)
+        {
+          var str = @"
+        if(choice==++index){
+            std::string name;
+            domain::Space *base1,*base2;
+            std::cout<<""Enter Name (string):\n"";
+            std::cin>>name;
+            int index = 0;
+            std::unordered_map<int, domain::Space*> index_to_sp;
+        " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp__ => "\n\tauto " + sp__.Name + @"s = domain_->get" + sp__.Name + @"Spaces();
+            for (auto it = " + sp__.Name + @"s.begin(); it != " + sp__.Name + @"s.end(); it++)
+            {
+                std::cout<<""(""<<std::to_string(++index)<<"")""<<(*it)->toString() + ""\n"";
+                index_to_sp[index] = *it;
+            }")) + @"
 
-        var str = @"
-    if(choice==++index){
-        " + 
-        (hasName ? @"
-        std::string name;
+            if(index==0){
+                std::cout<<""Unable to Proceed - No Existing Spaces\n"";
+                return;
+            }
+            int choice;
+            label1st:
+            std::cout<<""Select First Base Space : ""<<""\n"";
+            std::cin>>choice;
+            if(choice >0 and choice <=index){
+                base1 = index_to_sp[choice];
+            }
+            else
+                goto label1st;
+            
+            label2nd:
+            std::cout<<""Select Second Base Space : ""<<""\n"";
+            std::cin>>choice;
+            if(choice >0 and choice <=index){
+                base2 = index_to_sp[choice];
+            }
+            else
+                goto label2nd;
+            auto sp = this->domain_->mk" + sp_.Name + @"(name, name, base1, base2);
+            auto ib1 = this->interp2domain_->getSpace(base1);
+            auto ib2 = this->interp2domain_->getSpace(base2);
 
+            auto isp = new interp::DerivedSpace(sp, ib1, ib2);
+            interp2domain_->putSpace(isp, sp);
+            auto standard_framesp = sp->getFrames()[0];
+            auto interp_framesp = new interp::Frame(standard_framesp);
+            interp2domain_->putFrame(interp_framesp, sp->getFrames()[0]);
+        }
+";
+            return str;
+        }
+        else {
+            var str = @"
+        if(choice==++index){
+            std::string name;
+            std::cout<<""Enter Name (string):\n"";
+            std::cin>>name;
+            "
+            +
+            (sp_.DimensionType == Space.DimensionType_.ANY ? @"
+            int dimension;
+            std::cout<<""Enter Dimension (integer):\n"";
+            std::cin>>dimension;
+            auto sp = this->domain_->mk" + sp_.Name + @"(name, name, dimension);
+    " : @"
+            auto sp = this->domain_->mk" + sp_.Name + @"(name, name);")
+            +
+            @"
+            auto isp = new interp::Space(sp);
+            interp2domain_->putSpace(isp, sp);
+            auto standard_framesp = sp->getFrames()[0];
+            auto interp_framesp = new interp::Frame(standard_framesp);
+            interp2domain_->putFrame(interp_framesp, sp->getFrames()[0]);
+        }
 
-" : "") + (hasDim ? "int dimension;\n\t\t" : "")
-        +@"
-    }";
-        return "";
-    }))
-    +
+    " +
+        @"";
+            return str;
+        }
+    })) + 
     @"
-    
 }
 
 void Interpretation::buildFrame(){
@@ -521,7 +613,7 @@ void Interpretation::printFrames(){
 void Interpretation::mkVarTable(){
     int idx = 0;
   
-" + string.Join("\n\t", ParsePeirce.Instance.Grammar.Productions.Where(p => p.ProductionType != Grammar.ProductionType.Throw).Select(p => @"
+" + string.Join("\n\t", ParsePeirce.Instance.Grammar.Productions.Where(p => p.ProductionType == Grammar.ProductionType.Capture || p.ProductionType == Grammar.ProductionType.CaptureSingle).Select(p => @"
     for(auto it = this->" + p.Name + @"_vec.begin(); it != this->" + p.Name + @"_vec.end(); it++){
         this->index2coords_[++idx] = *it;
         (*it)->setIndex(idx);
@@ -539,9 +631,11 @@ void Interpretation::printVarTable(){
     coords::Coords* coords = this->index2coords_[i];
     if(false){}
 " +
-        string.Join("\n", ParsePeirce.Instance.Grammar.Productions.Where(p_ => p_.ProductionType != Grammar.ProductionType.Throw).SelectMany(p_ => (p_.Cases.Where(c_ => c_.CaseType != Grammar.CaseType.Passthrough).Select(c_ => @"
-    else if(auto dc = dynamic_cast<coords::" + (p_.ProductionType == Grammar.ProductionType.Single ? p_.Name : c_.Name) + @"*>(this->index2coords_[i])){
-        auto dom = (domain::DomainContainer*)this->coords2dom_->get" + (p_.ProductionType == Grammar.ProductionType.Single ? p_.Name : c_.Name) + @"(dc);
+        string.Join("\n", ParsePeirce.Instance.Grammar.Productions.Where(p_ => p_.ProductionType == Grammar.ProductionType.Capture || p_.ProductionType == Grammar.ProductionType.CaptureSingle).SelectMany(p_ => (p_.Cases.Where(c_ => c_.CaseType != Grammar.CaseType.Passthrough).Select(c_ => @"
+    else if(auto dc = dynamic_cast<coords::" + (p_.ProductionType == Grammar.ProductionType.Single || 
+        p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"*>(this->index2coords_[i])){
+        auto dom = (domain::DomainContainer*)this->coords2dom_->get" 
++ (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc);
         std::cout<<""Index: ""<<i<<"",""<<" + (string.IsNullOrEmpty(c_.Description) ? "" : @"""" + c_.Description + @",""<<") + @"dc->toString()<<"", SourceLocation:""<<dc->getSourceLoc()<<""\nExisting Interpretation: ""<<dom->toString()<<std::endl;
 
     }"))));
@@ -567,8 +661,9 @@ void Interpretation::updateVarTable(){
         //std::cout << ""********************************************\n"";
         std::cout << ""********************************************\n"";
         std::cout<<""Enter -1 to print Available Spaces\n"";
-        std::cout<<""Enter -2 to print Available Frames\n"";
-        std::cout<<""Enter -3 to create a New Frame\n"";
+        std::cout<<""Enter -2 to create a New Space\n"";
+        std::cout<<""Enter -3 to print Available Frames\n"";
+        std::cout<<""Enter -4 to create a New Frame\n"";
         std::cout<<""Enter 0 to print the Variable Table again.\n"";
         std::cout << ""Enter the index of a Variable to update its physical type. Enter "" << sz << "" to exit and check."" << std::endl;
         std::cin >> choice;
@@ -577,13 +672,17 @@ void Interpretation::updateVarTable(){
 
         while ((choice == -3 || choice == -2 || choice == -1 || choice == 0 || this->index2coords_.find(choice) != this->index2coords_.end()) && choice != sz)
         {
-            if (choice == -3)
+            if (choice == -4)
             {
                 this->buildFrame();
             }
-            else if(choice == -2)
+            else if(choice == -3)
             {
                 this->printFrames();
+            }
+            else if(choice == -2)
+            {
+                this->buildSpace();
             }
             else if (choice == -1)
             {
@@ -597,20 +696,20 @@ void Interpretation::updateVarTable(){
             {
                 if(false){}
 " +
-        string.Join("\n", ParsePeirce.Instance.Grammar.Productions.Where(p_ => p_.ProductionType != Grammar.ProductionType.Throw).SelectMany(p_ => (p_.Cases.Where(c_ => c_.CaseType != Grammar.CaseType.Passthrough).Select(c_ => @"
-                else if(auto dc = dynamic_cast<coords::" + (p_.ProductionType == Grammar.ProductionType.Single ? p_.Name : c_.Name) + @"*>(this->index2coords_[choice])){
-                    auto dom = this->coords2dom_->get" + (p_.ProductionType == Grammar.ProductionType.Single ? p_.Name : c_.Name) + @"(dc);
-                    auto interp = this->coords2interp_->get" + (p_.ProductionType == Grammar.ProductionType.Single ? p_.Name : c_.Name) + @"(dc);
-                    //this->coords2dom_->erase" + (p_.ProductionType == Grammar.ProductionType.Single ? p_.Name : c_.Name) + @"(dc, dom);
-                    //this->interp2domain_->erase" + (p_.ProductionType == Grammar.ProductionType.Single ? p_.Name : c_.Name) + @"(interp, dom);
+        string.Join("\n", ParsePeirce.Instance.Grammar.Productions.Where(p_ => p_.ProductionType == Grammar.ProductionType.Capture || p_.ProductionType == Grammar.ProductionType.CaptureSingle).SelectMany(p_ => (p_.Cases.Where(c_ => c_.CaseType != Grammar.CaseType.Passthrough).Select(c_ => @"
+                else if(auto dc = dynamic_cast<coords::" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"*>(this->index2coords_[choice])){
+                    auto dom = this->coords2dom_->get" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc);
+                    auto interp = this->coords2interp_->get" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc);
+                    //this->coords2dom_->erase" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc, dom);
+                    //this->interp2domain_->erase" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(interp, dom);
                     auto upd_dom = this->oracle_->getInterpretationFor" + p_.Name + @"(dc, dom);
                     if(upd_dom){//remap, hopefully everything works fine from here
-                        //this->coords2dom_->erase" + (p_.ProductionType == Grammar.ProductionType.Single ? p_.Name : c_.Name) + @"(dc, dom);
-                        //this->interp2domain_->erase" + (p_.ProductionType == Grammar.ProductionType.Single ? p_.Name : c_.Name) + @"(interp, dom);
+                        //this->coords2dom_->erase" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc, dom);
+                        //this->interp2domain_->erase" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(interp, dom);
                         //upd_dom->setOperands(dom->getOperands());
                         ((domain::DomainContainer*)dom)->setValue(upd_dom);
-                        //this->coords2dom_->put" + (p_.ProductionType == Grammar.ProductionType.Single ? p_.Name : c_.Name) + @"(dc, upd_dom);
-                        //this->interp2domain_->put" + (p_.ProductionType == Grammar.ProductionType.Single ? p_.Name : c_.Name) + @"(interp, upd_dom);
+                        //this->coords2dom_->put" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc, upd_dom);
+                        //this->interp2domain_->put" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(interp, upd_dom);
                         //delete dom;
                     }
                 }")))) + @"
@@ -624,8 +723,9 @@ void Interpretation::updateVarTable(){
             std::cout << ""********************************************\n"";
             //std::cout << ""********************************************\n"";
             std::cout<<""Enter -1 to print Available Spaces\n"";
-            std::cout<<""Enter -2 to print Available Frames\n"";
-            std::cout<<""Enter -3 to create a New Frame\n"";
+            std::cout<<""Enter -2 to create a New Space\n"";
+            std::cout<<""Enter -3 to print Available Frames\n"";
+            std::cout<<""Enter -4 to create a New Frame\n"";
             std::cout<<""Enter 0 to print the Variable Table again.\n"";
             std::cout << ""Enter the index of a Variable to update its physical type. Enter "" << sz << "" to exit and check."" << std::endl;
             std::cin >> choice;
@@ -668,6 +768,7 @@ class Checker;
 #include ""CoordsToInterp.h""
 #include ""InterpToDomain.h""
 #include <g3log/g3log.hpp> 
+#include <memory>
 
 
 #include <unordered_map>
@@ -679,6 +780,8 @@ class Interpretation
 {
 public:
     Interpretation();
+
+    std::string toString_AST();
 
     void setOracle(oracle::Oracle* oracle)
     {
@@ -700,14 +803,37 @@ public:
         return domain_;
     }
 
+    void setSources(std::vector<std::string> sources)
+    {
+        this->sources_ = sources;
+    }
+
+    std::vector<std::string> getSources()
+    {
+        return this->sources_;
+    }
+
 ";
             var file = header;
 
             foreach(var prod in ParsePeirce.Instance.Grammar.Productions)
             {
+                if(prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
+                {
+                    int j = 0;
+                    var mkStr = @"void mk" + prod.Name + @"(const ast::" + prod.Name + @" * ast " + (prod.Cases[0].Productions.Count > 0 ? "," +
+            string.Join(",", prod.Cases[0].Productions.Select(p_ => "ast::" + p_.Name + "* operand" + ++j)) : "") +
+                        (prod.HasValueContainer() ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "std::shared_ptr<" + prod.GetPriorityValueContainer().ValueType + "> value" + v + "=nullptr") : "") + @");
+                    ";
+                    file += "\n\t" + mkStr;
+                }
+
                 foreach(var pcase in prod.Cases)
                 {
                     if (pcase.CaseType == Grammar.CaseType.Passthrough || pcase.CaseType == Grammar.CaseType.Inherits)
+                        continue;
+                    else if (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                         continue;
                     int i = 0;
                     switch (pcase.CaseType)
@@ -719,14 +845,16 @@ public:
                         case Grammar.CaseType.Pure:
                             {
                                 var mkStr = @"void mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast " + (pcase.Productions.Count > 0 ? "," +
-                        string.Join(",", pcase.Productions.Select(p_ => "ast::" + p_.Name + "* operand" + ++i)) : "") + @");
+                        string.Join(",", pcase.Productions.Select(p_ => "ast::" + p_.Name + "* operand" + ++i)) : "") +
+                        (prod.HasValueContainer() ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "std::shared_ptr<" + prod.GetPriorityValueContainer().ValueType + "> value" + v + "=nullptr") : "") + @");
                     ";
                                 file += "\n\t" + mkStr;
-                                break;
                                 break;
                             }
                         case Grammar.CaseType.Ident:
                             {
+                                break;
                                 var mkStr = @"void mk" + prod.Name + @"(const ast::" + prod.Name + @" * ast " + (pcase.Productions.Count > 0 ? "," +
                         string.Join(",", pcase.Productions.Select(p_ => "ast::" + p_.Name + "* operand" + ++i)) : "") + @");
                     ";
@@ -744,14 +872,15 @@ public:
                             break;
                         }
 
-                        case Grammar.CaseType.Real:
+                        /*case Grammar.CaseType.Value:
                             {
-                                var mkStr = @"void mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast " + (pcase.Productions.Count > 0 ? "," + //<-- fine for now
-                        string.Join(",", pcase.Productions.Select(p_ => "ast::" + p_.Name + "* operand" + ++i)) : "") + @");
+                                var mkStr = @"void mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast " + (pcase.ValueCount > 0 ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, pcase.ValueCount), v => pcase.ValueType + " operand" + v + (!string.IsNullOrEmpty(pcase.ValueDefault) ? "=" + pcase.ValueDefault : "")) : "") + @");
                     ";
                                 file += "\n\t" + mkStr;
                                 break;
                             }
+                            */
                     }
                 }
                 var printstr = @"std::string toString_"+prod.Name+"s();";
@@ -796,6 +925,7 @@ public:
     coords2interp::CoordsToInterp *coords2interp_;
     interp2domain::InterpToDomain *interp2domain_; 
     Checker *checker_;
+    std::vector<std::string> sources_;
 "
 +
 string.Join("\n",ParsePeirce.Instance.Grammar.Productions.Select(p_ => "\tstd::vector<coords::" + p_.Name + "*> " + p_.Name + "_vec;"))

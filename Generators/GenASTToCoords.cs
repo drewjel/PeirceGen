@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -11,12 +12,12 @@ namespace PeirceGen.Generators
 
         public override string GetCPPLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/ASTToCoords.cpp";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\ASTToCoords.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/ASTToCoords.h";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\ASTToCoords.h";
         }
 
         public override void GenCpp()
@@ -25,10 +26,11 @@ namespace PeirceGen.Generators
 #include ""ASTToCoords.h""
 #include <g3log/g3log.hpp>
 
-#include<iostream>
-#include<exception>
-#include<memory>
-#include<string>
+#include <iostream>
+#include <exception>
+#include <memory>
+#include <string>
+#include <memory>
 
 #include ""llvm/Support/Casting.h""
 /*
@@ -121,29 +123,37 @@ ASTToCoords::ASTToCoords() {
 
                     int i = 0, j = 0;
 
-                    if (prod.ProductionType == Grammar.ProductionType.Single)
+                    if (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                     {
                         var mkStr = @"
-     coords::" + prod.Name + @"* ASTToCoords::mk" + prod.Name + "(const ast::" + prod.Name + "* ast, clang::ASTContext* c" + (pcase.Productions.Count > 0 ? "," +
-                string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++i)) : "") + @"){
-        coords::" + prod.Name + @"* coord = new coords::" + prod.Name + @"(" + string.Join(",", pcase.Productions.Select(p_ => "operand" + ++j)) + @");
-        ast::" + prod.Name + "* unconst_ast = const_cast<ast::" + prod.Name + @"*>(ast);
- 
-        if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
-            clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
-            setASTState(coord, unconst_dc, c);
-            overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
-            overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
-        }
-        /*if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
-            clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
-            setASTState(coord, unconst_dc, c);
-            overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
-            overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
-        }*/
-        return coord;
+coords::" + prod.Name + @"* ASTToCoords::mk" + prod.Name + "(const ast::" + prod.Name + "* ast, clang::ASTContext* c" + (pcase.Productions.Count > 0 ? "," +
+            string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++i)) : "") +
+                            (prod.HasValueContainer() ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "std::shared_ptr<" + prod.GetPriorityValueContainer().ValueType + "> value" + v) : "") + @"){
+    coords::" + prod.Name + @"* coord = new coords::" + prod.Name + @"(" + string.Join(",", pcase.Productions.Select(p_ => "operand" + ++j)) 
+    + (prod.HasValueContainer() ? (pcase.Productions.Count > 0 ? "," : "") +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => " value" + v) : "") 
++ @");
+    ast::" + prod.Name + "* unconst_ast = const_cast<ast::" + prod.Name + @"*>(ast);" +
+(prod.HasValueContainer() ? Peirce.Join("", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "\n\t//coord->setValue(value" + v + "," + v + ");") : "")
++ @"
+
+
+    if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
+        clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
     }
-    ";
+    /*if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
+        clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
+    }*/
+    return coord;
+}
+";
                         file += mkStr;
                         break;
                     }
@@ -158,164 +168,235 @@ ASTToCoords::ASTToCoords() {
                             case Grammar.CaseType.Hidden:
                             case Grammar.CaseType.Pure:
                                 {
+
                                     if (!(pcase.IsFuncDeclare || pcase.IsTranslationDeclare || pcase.IsVarDeclare))
                                     {
                                         var mkStr = @"
-     coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c" + (pcase.Productions.Count > 0 ? "," +
-                              string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++i)) : "") + @"){
-        coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(" + string.Join(",", pcase.Productions.Select(p_ => "operand" + ++j)) + @");
-        ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
- 
-        /*if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
-            clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
-            setASTState(coord, unconst_dc, c);
-            overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
-            overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
-        }*/
-        if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
-            clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
-            setASTState(coord, unconst_dc, c);
-            overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
-            overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
-        }
-        return coord;
+coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c" + (pcase.Productions.Count > 0 ? "," +
+                            string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++i)) : "") +
+                            (prod.HasValueContainer() ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "std::shared_ptr<" + prod.GetPriorityValueContainer().ValueType + "> value" + v) : "") + @"){
+    coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(" + string.Join(",", pcase.Productions.Select(p_ => "operand" + ++j))
+    + (prod.HasValueContainer() ? (pcase.Productions.Count > 0 ? "," : "") +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v =>  " value" + v) : "") + @");
+    ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);"
++
+(prod.HasValueContainer() ? Peirce.Join("", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "\n\t//coord->setValue(value" + v + "," + v + ");") : "")
+
++ @"
+    /*if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
+        clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
+    }*/
+    if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
+        clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
     }
-    ";
+    return coord;
+}
+";
                                         file += mkStr;
                                     }
                                     else
                                     {
 
                                         var mkStr = @"
-     coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c" + (pcase.Productions.Count > 0 ? "," +
-                              string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++i)) : "") + @"){
-        coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(" + string.Join(",", pcase.Productions.Select(p_ => "operand" + ++j)) + @");
-        ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
+coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c" + (pcase.Productions.Count > 0 ? "," +
+                            string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++i)) : "")  +
+                            (prod.HasValueContainer() ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "std::shared_ptr<" + prod.GetPriorityValueContainer().ValueType + "> value" + v) : "") + @"){
+    coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(" + string.Join(",", pcase.Productions.Select(p_ => "operand" + ++j))
+    + (prod.HasValueContainer() ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => " value" + v) : "") + @");
+    ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);"
++
+(prod.HasValueContainer() ? Peirce.Join("", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "\n\t//coord->setValue(value" + v + ","+v+");") : "")
+
++@"
  
-        if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
-            clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
-            setASTState(coord, unconst_dc, c);
-            overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
-            overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
-        }
-        /*if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
-            clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
-            setASTState(coord, unconst_dc, c);
-            overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
-            overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
-        }*/
-        return coord;
+    if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
+        clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
     }
-    ";
+    /*if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
+        clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
+    }*/
+    return coord;
+}
+";
                                         file += mkStr;
                                     }
                                     break;
                                 }
+                            /*case Grammar.CaseType.Pure://fix this!!
+                                {
+                                    if (!(pcase.IsFuncDeclare || pcase.IsTranslationDeclare || pcase.IsVarDeclare))
+                                    {
+                                        var mkStr = @"
+coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c" + (pcase.Productions.Count > 0 ? "," +
+                            string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++i)) : "") + @"){
+    coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(" + string.Join(",", pcase.Productions.Select(p_ => "operand" + ++j)) + @");
+    ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
+ 
+    /*if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
+        clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
+    }
+    if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
+        clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
+    }
+    return coord;
+}
+";
+                                        file += mkStr;
+                                    }
+                                    else
+                                    {
+
+                                        var mkStr = @"
+coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c" + (pcase.Productions.Count > 0 ? "," +
+                            string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++i)) : "") + @"){
+    coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(" + string.Join(",", pcase.Productions.Select(p_ => "operand" + ++j)) + @");
+    ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
+ 
+    if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
+        clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
+    }
+    /*if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
+        clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
+    }
+    return coord;
+}
+";
+                                        file += mkStr;
+                                    }
+                                    break;
+                                }*/
                             case Grammar.CaseType.ArrayOp:
                                 {
 
                                     if(!(pcase.IsFuncDeclare || pcase.IsTranslationDeclare || pcase.IsVarDeclare))
                                     {
                                         var mkStr = @"
-     coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c, std::vector<coords::" + pcase.Productions[0].Name + @"*> operands ){
-        coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(operands);
-        ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
+coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c, std::vector<coords::" + pcase.Productions[0].Name + @"*> operands ){
+    coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(operands);
+    ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
 
-        /*if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
-            clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
-            setASTState(coord, unconst_dc, c);
-            overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
-            overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
-        }*/
-        if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
-            clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
-            setASTState(coord, unconst_dc, c);
-            overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
-            overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
-        }
-        return coord;
+    /*if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
+        clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
+    }*/
+    if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
+        clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
     }
-    ";
+    return coord;
+}
+";
                                         file += mkStr;
                                     }
                                     else if (pcase.IsTranslationDeclare)
                                     {
 
                                         var mkStr = @"
-     coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c, std::vector<coords::" + pcase.Productions[0].Name + @"*> operands ){
-        coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(operands);
-        ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
+coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c, std::vector<coords::" + pcase.Productions[0].Name + @"*> operands ){
+    coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(operands);
+    ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
 
-        coord->state_ = new coords::ASTState(
-            """",
-            """",
-            """",
-            """",
-            0,
-            0,
-            0,
-            0
-        );
+    coord->state_ = new coords::ASTState(
+        """",
+        """",
+        """",
+        """",
+        0,
+        0,
+        0,
+        0
+    );
 
-        return coord;
-    }
-    ";
+    return coord;
+}
+";
                                         file += mkStr;
                                     }
                                     else
                                     {
                                         var mkStr = @"
-     coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c, std::vector<coords::" + pcase.Productions[0].Name + @"*> operands ){
-        coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(operands);
-        ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
+coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c, std::vector<coords::" + pcase.Productions[0].Name + @"*> operands ){
+    coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(operands);
+    ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
 
-        if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
-            clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
-            setASTState(coord, unconst_dc, c);
-            overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
-            overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
-        }
-        /*if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
-            clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
-            setASTState(coord, unconst_dc, c);
-            overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
-            overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
-        }*/
-        return coord;
+    if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
+        clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
     }
-    ";
+    /*if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
+        clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
+    }*/
+    return coord;
+}
+";
                                         file += mkStr;
                                     }
 
                                     break;
 
                                 }
-                            case Grammar.CaseType.Real:
+                           /* case Grammar.CaseType.Value:
                                 {
                                     var mkStr = @"
-     coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c" + (pcase.ProductionRefs.Count > 0 ? "," +
-                            string.Join(",", pcase.ProductionRefs.Select(p_ => "double value" + ++i)) : "") + @"){
-        coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(" + string.Join(",", pcase.ProductionRefs.Select(p_ => "value" + ++j)) + @");
-        ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
-        //bad Clang! bad!
-        /*if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
-            clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
-            setASTState(coord, unconst_dc, c);
-            overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
-            overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
-        }*/
-        if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
-            clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
-            setASTState(coord, unconst_dc, c);
-            overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
-            overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
-        }
-        return coord;
+coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c" + (pcase.ValueCount > 0 ? "," +
+                    Peirce.Join(",", Enumerable.Range(0, pcase.ValueCount), v => pcase.ValueType + " operand" + v) : "") + @"){
+    coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(" + Peirce.Join(",", Enumerable.Range(0, pcase.ValueCount), v => " operand" + v) + @");
+    ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
+    //bad Clang! bad!
+    /*if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
+        clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
     }
-    ";
+    if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
+        clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
+    }
+    return coord;
+}
+";
                                     file += mkStr;
                                     break;
-                                }
+                                }*/
 
                         }
                     }
@@ -422,12 +503,13 @@ public:
 
                     if (pcase.CaseType == Grammar.CaseType.Passthrough || pcase.CaseType == Grammar.CaseType.Inherits)
                         continue;
-                    else if (prod.ProductionType == Grammar.ProductionType.Single)
+                    else if (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                     {
 
                         int i = 0;
                         var mkStr = "\tcoords::" + prod.Name + "* mk" + prod.Name + "(const ast::" + prod.Name + "* ast, clang::ASTContext* c" + (pcase.Productions.Count > 0 ? "," +
-                            string.Join(",", pcase.Productions.Select(p_ => "coords::" + prod.Name + "* operand" + ++i)) : "") + ");";
+                            string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++i)) : "") +(prod.HasValueContainer() ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "std::shared_ptr<" + prod.GetPriorityValueContainer().ValueType + "> value" + v) : "") + ");";
                         file += "\n" + mkStr + "\n";
                     }
                     else
@@ -439,13 +521,22 @@ public:
                                 {
                                     break;
                                 }
-                            case Grammar.CaseType.Op:
-                            case Grammar.CaseType.Hidden:
                             case Grammar.CaseType.Pure:
+                                /*{
+                                    int i = 0;
+                                    var mkStr = "\tcoords::" + pcase.Name + "* mk" + pcase.Name + "(clang::ASTContext* c" + (pcase.Productions.Count > 0 ? "," +
+                                        string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++i)) : "") + ");";
+                                    file += "\n" + mkStr + "\n";
+                                    break;
+
+                                }*/
+                            case Grammar.CaseType.Hidden:
+                            case Grammar.CaseType.Op:
                                 {
                                     int i = 0;
                                     var mkStr = "\tcoords::" + pcase.Name + "* mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c" + (pcase.Productions.Count > 0 ? "," +
-                                        string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++i)) : "") + ");";
+                                        string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + "* operand" + ++i)) : "") + (prod.HasValueContainer() ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "std::shared_ptr<" + prod.GetPriorityValueContainer().ValueType + "> value" + v) : "") + ");";
                                     file += "\n" + mkStr + "\n";
                                     break;
                                 }
@@ -457,14 +548,14 @@ public:
                                     break;
 
                                 }
-                            case Grammar.CaseType.Real:
+                            /*case Grammar.CaseType.Value:
                                 {
                                     int i = 0;
-                                    var mkStr = "\tcoords::" + pcase.Name + "* mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c" + (pcase.ProductionRefs.Count > 0 ? "," +
-                                        string.Join(",", pcase.ProductionRefs.Select(p_ => "double value" + ++i)) : "") + ");";
+                                    var mkStr = "\tcoords::" + pcase.Name + "* mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c" + (pcase.ValueCount > 0 ? "," +
+                        Peirce.Join(",", Enumerable.Range(0, pcase.ValueCount), v => pcase.ValueType + " operand" + v) : "") + ");";
                                     file += "\n" + mkStr + "\n";
                                     break;
-                                }
+                                }*/
 
                         }
                     }

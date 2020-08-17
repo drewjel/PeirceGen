@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,12 +11,12 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/Domain.cpp";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Domain.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/Domain.h";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\Domain.h";
         }
         public override void GenCpp()
         {
@@ -157,12 +158,12 @@ DomainObject* Domain::mkDefaultDomainContainer(std::vector<DomainObject*> operan
 Frame* Domain::mkFrame(std::string name, Space* space, Frame* parent){
     " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => {
 
-                var hasName = sp_.MaskContains(Space.FieldType.Name);
-                var hasDim = sp_.MaskContains(Space.FieldType.Dimension);
+                //var hasName = sp_.MaskContains(Space.FieldType.Name);
+               // var hasDim = sp_.MaskContains(Space.FieldType.Dimension);
                 //PhysSpaceExpression.ClassicalTimeLiteral (ClassicalTimeSpaceExpression.ClassicalTimeLiteral
                 return "\n\tif(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(space)){
-            if(auto df = dynamic_cast<domain::" + sp_.Prefix + @"Frame*>(parent)){
-            auto child = this->mk" + sp_.Prefix + @"Frame(name, dc, df);
+            if(auto df = dynamic_cast<domain::" + sp_.Name + @"Frame*>(parent)){
+            auto child = this->mk" + sp_.Name + @"Frame(name, dc, df);
             return child;
         }
     }";
@@ -180,32 +181,57 @@ Frame* Domain::mkFrame(std::string name, Space* space, Frame* parent){
 
             file += "\n" + mkTransformMap + "\n";
 
+
+
             foreach (var sp in ParsePeirce.Instance.Spaces)
             {
-                var hasName = sp.MaskContains(Space.FieldType.Name);
-                var hasDim = sp.MaskContains(Space.FieldType.Dimension);
-
-                var mkSpace = sp.Name + "* Domain::mk" + sp.Name + "(std::string key" +
-                       (hasName && hasDim ? ",std::string name_, int dimension_" : hasName ? ",std::string name_" : hasDim ? ",int dimension_" : "") + @"){
-    " + sp.Name + @"* s = new " + sp.Name + @"(" + (hasName && hasDim ? "name_, dimension_" : hasName ? "name_" : hasDim ? "dimension_" : "") + @");
-    s->addFrame(new domain::" + sp.Prefix + @"Frame(""Standard"", s, nullptr));
-    this->" + sp.Name + @"_vec.push_back(s);
-    this->Space_vec.push_back(s);
-    this->Space_map[key] = s;
+                //var hasName = sp.MaskContains(Space.FieldType.Name);
+                //var hasDim = sp.MaskContains(Space.FieldType.Dimension);
+                if(sp.IsDerived)
+                {
+                    var mkSpace = sp.Name + "* Domain::mk" + sp.Name + @"(std::string key,std::string name_, Space* base1, Space* base2){
+        " + sp.Name + @"* s = new " + sp.Name + @"(name_, base1, base2);
+        s->addFrame(new domain::" + sp.Name + @"Frame(""Standard"", s, nullptr));
+        this->" + sp.Name + @"_vec.push_back(s);
+        this->Space_vec.push_back(s);
+        this->Space_map[key] = s;
     
-    return s;
-};";/*
+        return s;
+    };";/*
+                var addFrame = @"
+    void addFrame(Frame* frame);";*/
+
+                    var getSVec = "//std::vector<" + sp.Name + "*> &Domain::get" + sp.Name + "Spaces() { return " + sp.Name + "_vec; }";
+
+                    file += "\n" + mkSpace + "\n\n" + getSVec + "\n";
+                }
+                else
+                {
+                    var mkSpace = sp.Name + "* Domain::mk" + sp.Name + "(std::string key" +
+                           (sp.DimensionType == Space.DimensionType_.ANY ? ",std::string name_, int dimension_" :
+                           ",std::string name_") + @"){
+        " + sp.Name + @"* s = new " + sp.Name + @"(" + (sp.DimensionType == Space.DimensionType_.ANY ? "name_, dimension_"
+                                                    : "name_") + @");
+        s->addFrame(new domain::" + sp.Name + @"Frame(""Standard"", s, nullptr));
+        this->" + sp.Name + @"_vec.push_back(s);
+        this->Space_vec.push_back(s);
+        this->Space_map[key] = s;
+    
+        return s;
+    };";/*
                 var addFrame = @"
     void addFrame(Frame* frame);";*/
 
 
-                var getSVec = "//std::vector<" + sp.Name + "*> &Domain::get" + sp.Name + "Spaces() { return " + sp.Name + "_vec; }";
+                    var getSVec = "//std::vector<" + sp.Name + "*> &Domain::get" + sp.Name + "Spaces() { return " + sp.Name + "_vec; }";
 
-                file += "\n" + mkSpace + "\n\n" + getSVec + "\n";
+                    file += "\n" + mkSpace + "\n\n" + getSVec + "\n";
+                }
+                    
 
 
-                var mkFrame = sp.Prefix + "Frame* Domain::mk" + sp.Prefix + "Frame(std::string name, domain::" + sp.Name + @"* space, domain::" + sp.Prefix + @"Frame* parent){
-    " + sp.Prefix + @"Frame* child = new domain::" + sp.Prefix + @"Frame(name, space, parent);
+                var mkFrame = sp.Name + "Frame* Domain::mk" + sp.Name + "Frame(std::string name, domain::" + sp.Name + @"* space, domain::" + sp.Name + @"Frame* parent){
+    " + sp.Name + @"Frame* child = new domain::" + sp.Name + @"Frame(name, space, parent);
     space->addFrame(child);
     return child;
 }
@@ -214,21 +240,29 @@ Frame* Domain::mkFrame(std::string name, Space* space, Frame* parent){
 
 
 
-                var addFrame = "void " + sp.Name + "::addFrame(" + sp.Prefix + @"Frame* frame){
+                var addFrame = "void " + sp.Name + "::addFrame(" + sp.Name + @"Frame* frame){
     ((Space*)this)->addFrame(frame);
 }";
 
                 file += "\n" + addFrame + "\n";
-
+                /*
                 foreach (var spObj in sp.Category.Objects)
                 {
                     var mkWithSpace = "";
 
                     if (spObj.IsTransform)
                     {
-                        mkWithSpace = sp.Prefix + spObj.Name + "* Domain::mk" + sp.Prefix + spObj.Name + @"(MapSpace* sp){
-    " + sp.Prefix + spObj.Name + @"* dom_ = new " + sp.Prefix + spObj.Name + @"(sp, {});
-    this->" + sp.Prefix + spObj.Name + @"_vec.push_back(dom_);
+                        mkWithSpace = @"
+template <class ValueType, int ValueCount>
+" +
+                            sp.Name + spObj.Name + "<ValueType,ValueCount>* Domain::mk" + sp.Name + spObj.Name + @"(MapSpace* sp, ValueType* values[ValueCount]){
+    " + sp.Name + spObj.Name + @"<ValueType,ValueCount>* dom_ = new " + sp.Name + spObj.Name + @"<ValueType,ValueCount>(sp, {});
+    dom_->setValues(values);
+    //this->" + sp.Name + spObj.Name + @"_vec.push_back(dom_);
+    int i = 0;
+    for(auto val : values){
+        dom_->setValue(values[i],i++);
+    }
     return dom_;
 }
                 ";
@@ -236,29 +270,46 @@ Frame* Domain::mkFrame(std::string name, Space* space, Frame* parent){
                     }
                     else
                     {
-                        mkWithSpace = sp.Prefix + spObj.Name + "* Domain::mk" + sp.Prefix + spObj.Name + "(" + sp.Name + @"* sp){
-    " + sp.Prefix + spObj.Name + @"* dom_ = new " + sp.Prefix + spObj.Name + @"(sp, {});
-    this->" + sp.Prefix + spObj.Name + @"_vec.push_back(dom_);
+                        mkWithSpace = @"
+template <class ValueType, int ValueCount>
+" + sp.Name + spObj.Name + "<ValueType,ValueCount>* Domain::mk" + sp.Name + spObj.Name + "(" + sp.Name + @"* sp, ValueType* values[ValueCount]){
+    " + sp.Name + spObj.Name + @"<ValueType,ValueCount>* dom_ = new " + sp.Name + spObj.Name + @"<ValueType,ValueCount>(sp, {});
+    //dom_->setValues(values);
+    //this->" + sp.Name + spObj.Name + @"_vec.push_back(dom_);
+    int i = 0;
+    for(auto val : values){
+        dom_->setValue(values[i],i++);
+    }
+
     return dom_;
 }
                 ";
                     }
 
-                    var mkSansSpace = sp.Prefix + spObj.Name + "* Domain::mk" + sp.Prefix + spObj.Name + @"(){
-    " + sp.Prefix + spObj.Name + @"* dom_ = new " + sp.Prefix + spObj.Name + @"({});
-    this->" + sp.Prefix + spObj.Name + @"_vec.push_back(dom_);   
+                    var mkSansSpace = @"
+template <class ValueType, int ValueCount>
+" +
+                            sp.Name + spObj.Name + "<ValueType,ValueCount>* Domain::mk" + sp.Name + spObj.Name + @"(){
+    " + sp.Name + spObj.Name + @"<ValueType,ValueCount>* dom_ = new " + sp.Name + spObj.Name + @"<ValueType,ValueCount>({});
+    //this->" + sp.Name + spObj.Name + @"_vec.push_back(dom_);
+    /*int i = 0;
+    for(auto val : values){
+        dom_->setValue(values[i],i++);
+    } 
     return dom_;
 }";
 
                     file += "\n" + mkWithSpace + "\n" + mkSansSpace + "\n" ;
                     if (spObj.HasFrame)
                     {
-                        var setFrame = "void " + sp.Prefix + spObj.Name + "::setFrame(" + sp.Prefix + @"Frame* frame){
+                        var setFrame = @"
+template <class ValueType, int ValueCount>
+" + "void " + sp.Name + spObj.Name + "<ValueType,ValueCount>::setFrame(" + sp.Name + @"Frame* frame){
     this->frame_ = frame;
 };";
                         file += "\n" + setFrame;
                     }
-                }
+                }*/
             }
 
             this.CppFile = file;
@@ -278,6 +329,7 @@ Frame* Domain::mkFrame(std::string name, Space* space, Frame* parent){
 #include ""clang/AST/AST.h""
 #include <vector>
 #include <string>
+#include <memory>
 
 #include ""AST.h""
 #include ""Coords.h""
@@ -303,17 +355,17 @@ namespace domain{
 
             //print all classes
 
-            file += "\nclass Space;\nclass MapSpace;\nclass Frame;\nclass DomainObject;\nclass DomainContainer;\n";
+            file += "\nclass Space;\nclass DerivedSpace;\nclass MapSpace;\nclass Frame;\nclass DomainObject;\nclass DomainContainer;\ntemplate<typename ValueType,int ValueCount>\nclass ValueObject;\n";
 
             foreach (var sp in ParsePeirce.Instance.Spaces)
             {
                 file += "\nclass " + sp.Name + ";\n";
 
-                file += "\nclass " + sp.Prefix + "Frame;\n";
+                file += "\nclass " + sp.Name + "Frame;\n";
 
                 foreach (var spObj in sp.Category.Objects)
                 {
-                    file += "\nclass " + sp.Prefix +  spObj.Name + ";\n";
+                    file += "\ntemplate<typename ValueType,int ValueCount>\nclass " + sp.Name +  spObj.Name + ";\n";
                 }
             }
 
@@ -357,38 +409,120 @@ public:
 
             foreach (var sp in ParsePeirce.Instance.Spaces)
             {
-                var hasName = sp.MaskContains(Space.FieldType.Name);
-                var hasDim = sp.MaskContains(Space.FieldType.Dimension);
+                //var hasName = sp.MaskContains(Space.FieldType.Name);
+                //var hasDim = sp.MaskContains(Space.FieldType.Dimension);
+                if (sp.IsDerived)
+                {
+                    var mkSpace = sp.Name + "* mk" + sp.Name + "(std::string key, std::string name_,Space* base1, Space* base2" + ");";
+                    var getSVec = "std::vector<" + sp.Name + "*> &get" + sp.Name + "Spaces() { return " + sp.Name + "_vec; }";
 
-                var mkSpace = sp.Name + "* mk" + sp.Name + "(std::string key " +
-                       (hasName && hasDim ? ",std::string name_, int dimension_" : hasName ? ",std::string name_" : hasDim ? ",int dimension_" : "") + ");";
-                var getSVec = "std::vector<" + sp.Name + "*> &get" + sp.Name + "Spaces() { return " + sp.Name + "_vec; }";
+                    file += "\n\t" + mkSpace + "\n\t" + getSVec + "\n";
+                }
+                else
+                {
+                    var mkSpace = sp.Name + "* mk" + sp.Name + "(std::string key " +
+                           (sp.DimensionType == Space.DimensionType_.ANY ? ",std::string name_, int dimension_" :
+                                ",std::string name_") + ");";
+                    var getSVec = "std::vector<" + sp.Name + "*> &get" + sp.Name + "Spaces() { return " + sp.Name + "_vec; }";
 
-                file += "\n\t" + mkSpace + "\n\t" + getSVec + "\n";
+                    file += "\n\t" + mkSpace + "\n\t" + getSVec + "\n";
+                }
 
-                var mkFrame = sp.Prefix + "Frame* mk" + sp.Prefix + "Frame(std::string name," + (@" domain::" + sp.Name + @"* space") + @", domain::" + sp.Prefix + @"Frame* parent);";
+                var mkFrame = sp.Name + "Frame* mk" + sp.Name + "Frame(std::string name," + (@" domain::" + sp.Name + @"* space") + @", domain::" + sp.Name + @"Frame* parent);";
 
                 file += "\n\t" + mkFrame;
 
-            
+                foreach (var spObj in sp.Category.Objects)
+                {
+                    var mkWithSpace = "";
 
+                    if (spObj.IsTransform)
+                    {
+                        mkWithSpace = @"
+template <class ValueType, int ValueCount>
+" +
+                            sp.Name + spObj.Name + "<ValueType,ValueCount>* mk" + sp.Name + spObj.Name + @"(MapSpace* sp, std::shared_ptr<ValueType> values[ValueCount]){
+    " + sp.Name + spObj.Name + @"<ValueType,ValueCount>* dom_ = new " + sp.Name + spObj.Name + @"<ValueType,ValueCount>(sp, {});
+    //((ValueObject<ValueType,ValueCount>)(dom_))->setValues(values);
+    //this->" + sp.Name + spObj.Name + @"_vec.push_back(dom_);
+    for(int i = 0; i < ValueCount;i++){
+        dom_->setValue(values[i],i);
+    }
+    return dom_;
+}
+                ";
+
+                    }
+                    else
+                    {
+                        mkWithSpace = @"
+template <class ValueType, int ValueCount>
+" + sp.Name + spObj.Name + "<ValueType,ValueCount>* mk" + sp.Name + spObj.Name + "(" + sp.Name + @"* sp, std::shared_ptr<ValueType> values[ValueCount]){
+    " + sp.Name + spObj.Name + @"<ValueType,ValueCount>* dom_ = new " + sp.Name + spObj.Name + @"<ValueType,ValueCount>(sp, {});
+    //dom_->setValues(values);
+    //this->" + sp.Name + spObj.Name + @"_vec.push_back(dom_);
+    for(int i = 0; i < ValueCount;i++){
+        dom_->setValue(values[i],i);
+    }
+
+    return dom_;
+}
+                ";
+                    }
+
+                    var mkSansSpace = @"
+template <class ValueType, int ValueCount>
+" +
+                            sp.Name + spObj.Name + "<ValueType,ValueCount>* mk" + sp.Name + spObj.Name + @"(){
+    " + sp.Name + spObj.Name + @"<ValueType,ValueCount>* dom_ = new " + sp.Name + spObj.Name + @"<ValueType,ValueCount>({});
+    //this->" + sp.Name + spObj.Name + @"_vec.push_back(dom_);
+    /*int i = 0;
+    for(auto val : values){
+        dom_->setValue(values[i],i++);
+    } */  
+    return dom_;
+}";
+
+                    file += "\n" + mkWithSpace + "\n" + mkSansSpace + "\n";
+                    /*if (spObj.HasFrame)
+                    {
+                        var setFrame = @"
+template <class ValueType, int ValueCount>
+" + "void " + sp.Name + spObj.Name + "<ValueType,ValueCount>::setFrame(" + sp.Name + @"Frame* frame){
+    this->frame_ = frame;
+};";
+                        file += "\n" + setFrame;
+                    }*/
+                }
+                /*
                 foreach (var spObj in sp.Category.Objects)
                 {
                     var mkWithSpace = "";
                     if (spObj.IsTransform)
                     {
-                        mkWithSpace = sp.Prefix + spObj.Name + " * mk" + sp.Prefix + spObj.Name + "(MapSpace* sp);";
+                        mkWithSpace = @"
+template <class ValueType, int ValueCount>
+" +
+                            sp.Name + spObj.Name + "<ValueType,ValueCount> * mk" + sp.Name + spObj.Name + "(MapSpace* sp,ValueType* values[ValueCount]);";
 
                     }
                     else
                     {
-                        mkWithSpace = sp.Prefix + spObj.Name + " * mk" + sp.Prefix + spObj.Name + "(" + sp.Name + "* sp);";
+                        mkWithSpace = @"
+template <class ValueType, int ValueCount>
+" +
+                            sp.Name + spObj.Name + "<ValueType,ValueCount> * mk" + sp.Name + spObj.Name + "(" + sp.Name + "* sp, ValueType* values[ValueCount]);";
                     }
-                    var mkSansSpace = sp.Prefix + spObj.Name + "* mk" + sp.Prefix + spObj.Name + "();";
-                    var getVec = "std::vector<" + sp.Prefix + spObj.Name + "*> &get" + sp.Prefix + spObj.Name + "s() { return " + sp.Prefix + spObj.Name + "_vec; }";
+                    var mkSansSpace = @"
+template <class ValueType, int ValueCount>
+" +
+                            sp.Name + spObj.Name + "<ValueType,ValueCount> * mk" + sp.Name + spObj.Name + "();";
+                    // var getVec = "std::vector<" + sp.Name + spObj.Name + "*> &get" + sp.Name + spObj.Name + "s() { return " + sp.Name + spObj.Name + "_vec; }";
 
-                    file += "\n\t" + mkWithSpace + "\n\t" + mkSansSpace + "\n\t" + getVec + "\n";
+                    file += "\n\t" + mkWithSpace + "\n\t" + mkSansSpace + "\n\t";// + getVec + "\n";
                 }
+                */
+
             }
 
             file += "\nprivate:\n";
@@ -406,9 +540,9 @@ public:
 
                 foreach (var spObj in sp.Category.Objects)
                 {
-                    var getVec = "std::vector<" + sp.Prefix + spObj.Name + "*>" + sp.Prefix + spObj.Name + "_vec;";
+                   // var getVec = "std::vector<" + sp.Name + spObj.Name + "*>" + sp.Name + spObj.Name + "_vec;";
 
-                    file += "\n\t" + getVec;
+                   // file += "\n\t" + getVec;
                 }
             }
 
@@ -443,12 +577,16 @@ public:
 class Space {
 public:
 	Space() {};
+    Space(string name, int dimension) : name_(name), dimension_(dimension) {};
     virtual ~Space(){};
 	virtual std::string toString() const {
 		return ""Not implemented""; 
 	}
     virtual std::string getName() const {
-        return ""Not implemented"";
+        return this->name_;
+    }
+    int getDimension() const {
+        return this->dimension_;
     }
 
     std::vector<Frame*> getFrames() const { return this->frames_; };
@@ -456,6 +594,9 @@ public:
 
 protected:
     std::vector<Frame*> frames_;
+    std::string name_;
+    int dimension_;
+
 };
 
 class Frame {
@@ -479,6 +620,31 @@ protected:
     Space* space_;
     std::string name_;
 
+};
+
+class DerivedSpace : public Space {
+public:
+    DerivedSpace() {};
+    DerivedSpace(string name, Space* base1, Space* base2) :  Space(name, base1->getDimension()*base2->getDimension()), base_1(base1), base_2(base2) {
+        
+    }
+
+    Space* getBase1() const {
+        return this->base_1;
+    }
+
+    Space* getBase2() const {
+        return this->base_2;
+    }
+
+    virtual ~DerivedSpace(){};
+	virtual std::string toString() const override {
+		return ""Not implemented""; 
+	}
+
+protected:
+    Space* base_1;
+    Space* base_2;
 };
 ";
 
@@ -534,6 +700,7 @@ public:
     DomainObject* getOperand(int i);
     std::vector<DomainObject*> getOperands() const { return operands_; };
     void setOperands(std::vector<DomainObject*> operands);
+
     virtual std::string toString();
     friend class DomainObject; 
   
@@ -555,70 +722,197 @@ public:
         
 
 private:
-DomainObject* inner_;
+    DomainObject* inner_;
 };
+
+
+template <typename ValueType, int ValueCount>
+class ValueObject : public DomainObject {
+public:
+    // ValueCoords() : DomainObject() {};
+
+    ValueObject() : DomainObject(){
+        for(int i = 0; i<ValueCount;i++){
+            this->values_[i] = nullptr;
+        }
+    };
+
+    ValueObject(std::initializer_list<DomainObject*> args) :  DomainObject(args) {
+        for(int i = 0; i<ValueCount;i++){
+            this->values_[i] = nullptr;
+        }
+
+    }
+    ValueObject(std::vector<DomainObject*> operands) : DomainObject(operands) {
+        for(int i = 0; i<ValueCount;i++){
+            this->values_[i] = nullptr;
+        }
+
+    }
+
+    ~ValueObject() {
+        for(auto v : this->values_){
+           // delete v;
+        }
+    }
+
+    ValueObject(ValueType* values...) : DomainObject() {
+        int i = 0;
+        for(auto val : {values}){
+            if(i == ValueCount)
+                throw ""Out of Range"";
+            this->values_[i++] = std::make_shared<ValueType>(*val);
+
+        }
+    }
+
+    ValueObject(std::initializer_list<DomainObject*> args, ValueType* values...) : ValueObject(values), DomainObject(args)
+    {
+    }
+
+    ValueObject(std::vector<DomainObject*> operands, ValueType* values...) : ValueObject(values), DomainObject(operands)
+    {
+        int i = 0;
+        for (auto val : { values}){
+            if (i == ValueCount)
+                throw ""Out of Range"";
+            this->values_[i++] = std::make_shared<ValueType>(*val);
+
+        }
+    }
+
+    virtual std::string toString() override {
+        std::string ret = ""Value=<"";
+    int i = 1;
+        for(auto val : this->values_){
+        ret += (val ? std::to_string(*val) : ""UNK"") + (i++ == ValueCount ? """" : "","");
+    }
+        return ret + "">"";
+    }
+
+    ValueObject(ValueType* values[ValueCount]) : DomainObject(), values_(values) { };
+
+    std::shared_ptr<ValueType> getValue(int index) const {
+        if(index< 0 or index >= ValueCount)
+            throw ""Invalid Index"";
+        return this->values_[index];
+    };
+
+    void setValue(ValueType value, int index)
+    {
+        if (index < 0 or index >= ValueCount)
+            throw ""Invalid Index"";
+        if (this->values_[index])
+            *this->values_[index] = value;
+        else
+            this->values_[index] = std::make_shared<ValueType>(value);
+        //this->values_[index] = new ValueType(value)
+    };
+
+    void setValue(std::shared_ptr<ValueType> value, int index)
+    {
+        if (index < 0 or index >= ValueCount)
+            throw ""Invalid Index"";
+        if (this->values_[index])
+            if(value)
+                *this->values_[index] = *value;
+            else{
+                this->values_[index] = std::make_shared<ValueType>(*value);
+            }
+        else
+            this->values_[index] = value ? std::make_shared<ValueType>(*value) : nullptr;
+        //this->values_[index] = value ? new ValueType(*value) : nullptr;
+    };
+    protected:
+    std::shared_ptr<ValueType> values_[ValueCount];
+};
+
 ";
 
 
             foreach (var sp in ParsePeirce.Instance.Spaces)
             {
-                var hasName = sp.MaskContains(Space.FieldType.Name);
-                var hasDim = sp.MaskContains(Space.FieldType.Dimension);
-                var spclass = "\n\nclass " + sp.Name + @" : public Space {
-public:
-	" + sp.Name + @"() : name_("""") {};
-	" + (hasName ? sp.Name + @"(std::string name) : name_(name) {};" : "") + @"
-	" + (hasName && hasDim ? sp.Name + @"(std::string name, int dimension) : name_(name), dimension_(dimension) {};" : "" ) + @"
-	" + (hasName ? "std::string getName() const override { return name_; }; " : "") + @"
-	" + (hasDim ? "int getDimension() const { return dimension_; }; " : "") + @"
-    void addFrame(" + sp.Prefix + @"Frame* frame);
-	std::string toString() const override {
-		return ""@@" + sp.Name + @"  "" " + (hasName ? "+ getName() " : "") + @"  + ""(""" + (hasDim ? "+ std::to_string(getDimension())" : "") + @" + "")"";" + @" 
-	}
+                //var hasName = sp.MaskContains(Space.FieldType.Name);
+                //var hasDim = sp.MaskContains(Space.FieldType.Dimension);
+                if (sp.IsDerived)
+                {
 
-private:
-    " + (hasName ? "std::string name_;" : "") + @"
-    " + (hasDim ? "int dimension_;" : "") + @"
-};";
+                    var spclass = "\n\nclass " + sp.Name + @" : public DerivedSpace {
+    public:
+	    " + @"
+        " + sp.Name + @"(std::string name, Space* base1, Space* base2) : DerivedSpace(name, base1, base2) {};
+        void addFrame(" + sp.Name + @"Frame* frame);
+	    std::string toString() const override {
+		    return ""@@" + sp.Name + @"  "" " + "+ getName() " + @"  + ""("" + this->base_1->getName() + "","" + this->base_2->getName() + "")"";" + @" 
+	    }
 
-                file += spclass;
+    private:
+    };";
+                    file += spclass;
+                }
+                else
+                {
+                    var spclass = "\n\nclass " + sp.Name + @" : public Space {
+    public:
+	    " + sp.Name + (sp.DimensionType == Space.DimensionType_.Fixed ? @"(std::string name) : Space(name, " + sp.FixedDimension + @") {};" : "")
+        + (sp.DimensionType == Space.DimensionType_.ANY ? @"(std::string name, int dimension) : Space(name, dimension) {};" : "") + @"
+	    " + "std::string getName() const override { return name_; }; " + @"
+	    " + @"
+        void addFrame(" + sp.Name + @"Frame* frame);
+	    std::string toString() const override {
+		    return ""@@" + sp.Name + @"  "" " + "+ getName() " + @"  + ""(""" + (sp.DimensionType == Space.DimensionType_.ANY ? "+ std::to_string(getDimension())" : "") + @" + "")"";" + @" 
+	    }
+
+    private:
+    };";
+                    file += spclass;
+                }
                 
-                var spframeclass = "\n\nclass " + sp.Prefix + @"Frame : public Frame {
+                var spframeclass = "\n\nclass " + sp.Name + @"Frame : public Frame {
 public:
-	" + sp.Prefix + @"Frame(std::string name,  " + sp.Name + @"* space, " + sp.Prefix + @"Frame* parent) : Frame(name, space, parent) {};
+	" + sp.Name + @"Frame(std::string name,  " + sp.Name + @"* space, " + sp.Name + @"Frame* parent) : Frame(name, space, parent) {};
 	std::string toString() const override {
         std::string parentName = ((" + sp.Name + @"*)this->space_)->getName();
-		return ""@@" + sp.Prefix + @"Frame  "" + this->getName() + ""("" + parentName + (this->parent_? "","" + parentName + ""."" + this->parent_->getName() : """") + "")"";
+		return ""@@" + sp.Name + @"Frame  "" + this->getName() + ""("" + parentName + (this->parent_? "","" + parentName + ""."" + this->parent_->getName() : """") + "")"";
 	}
 
 private:
 };";
 
                 file += "\n" + spframeclass + "\n";
-
+                
                 foreach (var spObj in sp.Category.Objects)
                 {
-                    var spobjclass = @"class " + sp.Prefix +  spObj.Name + @" : public DomainObject {
+                    var spobjclass = @"
+
+template <class ValueType, int ValueCount>
+class " + sp.Name +  spObj.Name + @" : public ValueObject<ValueType,ValueCount> {
 public:
-    " + sp.Prefix + spObj.Name + @"(" + (spObj.IsTransform ? "MapSpace" : sp.Name) + @"* s, std::initializer_list<DomainObject*> args) : 
-			domain::DomainObject(args), space_(s)  {}
-    " + sp.Prefix + spObj.Name + @"(std::initializer_list<DomainObject*> args ) :
-	 		domain::DomainObject(args) {}
-	virtual ~" + sp.Prefix + spObj.Name + @"(){}
+    " + sp.Name + spObj.Name + @"(" + (spObj.IsTransform ? "MapSpace" : sp.Name) + @"* s, std::initializer_list<DomainObject*> args) : 
+			ValueObject<ValueType,ValueCount>::ValueObject(args), space_(s)  {}
+    " + sp.Name + spObj.Name + @"(std::initializer_list<DomainObject*> args ) :
+	 		ValueObject<ValueType,ValueCount>::ValueObject(args) {}
+	virtual ~" + sp.Name + spObj.Name + @"(){}
     std::string toString() override {
-        return ""@@" + sp.Prefix + spObj.Name + @"("" + " + (sp.MaskContains(Space.FieldType.Name) ? @"(space_?space_->getName():""Missing Space"")" : "") + (spObj.HasFrame ? "+\",\"+(frame_?frame_->getName():\"\")" : "") + @" + "")"";
+        return ""@@" + sp.Name + spObj.Name 
+        + @"("" + " + @"(space_?space_->getName():""Missing Space"")" 
+        + "+\",\"+ValueObject<ValueType,ValueCount>::toString()" 
+        + (spObj.HasFrame ? "+\",\"+(frame_?frame_->getName():\"\")" : "") + @" + "")"";
     }
     
-    " + (spObj.HasFrame ? (sp.Prefix + @"Frame* getFrame() const { return this->frame_; };") : "") + @"
-    " + (spObj.HasFrame ? (@"void setFrame(" + sp.Prefix + @"Frame* frame);") : "") + @"
+    " + (spObj.HasFrame ? (sp.Name + @"Frame* getFrame() const { return this->frame_; };") : "") + @"
+    " + (spObj.HasFrame ? (@"void setFrame(" + sp.Name + @"Frame* frame){
+            this->frame_ = frame;
+        };") : "") + @"
 private:
     " + (!spObj.IsMap && !spObj.IsTransform ? sp.Name + @"* space_;" : "") + @" 
-    " + (spObj.HasFrame?(sp.Prefix + @"Frame* frame_;"):"") + @"
+    " + (spObj.HasFrame?(sp.Name + @"Frame* frame_;"):"") + @"
     " + (spObj.IsMap || spObj.IsTransform ? (@"MapSpace* space_;") : "") + @"
 };
 ";
                     file += "\n\n" +  spobjclass;
                 }
+                
             }
 
 

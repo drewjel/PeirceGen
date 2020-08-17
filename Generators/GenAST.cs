@@ -13,8 +13,8 @@ namespace PeirceGen.Generators
         {
 
             GenHeader();
-            if (!Directory.Exists(@"/peirce/PeirceGen/symlinkme"))
-                Directory.CreateDirectory(@"/peirce/PeirceGen/symlinkme");
+            if (!Directory.Exists(@"C:\Users\msfti\OneDrive\Desktop\myoutput"))
+                Directory.CreateDirectory(@"C:\Users\msfti\OneDrive\Desktop\myoutput");
             System.IO.File.WriteAllText(this.GetHeaderLoc(), this.HeaderFile);
         }
 
@@ -44,7 +44,35 @@ using RealScalar = double;
             {
                 switch (prod.ProductionType)
                 {
-                    case Grammar.ProductionType.Single: { break;  }
+                    case Grammar.ProductionType.Single:
+                    case Grammar.ProductionType.CaptureSingle: //{ break;  }
+                        {
+                            if (prod.IsFuncDeclare || prod.Cases[0].IsFuncDeclare)
+                            {
+                                file += "\n";
+                                file += "using " + prod.Name + " = const clang::FunctionDecl;";
+
+                            }
+                            else if (prod.IsTranslationDeclare || prod.Cases[0].IsTranslationDeclare)
+                            {
+                                file += "\n";
+                                file += "using " + prod.Name + " = const clang::TranslationUnitDecl;";
+
+                            }
+                            else if (prod.IsVarDeclare || prod.Cases[0].IsVarDeclare)
+                            {
+                                file += "\n";
+                                file += "using " + prod.Name + " = const clang::VarDecl;";
+
+
+                            }
+                            else //(!(prod.Passthrough is Grammar.Production))
+                            {
+                                file += "\n";
+                                file += "using " + prod.Name + " = const clang::Stmt;";
+                            }
+                            break;
+                        }
                     default:{
 
                             if (prod.IsFuncDeclare)
@@ -59,7 +87,14 @@ using RealScalar = double;
                                 file += "using " + prod.Name + " = const clang::TranslationUnitDecl;";
 
                             }
-                            else
+                            else if(prod.IsVarDeclare)
+                            {
+                                file += "\n";
+                                file += "using " + prod.Name + " = const clang::VarDecl;";
+
+
+                            }
+                            else //(!(prod.Passthrough is Grammar.Production))
                             {
                                 file += "\n";
                                 file += "using " + prod.Name + " = const clang::Stmt;";
@@ -70,22 +105,42 @@ using RealScalar = double;
 
                 foreach (var pcase in prod.Cases)
                 {
-                    if (pcase.CaseType == Grammar.CaseType.Passthrough)
+                    if (pcase.CaseType == Grammar.CaseType.Passthrough || pcase.CaseType == Grammar.CaseType.Inherits)
                         continue;
                     switch (prod.ProductionType)
                     {
-                        case Grammar.ProductionType.Single: 
+                        case Grammar.ProductionType.Single:
+                        case Grammar.ProductionType.CaptureSingle:
                             {
+                                break;
                                 if (pcase.CaseType == Grammar.CaseType.Ident)
                                 {
-                                    file += "\n";
-                                    file += "using " + prod.Name +" = const clang::VarDecl;";
-                                    ;
+                                    if(pcase.IsFuncDeclare)
+                                    {
+
+
+                                        file += "\n";
+                                        file += "using " + prod.Name + " = const clang::FunctionDecl;";
+                                    }
+                                    else if(pcase.IsTranslationDeclare)
+                                    {
+
+
+                                        file += "\n";
+                                        file += "using " + prod.Name + " = const clang::TranslationUnitDecl;";
+                                    }
+                                    else if(pcase.IsVarDeclare)
+                                    {
+
+
+                                        file += "\n";
+                                        file += "using " + prod.Name + " = const clang::VarDecl;";
+                                    }
                                 }break;
                             }
                         default:
                             {
-                                if (pcase.CaseType == Grammar.CaseType.Ident)
+                                if (pcase.CaseType == Grammar.CaseType.Ident || pcase.IsVarDeclare)
                                 {
 
                                     file += "\n";
@@ -139,7 +194,7 @@ using RealScalar = double;
 
         public string GetHeaderLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/AST.h";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\AST.h";
         }
     }
 }

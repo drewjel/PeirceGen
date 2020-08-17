@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,12 +11,12 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/CoordsToDomain.cpp";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\CoordsToDomain.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/CoordsToDomain.h";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\CoordsToDomain.h";
         }
         public override void GenCpp()
         {
@@ -73,13 +74,13 @@ using namespace coords2domain;
 
             foreach(var prod in ParsePeirce.Instance.Grammar.Productions)
             {
-                if (prod.ProductionType != Grammar.ProductionType.Single)
+                if (prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
                 {
                     var getdomprod = @"domain::DomainObject *CoordsToDomain::get" + prod.Name + @"(coords::" + prod.Name + @" *c) const
     {
         domain::DomainObject *dom = NULL;
         try {
-            dom = coords2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at((coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"*)c);
+            dom = coords2dom_" + prod.GetTopPassthrough().Name + @".at((coords::" + prod.GetTopPassthrough().Name + @"*)c);
         }
         catch (std::out_of_range &e) {
             dom = NULL;
@@ -88,9 +89,9 @@ using namespace coords2domain;
     }";
                     var getcooprod = @"coords::" + prod.Name + @" *CoordsToDomain::get" + prod.Name + @"(domain::DomainObject *d) const
     {
-        coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @" *coords = NULL;
+        coords::" + prod.GetTopPassthrough().Name + @" *coords = NULL;
         try {
-            coords = dom2coords_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at(d);
+            coords = dom2coords_" + prod.GetTopPassthrough().Name + @".at(d);
         }
         catch (std::out_of_range &e) {
             coords = NULL;
@@ -105,23 +106,23 @@ using namespace coords2domain;
 
                     if (pcase.CaseType == Grammar.CaseType.Passthrough || pcase.CaseType == Grammar.CaseType.Inherits)
                         continue;
-                    else if (pcase.CaseType == Grammar.CaseType.Ident)
+                    else if (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                     {
                         var put = @"void CoordsToDomain::put" + prod.Name + @"(coords::" + prod.Name + @"* c, domain::DomainObject *d)
 {
-    coords2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"[(coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"*)c] = d;
-    dom2coords_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"[d] = c;
+    coords2dom_" + prod.GetTopPassthrough().Name + @"[(coords::" + prod.GetTopPassthrough().Name + @"*)c] = d;
+    dom2coords_" + prod.GetTopPassthrough().Name + @"[d] = c;
 }";
                         var erase = @"void CoordsToDomain::erase" + prod.Name + @"(coords::" + prod.Name + @"* c, domain::DomainObject *d)
 {
-    coords2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".erase((coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"*)c);
-    dom2coords_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".erase(d);
+    coords2dom_" + prod.GetTopPassthrough().Name + @".erase((coords::" + prod.GetTopPassthrough().Name + @"*)c);
+    dom2coords_" + prod.GetTopPassthrough().Name + @".erase(d);
 }";
                         var getcoo = @"domain::DomainObject* CoordsToDomain::get" + prod.Name + @"(coords::" + prod.Name + @"* c) const
 {
     domain::DomainObject* dom = NULL;
     try {
-        dom = coords2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at((coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"*)c);
+        dom = coords2dom_" + prod.GetTopPassthrough().Name + @".at((coords::" + prod.GetTopPassthrough().Name + @"*)c);
     }
     catch (std::out_of_range &e) {
         dom = NULL;
@@ -130,9 +131,9 @@ using namespace coords2domain;
 }";
                         var getdom = @"coords::" + prod.Name + @"* CoordsToDomain::get" + prod.Name + @"(domain::DomainObject* d) const
 {
-    coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @" *coords = NULL;
+    coords::" + prod.GetTopPassthrough().Name + @" *coords = NULL;
     try {
-        coords = dom2coords_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at(d);
+        coords = dom2coords_" + prod.GetTopPassthrough().Name + @".at(d);
     }
     catch (std::out_of_range &e) {
         coords = NULL;
@@ -145,20 +146,20 @@ using namespace coords2domain;
                     {
                         var put = @"void CoordsToDomain::put" + pcase.Name + @"(coords::" + pcase.Name + @"* c, domain::DomainObject *d)
 {
-    coords2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"[(coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"*)c] = d;
-    dom2coords_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"[d] = (coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"*)c;
+    coords2dom_" + prod.GetTopPassthrough().Name + @"[(coords::" + prod.GetTopPassthrough().Name + @"*)c] = d;
+    dom2coords_" + prod.GetTopPassthrough().Name + @"[d] = (coords::" + prod.GetTopPassthrough().Name + @"*)c;
 }";
 
                         var erase = @"void CoordsToDomain::erase" + pcase.Name + @"(coords::" + pcase.Name + @"* c, domain::DomainObject *d)
 {
-    coords2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".erase((coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"*)c);
-    dom2coords_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".erase(d);
+    coords2dom_" + prod.GetTopPassthrough().Name + @".erase((coords::" + prod.GetTopPassthrough().Name + @"*)c);
+    dom2coords_" + prod.GetTopPassthrough().Name + @".erase(d);
 }";
                         var getcoo = @"domain::DomainObject* CoordsToDomain::get" + pcase.Name + @"(coords::" + pcase.Name + @"* c) const
 {
     domain::DomainObject* dom = NULL;
     try {
-        dom = coords2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at((coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"*)c);
+        dom = coords2dom_" + prod.GetTopPassthrough().Name + @".at((coords::" + prod.GetTopPassthrough().Name + @"*)c);
     }
     catch (std::out_of_range &e) {
         dom = NULL;
@@ -167,9 +168,9 @@ using namespace coords2domain;
 }";
                         var getdom = @"coords::" + pcase.Name + @"* CoordsToDomain::get" + pcase.Name + @"(domain::DomainObject* d) const
 {
-    coords::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @" *coords = NULL;
+    coords::" + prod.GetTopPassthrough().Name + @" *coords = NULL;
     try {
-        coords = dom2coords_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at(d);
+        coords = dom2coords_" + prod.GetTopPassthrough().Name + @".at(d);
     }
     catch (std::out_of_range &e) {
         coords = NULL;
@@ -224,7 +225,7 @@ public:
 
             foreach (var prod in ParsePeirce.Instance.Grammar.Productions)
             {
-                if (prod.ProductionType != Grammar.ProductionType.Single)
+                if (prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
                 {
                     var getdomprod = @"domain::DomainObject* get" + prod.Name + "(coords::" + prod.Name + "* c) const;";
                     var getcooprod = @"coords::" + prod.Name + "* get" + prod.Name + "(domain::DomainObject* d) const;";
@@ -233,7 +234,17 @@ public:
                 }
                 else
                 {
+                    var getdomprod = @"domain::DomainObject* get" + prod.Name + "(coords::" + prod.Name + "* c) const;";
+                    var getcooprod = @"coords::" + prod.Name + "* get" + prod.Name + "(domain::DomainObject* d) const;";
 
+                    file += "\n\t" + getdomprod + "\n\t" + getcooprod + "\n";
+
+                    var put = @"void put" + prod.Name + "(coords::" + prod.Name + "* key, domain::DomainObject* val);";
+                    var erase = @"void erase" + prod.Name + "(coords::" + prod.Name + "* key, domain::DomainObject* val);";
+
+                    file += "\n\t" + put + "\n" + erase + "\n";
+
+                    continue;
                 }
 
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -10,12 +11,12 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/InterpToDomain.cpp";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\InterpToDomain.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return @"/peirce/PeirceGen/symlinkme/InterpToDomain.h";
+            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\InterpToDomain.h";
         }
         public override void GenCpp()
         {
@@ -88,13 +89,13 @@ using namespace interp2domain;
 
             foreach (var prod in ParsePeirce.Instance.Grammar.Productions)
             {
-                if (prod.ProductionType != Grammar.ProductionType.Single)
+                if (prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
                 {
                     var getdomprod = @"domain::DomainObject *InterpToDomain::get" + prod.Name + @"(interp::" + prod.Name + @" *i) const
     {
         domain::DomainObject *dom = NULL;
         try {
-            dom = interp2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at(i);
+            dom = interp2dom_" + prod.GetTopPassthrough().Name + @".at(i);
         }
         catch (std::out_of_range &e) {
             dom = NULL;
@@ -103,9 +104,9 @@ using namespace interp2domain;
     }";
                     var getintprod = @"interp::" + prod.Name + @" *InterpToDomain::get" + prod.Name + @"(domain::DomainObject *d) const
     {
-        interp::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @" *interp = NULL;
+        interp::" + prod.GetTopPassthrough().Name + @" *interp = NULL;
         try {
-            interp = dom2interp_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at(d);
+            interp = dom2interp_" + prod.GetTopPassthrough().Name + @".at(d);
         }
         catch (std::out_of_range &e) {
             interp = NULL;
@@ -113,6 +114,44 @@ using namespace interp2domain;
         return (interp::" + (prod.Name) + @"*)interp;
     }";
                     file += "\n" + getintprod + "\n" + getdomprod + "\n";
+                }
+                else
+                {
+                    var put = @"void InterpToDomain::put" + prod.Name + @"(interp::" + prod.Name + @"* i, domain::DomainObject* d)
+{
+    interp2dom_" + prod.GetTopPassthrough().Name + @"[i] = d;
+    dom2interp_" + prod.GetTopPassthrough().Name + @"[d] = i;
+}";
+                    var erase = @"void InterpToDomain::erase" + prod.Name + @"(interp::" + prod.Name + @"* i, domain::DomainObject* d)
+{
+    interp2dom_" + prod.GetTopPassthrough().Name + @".erase(i);
+    dom2interp_" + prod.GetTopPassthrough().Name + @".erase(d);
+}";
+                    var getint = @"domain::DomainObject* InterpToDomain::get" + prod.Name + @"(interp::" + prod.Name + @"* i) const
+{
+    domain::DomainObject* dom = NULL;
+    try {
+        dom = interp2dom_" + prod.GetTopPassthrough().Name + @".at(i);
+    }
+    catch (std::out_of_range &e) {
+        dom = NULL;
+    }
+    return static_cast<domain::DomainObject*>(dom);
+}";
+                    var getdom = @"interp::" + prod.Name + @"* InterpToDomain::get" + prod.Name + @"(domain::DomainObject* d) const
+{
+    interp::" + prod.GetTopPassthrough().Name + @" *interp = NULL;
+    try {
+        interp = dom2interp_" + prod.GetTopPassthrough().Name + @".at(d);
+    }
+    catch (std::out_of_range &e) {
+        interp = NULL;
+    }
+    return static_cast<interp::" + prod.Name + @"*>(interp);
+}";
+                    file += "\n" + put + "\n" + erase + "\n" + getint + "\n" + getdom + "\n";
+
+                    continue;
                 }
 
                 foreach (var pcase in prod.Cases)
@@ -122,21 +161,22 @@ using namespace interp2domain;
                         continue;
                     else if (pcase.CaseType == Grammar.CaseType.Ident)
                     {
+                        break;
                         var put = @"void InterpToDomain::put" + prod.Name + @"(interp::" + prod.Name + @"* i, domain::DomainObject* d)
 {
-    interp2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"[i] = d;
-    dom2interp_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"[d] = i;
+    interp2dom_" + prod.GetTopPassthrough().Name + @"[i] = d;
+    dom2interp_" + prod.GetTopPassthrough().Name + @"[d] = i;
 }";
                         var erase = @"void InterpToDomain::erase" + prod.Name + @"(interp::" + prod.Name + @"* i, domain::DomainObject* d)
 {
-    interp2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".erase(i);
-    dom2interp_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".erase(d);
+    interp2dom_" + prod.GetTopPassthrough().Name + @".erase(i);
+    dom2interp_" + prod.GetTopPassthrough().Name + @".erase(d);
 }";
                         var getint = @"domain::DomainObject* InterpToDomain::get" + prod.Name + @"(interp::" + prod.Name + @"* i) const
 {
     domain::DomainObject* dom = NULL;
     try {
-        dom = interp2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at(i);
+        dom = interp2dom_" + prod.GetTopPassthrough().Name + @".at(i);
     }
     catch (std::out_of_range &e) {
         dom = NULL;
@@ -145,9 +185,9 @@ using namespace interp2domain;
 }";
                         var getdom = @"interp::" + prod.Name + @"* InterpToDomain::get" + prod.Name + @"(domain::DomainObject* d) const
 {
-    interp::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @" *interp = NULL;
+    interp::" + prod.GetTopPassthrough().Name + @" *interp = NULL;
     try {
-        interp = dom2interp_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at(d);
+        interp = dom2interp_" + prod.GetTopPassthrough().Name + @".at(d);
     }
     catch (std::out_of_range &e) {
         interp = NULL;
@@ -160,19 +200,19 @@ using namespace interp2domain;
                     {
                         var put = @"void InterpToDomain::put" + pcase.Name + @"(interp::" + pcase.Name + @"* i, domain::DomainObject* d)
 {
-    interp2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"[i] = d;
-    dom2interp_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @"[d] = i;
+    interp2dom_" + prod.GetTopPassthrough().Name + @"[i] = d;
+    dom2interp_" + prod.GetTopPassthrough().Name + @"[d] = i;
 }";
                         var erase = @"void InterpToDomain::erase" + pcase.Name + @"(interp::" + pcase.Name + @"* i, domain::DomainObject* d)
 {
-    interp2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".erase(i);
-    dom2interp_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".erase(d);
+    interp2dom_" + prod.GetTopPassthrough().Name + @".erase(i);
+    dom2interp_" + prod.GetTopPassthrough().Name + @".erase(d);
 }";
                         var getint = @"domain::DomainObject* InterpToDomain::get" + pcase.Name + @"(interp::" + pcase.Name + @"* i) const
 {
     domain::DomainObject* dom = NULL;
     try {
-        dom = interp2dom_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at(i);
+        dom = interp2dom_" + prod.GetTopPassthrough().Name + @".at(i);
     }
     catch (std::out_of_range &e) {
         dom = NULL;
@@ -181,9 +221,9 @@ using namespace interp2domain;
 }";
                         var getdom = @"interp::" + pcase.Name + @"* InterpToDomain::get" + pcase.Name + @"(domain::DomainObject* d) const
 {
-    interp::" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @" *interp = NULL;
+    interp::" + prod.GetTopPassthrough().Name + @" *interp = NULL;
     try {
-        interp = dom2interp_" + (prod.Passthrough is Grammar.Production ? prod.Passthrough.Name :  prod.Name) + @".at(d);
+        interp = dom2interp_" + prod.GetTopPassthrough().Name + @".at(d);
     }
     catch (std::out_of_range &e) {
         interp = NULL;
@@ -232,7 +272,7 @@ class InterpToDomain
 
             foreach (var prod in ParsePeirce.Instance.Grammar.Productions)
             {
-                if (prod.ProductionType != Grammar.ProductionType.Single)
+                if (prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
                 {
 
 
@@ -241,6 +281,20 @@ class InterpToDomain
 
                     file += "\n\t" + getdomprod + "\n\t" + getintprod + "\n\t";
                 }
+                else
+                {
+
+                    var put = @"void put" + prod.Name + "(interp::" + prod.Name + "* key, domain::DomainObject* val);";
+                    var erase = @"void erase" + prod.Name + "(interp::" + prod.Name + "* key, domain::DomainObject* val);";
+                    var getdom = @"domain::DomainObject* get" + prod.Name + "(interp::" + prod.Name + "* c) const;";
+                    var getint = @"interp::" + prod.Name + "* get" + prod.Name + "(domain::DomainObject* d) const;";
+
+                    file += "\n\t" + put + "\n\t" + getdom + "\n\t" + getint + "\n" + erase + "\n";
+
+                    continue;
+
+                }
+
                 foreach (var pcase in prod.Cases)
                 {
 
@@ -248,7 +302,7 @@ class InterpToDomain
                         continue;
                     else if (pcase.CaseType == Grammar.CaseType.Ident)
                     {
-
+                        break;
                         var put = @"void put" + prod.Name + "(interp::" + prod.Name + "* key, domain::DomainObject* val);";
                         var erase = @"void erase" + prod.Name + "(interp::" + prod.Name + "* key, domain::DomainObject* val);";
                         var getdom = @"domain::DomainObject* get" + prod.Name + "(interp::" + prod.Name + "* c) const;";
