@@ -5,18 +5,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Configuration;
+
 namespace PeirceGen.Generators
 {
     public class GenCoords : GenBase
     {
         public override string GetCPPLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/Coords.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "Coords.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/Coords.h";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "Coords.h";
         }
 
         public GenCoords()
@@ -254,7 +256,7 @@ public:
             prod.Passthrough is Grammar.Production ? prod.Passthrough.Name : prod.Inherits is Grammar.Production ? prod.Inherits.Name : "Coords") + 
             @"(" + (prod.HasValueContainer() ? "{" +
                     Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "value" + v) + "}" : "") + @") {};
-    std::string virtual toString() const { return ""Do not call this""; };
+    std::string virtual toString() const override { return ""Do not call this""; };
     bool operator==(const " + prod.Name + @" &other) const {
         return ((Coords*)this)->state_ == ((Coords)other).state_;
     };
@@ -288,7 +290,7 @@ public:
                         prod.Inherits is Grammar.Production ? prod.Inherits.Name : "Coords") + @"(" + (prod.HasValueContainer() ? "{" +
                     Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "value" + v) + "}" : "") + @")
         " + (prod.Cases[0].Productions.Count > 0 ? "," :"") + Peirce.Join(",", Enumerable.Range(0, prod.Cases[0].Productions.Count), v => " operand_" + v + "(operand" + v + ")") + @"{};
-    std::string virtual toString() const;
+    std::string virtual toString() const override;
     " + Peirce.Join("\n\t", Enumerable.Range(0, prod.Cases[0].Productions.Count), v => "coords::" + prod.Cases[0].Productions[v].Name + " * getOperand" + v + "(){ return this->operand_" + v +@";};") + @"
     bool operator==(const " + prod.Name + @" &other) const {
         return ((Coords*)this)->state_ == ((Coords)other).state_;
@@ -318,7 +320,7 @@ protected:
                             {
                                 break;
 
-                                int i = 0, j = 0, k = 0;
+                                /*int i = 0, j = 0, k = 0;
                                 var caseStr =
     @"
 
@@ -338,7 +340,7 @@ public:
 };
 
 ";
-                                break;
+                                break;*/
                             }
                         case Grammar.CaseType.Op:
                         case Grammar.CaseType.Hidden:
@@ -354,7 +356,7 @@ public:
     (prod.HasValueContainer() ? (pcase.Productions.Count > 0 ? "," : "") +
                         Peirce.Join(",", Enumerable.Range(0, prod.GetPriorityValueContainer().ValueCount), v => "std::shared_ptr<" + prod.GetPriorityValueContainer().ValueType + "> value" + v) : "") +
     @");
-    virtual std::string toString() const;
+    virtual std::string toString() const override;
     bool operator==(const " + prod.Name + @" &other) const {
         return ((Coords*)this)->state_ == ((Coords)other).state_;
     };" + "\n\t" +
@@ -372,14 +374,14 @@ string.Join("\n\t", pcase.Productions.Select(p_ => "coords::"+p_.Name + " *opera
                         }
                         case Grammar.CaseType.ArrayOp:
                         {
-                                int i = 0, j = 0, k = 0;
+                                //int i = 0, j = 0;//, k = 0;
                                 var caseStr =
     @"
 
 class " + pcase.Name + @" : public " + prod.Name + @" {
 public:
     " + pcase.Name + @"(std::vector<"+pcase.Productions[0].Name + @"*> operands);
-    virtual std::string toString() const;
+    virtual std::string toString() const override;
     bool operator==(const " + prod.Name + @" &other) const {
         return ((Coords*)this)->state_ == ((Coords)other).state_;
     };
@@ -387,7 +389,7 @@ public:
     std::vector<" + pcase.Productions[0].Name + @"*> getOperands() const { return this->operands_; };
 
     coords::" + pcase.Productions[0].Name + @"* getOperand(int i) const {
-        return this->operands_.size() >= i ? this->operands_[i-1] : nullptr;
+        return ((int)this->operands_.size()) >= i ? this->operands_[i-1] : nullptr;
     }"+
 
     "\nprotected:\n\t" + @"
@@ -553,7 +555,7 @@ std::string Coords::getSourceLoc() const {
                         case Grammar.CaseType.Hidden:
                         case Grammar.CaseType.Pure:
                             {
-                                int i = 0, j = 0, k = 0;
+                                int i = 0, j = 0;//, k = 0;
                                 var cons = "\n" + pcase.Name + "::" + pcase.Name + "(" 
                                     + string.Join(",", pcase.Productions.Select(p_ => "coords::" + p_.Name + " *operand_" + ++j)) +
                                     (prod.HasValueContainer() ? (pcase.Productions.Count > 0 ? "," : "") +
@@ -602,7 +604,7 @@ std::string Coords::getSourceLoc() const {
                                 */
 
 
-                                int i = 0, j = 0, k = 0;
+                                //int i = 0, j = 0;//, k = 0;
                                 var cons = "\n" + pcase.Name + "::" + pcase.Name  + "(std::vector<" + pcase.Productions[0].Name + @"*> operands) :" + prod.Name + "()" +@" {
     for(auto& op : operands){
         this->operands_.push_back(op);
@@ -611,7 +613,7 @@ std::string Coords::getSourceLoc() const {
 };";
 
                                 file += cons;
-                                i = 0; j = 0;
+                                //i = 0; j = 0;
                                //foreach (var casep in pcase.Productions)
                                 //{
                                  //   var opgetter = "\n" + "coords::" + casep.Name + "* " + pcase.Name + "::getOperand" + ++i + "() { return this->operand" + i + ";}";

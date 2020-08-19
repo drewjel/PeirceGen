@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Configuration;
+
 namespace PeirceGen.Generators
 {
     public class GenMatcher //: GenBase
@@ -21,8 +23,8 @@ namespace PeirceGen.Generators
 
             GenHeader();
             GenCpp();
-            if (!Directory.Exists(Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\ros_matchers"))
-                Directory.CreateDirectory(Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\ros_matchers");
+            if (!Directory.Exists(PeirceGen.MonoConfigurationManager.Instance["MatcherPath"]))
+                Directory.CreateDirectory(PeirceGen.MonoConfigurationManager.Instance["MatcherPath"]);
             System.IO.File.WriteAllText(this.GetHeaderLoc(), this.HeaderFile);
             System.IO.File.WriteAllText(this.GetCPPLoc(), this.CppFile);
         }
@@ -38,8 +40,8 @@ namespace PeirceGen.Generators
             GenMatcher.GenStatementCpp();
             //GenMatcher.GenFunctionHeader();
            // GenMatcher.GenFunctionCpp();
-            if (!Directory.Exists(Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\ros_matchers"))
-                Directory.CreateDirectory(Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\ros_matchers");
+            if (!Directory.Exists(PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + "ros_matchers"))
+                Directory.CreateDirectory(PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + "ros_matchers");
             System.IO.File.WriteAllText(GenMatcher.GetStatementHeaderLoc(), GenMatcher.StatementHeaderFile);
             System.IO.File.WriteAllText(GenMatcher.GetStatementCPPLoc(), GenMatcher.StatementCppFile);
             System.IO.File.WriteAllText(GenMatcher.GetFunctionHeaderLoc(), GenMatcher.FunctionHeaderFile);
@@ -48,22 +50,22 @@ namespace PeirceGen.Generators
 
         private static string GetFunctionCPPLoc()
         {
-            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\ros_matchers\ROSFunctionMatcher.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + "ROSFunctionMatcher.cpp";
         }
 
         private static string GetFunctionHeaderLoc()
         {
-            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\ros_matchers\ROSFunctionMatcher.h";
+            return PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + "ROSFunctionMatcher.h";
         }
 
         private static string GetStatementCPPLoc()
         {
-            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\ros_matchers\ROSStatementMatcher.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + "ROSStatementMatcher.cpp";
         }
 
         private static string GetStatementHeaderLoc()
         {
-            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\ros_matchers\ROSStatementMatcher.h";
+            return PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + "ROSStatementMatcher.h";
         }
 
         public static void GenStatementHeader()
@@ -171,13 +173,13 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
 
     const auto exprWithCleanupsDiscard = Result.Nodes.getNodeAs<clang::ExprWithCleanups>(""ExprWithCleanupsDiscard"");
 
-    const auto ifStmt_ = Result.Nodes.getNodeAs<clang::IfStmt>(""IfStmt"");
+    //const auto ifStmt_ = Result.Nodes.getNodeAs<clang::IfStmt>(""IfStmt"");
 
     const auto cmpdStmt_ = Result.Nodes.getNodeAs<clang::CompoundStmt>(""CompoundStmt"");
 
-    const auto returnStmt_ = Result.Nodes.getNodeAs<clang::ReturnStmt>(""ReturnStmt"");
+    //const auto returnStmt_ = Result.Nodes.getNodeAs<clang::ReturnStmt>(""ReturnStmt"");
 
-    const auto whileStmt_ = Result.Nodes.getNodeAs<clang::WhileStmt>(""WhileStmt"");
+    //const auto whileStmt_ = Result.Nodes.getNodeAs<clang::WhileStmt>(""WhileStmt"");
 
     /*
         if(declStmt)

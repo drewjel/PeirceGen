@@ -6,15 +6,17 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+using System.Configuration;
+
 namespace PeirceGen
 {
    // public class 
+
     public class MonoHack
     {
         public Space Item1;
         public Space.SpaceObject Item2;
     }
-
 
     public class Peirce
     {
@@ -52,7 +54,7 @@ namespace PeirceGen
 
     public class ParsePeirce
     {
-        public static readonly string GrammarFile = "/peirce/PeirceGen/GrammarEmpty";
+        public static readonly string GrammarFile = PeirceGen.MonoConfigurationManager.Instance["GrammarPath"] + "/GrammarEmpty";//Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\GrammarEmpty";
 
         public static readonly Peirce Instance = new Peirce();
         
@@ -367,12 +369,12 @@ namespace PeirceGen
             remaining_config = remaining_config.Skip(next_split + 1).ToList();
             next_split = remaining_config.IndexOf("####");
 
-            var ast_annotation_to_dsl_map = remaining_config.Take(next_split).ToList();
+           // var ast_annotation_to_dsl_map = remaining_config.Take(next_split).ToList();
 
             remaining_config = remaining_config.Skip(next_split + 1).ToList();
             next_split = remaining_config.IndexOf("####");
 
-            var ast_to_default_domain_object_map = remaining_config.ToList();
+        //    var ast_to_default_domain_object_map = remaining_config.ToList();
 
             remaining_config = remaining_config.Skip(next_split + 1).ToList();
             next_split = remaining_config.IndexOf("####");
@@ -518,7 +520,7 @@ namespace PeirceGen
                         if (cmd is Grammar.Command)
                             fixedline = fixedline.Replace('@' + commandwrapper[0] + '@', "");
 
-                        var last = fixedline.IndexOf(" :=");
+                        //var last = fixedline.IndexOf(" :=");
 
                         bool isDeclare = (fixedline[1] == '#');
                         if (isDeclare)
@@ -587,7 +589,7 @@ namespace PeirceGen
                         foreach (var pref in pcase.ProductionRefs)
                         {
                             t = Instance.Grammar.Productions.Where(p_ => p_.Name == Grammar.TrimProductionType(pref)).ToList();
-                            Console.WriteLine(pcase.Name + " " + pref);
+                            //Console.WrConsole.WriteLine(pcase.Name + " " + pref);
                             pcase.Productions.Add(Instance.Grammar.Productions.Single(p_ => p_.Name == Grammar.TrimProductionType(pref)));
                         }
 
@@ -632,8 +634,8 @@ namespace PeirceGen
 
             var sp = default(Space);
 
-            bool inSpace = false;
-            bool inInstance = false;
+           // bool inSpace = false;
+            //bool inInstance = false;
 
             Func<string, bool> begin = (ln) => ln.Trim() == "{";
             Func<string, bool> end = (ln) => ln.Trim() == "}";
@@ -732,7 +734,7 @@ namespace PeirceGen
                         var pattern = Regex.Escape("{") + "(.*)" + Regex.Escape("}");
                         
                         var fieldsmatch = Regex.Match(spl[2], pattern).Groups[1].Value.Split('-').ToList();
-                        var fields = fieldsmatch;// fieldsmatch.Select(f => Enum.Parse(typeof(Space.FieldType), f));
+                        //var fields = fieldsmatch;// fieldsmatch.Select(f => Enum.Parse(typeof(Space.FieldType), f));
 
                         /*
                         //EuclideanGeometry,{geom3d,3}
@@ -846,9 +848,9 @@ namespace PeirceGen
 
             int
                 prematch = 1,
-                matched = 2,
-                exSpace = 3,
-                instance = 4;
+                matched = 2;//,
+                //exSpace = 3,
+               // instance = 4;
 
             int current = prematch;
 
@@ -893,7 +895,7 @@ namespace PeirceGen
 
                                 var spaceObjDict = Space.RetrieveInheritedObjects(sp, obj, Instance.Spaces);
                                 Instance.GrammarRuleToSpaceObjectMap[prod] = Instance.GrammarRuleToSpaceObjectMap.ContainsKey(prod) ? Instance.GrammarRuleToSpaceObjectMap[prod]: new List<MonoHack>();
-                                spaceObjDict.Keys.ToList().ForEach(key => Instance.GrammarRuleToSpaceObjectMap[prod].Add(new MonoHack(){Item1 =key, Item2=spaceObjDict[key]}));
+                                spaceObjDict.Keys.ToList().ForEach(key => Instance.GrammarRuleToSpaceObjectMap[prod].Add(new MonoHack() { Item1 = key, Item2 = spaceObjDict[key] }));
                             }
                         }
                     }

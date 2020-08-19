@@ -5,18 +5,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Configuration;
+
 namespace PeirceGen.Generators
 {
     public class GenCoordsToInterp : GenBase
     {
         public override string GetCPPLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/CoordsToInterp.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "CoordsToInterp.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/CoordsToInterp.h";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "CoordsToInterp.h";
         }
 
         public override void GenCpp()
@@ -101,7 +103,7 @@ using namespace coords2interp;
                         continue;
                     else if (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                     {
-                        continue;
+                        continue;/*
                         var put = @"void CoordsToInterp::put" + prod.Name + @"(coords::" + prod.Name + @"* c, interp::" + prod.Name + @"* i)
 {
     coords2interp_" + prod.GetTopPassthrough().Name + @"[c] = (interp::" + prod.GetTopPassthrough().Name + @"*)i;
@@ -129,7 +131,7 @@ using namespace coords2interp;
     }
     return static_cast<interp::" + prod.Name + @"*>(interp);
 }";
-                        file += "\n" + put + "\n" + getcoo + "\n" + getint + "\n";
+                        file += "\n" + put + "\n" + getcoo + "\n" + getint + "\n";*/
                     }
                     else
                     {
@@ -221,11 +223,11 @@ public:
                     {
 
                         break;
-                        var put = @"void put" + prod.Name + "(coords::" + prod.Name + "* key, interp::" + prod.Name + "* val);";
+                        /*var put = @"void put" + prod.Name + "(coords::" + prod.Name + "* key, interp::" + prod.Name + "* val);";
                         var getint = @"interp::" + prod.Name + "* get" + prod.Name + "(coords::" + prod.Name + "* c) const;";
                         var getcoo = @"coords::" + prod.Name + "* get" + prod.Name + "(interp::" + prod.Name + "* i) const;";
 
-                        file += "\n\t" + put + "\n\t" + getint + "\n\t" + getcoo + "\n";
+                        file += "\n\t" + put + "\n\t" + getint + "\n\t" + getcoo + "\n";*/
                     }
                     else
                     {

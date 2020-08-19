@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -42,13 +43,13 @@ using namespace oracle;
             var getFrame = @"domain::Frame* Oracle_AskAll::getFrame(domain::Space* space){
 
     auto frames = space->getFrames();
-    auto sz = frames.size();
+    auto sz = (int)frames.size();
             
     while(true){
         int i = 0;
         std::cout<<""Available Frames For : "" << space->toString() << ""\n"";
         for(auto fr : frames){
-            std::cout<<""(""+std::to_string((i + 1))+"") ""<<frames[i++]->toString()<<""\n"";
+            std::cout<<""(""+std::to_string((i++))+"") ""<<fr->toString()<<""\n"";
         }
         int choice = 0;
         std::cin>>choice;
@@ -56,6 +57,7 @@ using namespace oracle;
             return frames[choice-1];
         }
     }
+    return nullptr;
 }";
             file += "\n" + getFrame + "\n";
 
@@ -425,13 +427,13 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
 
             }
 
-            file += "\n}";
+            file += "\n\treturn nullptr;\n}";
 
             file += getters;
 
 
 
-
+            /*
 var p = @"
     std::vector<domain::Space*>& spaces = this->domain_->getSpaces();
 	if (spaces.size() == 0) {
@@ -451,7 +453,7 @@ var p = @"
 	}
 }
 ";
-
+            */
 
             this.CppFile = file;
 
@@ -471,7 +473,7 @@ namespace oracle{
 class Oracle_AskAll : public Oracle 
 {
 public:
-	Oracle_AskAll(domain::Domain* d) : domain_(d) { };
+	Oracle_AskAll(domain::Domain* d) " + (ParsePeirce.Instance.Grammar.Productions.Where(p_ => p_.ProductionType == Grammar.ProductionType.Capture || p_.ProductionType == Grammar.ProductionType.CaptureSingle).ToList().Count > 0 ? @" : domain_(d)" : "") + @" { };
 
     domain::DomainObject* getInterpretation(coords::Coords* coords, domain::DomainObject* dom);
 
@@ -489,10 +491,10 @@ public:
  //                   if (pcase.CaseType == Grammar.CaseType.Passthrough)
   //                      continue;
 
-                    var getstr = @"
+//                    var getstr = @"
 
     
-";
+//";
                     //file += getstr;
                 //}
             }
@@ -516,23 +518,28 @@ public:
                 else
                 {
                     continue;
-                    var getstr = @"
+                    /*var getstr = @"
     virtual domain::DomainObject* getInterpretationFor" + prod.Name + @"(coords::" + prod.Name + @"* coords, domain::DomainObject* dom);
 ";
-                    file += getstr;
+                    file += getstr;*/
                     // }
                 }
             }
 
-            var footer = @"
-private:
+            var footer = (ParsePeirce.Instance.Grammar.Productions.Where(p_=>p_.ProductionType == Grammar.ProductionType.Capture || p_.ProductionType == Grammar.ProductionType.CaptureSingle).ToList().Count > 0 ? @"
+protected:
 	domain::Domain* domain_;
 };
 
 } // namespace
 
 #endif
-";
+" : @"
+};
+} // namespace
+
+#endif"
+);
             file += footer;
 
             this.HeaderFile = file;
@@ -540,12 +547,12 @@ private:
 
         public override string GetCPPLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/Oracle_AskAll.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "Oracle_AskAll.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/Oracle_AskAll.h";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "Oracle_AskAll.h";
         }
 
         public void GenBaseHeaderFile()
@@ -590,10 +597,10 @@ public:";
                 else
                 {
                     continue;
-                    var getstr = @"
+                    /*var getstr = @"
     virtual domain::DomainObject* getInterpretationFor" + prod.Name + @"(coords::" + prod.Name + @"* coords, domain::DomainObject* dom) = 0;
 ";
-                    file += getstr;
+                    file += getstr;*/
                 }
             }
             file += footer;
@@ -611,7 +618,7 @@ public:";
 
         public string GetBaseHeaderLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/Oracle.h";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "Oracle.h";
         }
     }
 }

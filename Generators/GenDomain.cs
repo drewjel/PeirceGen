@@ -5,18 +5,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Configuration;
+
 namespace PeirceGen.Generators
 {
     public class GenDomain : GenBase
     {
         public override string GetCPPLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/Domain.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "Domain.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/Domain.h";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "Domain.h";
         }
         public override void GenCpp()
         {
@@ -168,6 +170,7 @@ Frame* Domain::mkFrame(std::string name, Space* space, Frame* parent){
         }
     }";
             })) + @"
+    return nullptr;
 };
 
 
@@ -601,7 +604,7 @@ protected:
 
 class Frame {
 public:
-    Frame(std::string name, Space* space, Frame* parent) : name_(name), space_(space), parent_(parent) {};
+    Frame(std::string name, Space* space, Frame* parent) : parent_(parent), space_(space), name_(name) {};
     Frame() {};
     virtual ~Frame(){};
     virtual std::string toString() const {
@@ -656,10 +659,10 @@ public:
 	MapSpace(domain::Space* domain, domain::Space* codomain) : domain_(domain), codomain_(codomain), change_space_{true}, change_frame_{true} {};
 
     MapSpace(domain::Space* domain, domain::Space* codomain, Frame* domain_frame, Frame* codomain_frame) 
-        : domain_(domain), codomain_(codomain), domain_frame_(domain_frame), codomain_frame_(codomain_frame), change_space_{true}, change_frame_{true} {};
+        : domain_(domain), domain_frame_(domain_frame), codomain_(codomain), codomain_frame_(codomain_frame), change_space_{true}, change_frame_{true} {};
 
     MapSpace(domain::Space* domain, Frame* domain_frame, Frame* codomain_frame)
-        : domain_(domain), codomain_(nullptr), domain_frame_(domain_frame), codomain_frame_(codomain_frame), change_space_{false}, change_frame_{true} {};
+        : domain_(domain), domain_frame_(domain_frame), codomain_(nullptr), codomain_frame_(codomain_frame), change_space_{false}, change_frame_{true} {};
 	std::string toString() const {
         return ""@@Map("" + this->getName() + "")"";
     };
@@ -697,6 +700,7 @@ public:
     DomainObject(std::initializer_list<DomainObject*> args);
     DomainObject(std::vector<DomainObject*> operands) : operands_(operands) {};
     DomainObject(){};
+    virtual ~DomainObject(){};
     DomainObject* getOperand(int i);
     std::vector<DomainObject*> getOperands() const { return operands_; };
     void setOperands(std::vector<DomainObject*> operands);

@@ -4,6 +4,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Configuration;
+
 namespace PeirceGen.Generators
 {
     using System.IO;
@@ -18,8 +20,8 @@ namespace PeirceGen.Generators
         {
             GenHeader();
             GenCpp();
-            if (Directory.Exists("/peirce/PeirceGen/symlinkme"))
-                Directory.CreateDirectory("/peirce/PeirceGen/symlinkme");
+            if (!Directory.Exists(PeirceGen.MonoConfigurationManager.Instance["GenPath"]))
+                Directory.CreateDirectory(PeirceGen.MonoConfigurationManager.Instance["GenPath"]);
             System.IO.File.WriteAllText(this.GetHeaderLoc(), this.HeaderFile);
             System.IO.File.WriteAllText(this.GetCPPLoc(), this.CppFile);
         }

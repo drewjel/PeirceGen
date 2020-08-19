@@ -160,6 +160,11 @@ namespace PeirceGen
                 return this.ClangName == mc.ClangName && this.Args.Count == mc.Args.Count &&
                     Enumerable.Range(0, this.Args.Count).ToList().TrueForAll(i => this.Args[i] == mc.Args[i]);
             }
+
+            public override int GetHashCode()
+            {
+                return base.GetHashCode();
+            }
         }
 
        
@@ -189,7 +194,7 @@ body
                 var grammartype = raw.Split('@')[1];
 
                 var asttoks = asttype.Split('.');
-                var grammartoks = grammartype.Split('.');
+                //var grammartoks = grammartype.Split('.');
 
                 //Console.WriteLine(raw + " " + grammartype);
 
@@ -219,8 +224,8 @@ body
                         BuildCallbackHandler = (prod) =>
                         {
 
-                            int i = 0, j = 0, k = 0,
-                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0, z = 0, q = 0;
+                            int i = 0, //j = 0, k = 0,
+                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0,  q = 0;
                             var prodexistpreds = string.Join("",
                                 prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
@@ -309,8 +314,8 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         },
                         BuildCallbackHandler = (prod) =>
                         {
-                            int i = 0, j = 0, k = 0,
-                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0, z = 0;
+                            //int i = 0, j = 0, k = 0,
+                            //    l = 0, m = 0, n = 0, o = 0, x = 0, y = 0, z = 0;
                             var prodexistpreds = string.Join("",
                                 prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.TypeName + @"""] = [=](std::string typenm){
     if(false){return false;}" +
@@ -415,8 +420,8 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         },
                         BuildCallbackHandler = (prod) =>
                         {
-                            int i = 0, j = 0, k = 0,
-                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0, z = 0, q = 0;
+                            int i = 0,// j = 0, k = 0,
+                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0,  q = 0;
                             var prodexistpreds = string.Join("",
                                    prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.TypeName + @"""] = [=](std::string typenm){
         if(false){ return false;}" +
@@ -504,8 +509,8 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         BuildCallbackHandler = (prod) =>
                          {
 
-                             int i = 0, j = 0, k = 0,
-                                 l = 0, m = 0, n = 0, o = 0, x = 0, y = 0, z = 0, q = 0;
+                             int i = 0, j = 0, 
+                                 l = 0, m = 0, n = 0, o = 0, x = 0, y = 0,  q = 0;
 
 
                              var prodexistpreds = string.Join("",
@@ -581,8 +586,8 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         {
 
 
-                            int i = 0, j = 0, k = 0,
-                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0, z = 0, q = 0;
+                            int i = 0, j = 0, 
+                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0,  q = 0;
 
 
                             var prodexistpreds = string.Join("",
@@ -680,7 +685,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
            Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
            + @"
     };");
-                                int y = 0, m = 0;
+                               // int y = 0, m = 0;
                                 return prodexistpreds + @"
     if (cxxBoolLiteralExpr_)
     {
@@ -711,7 +716,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
            Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
            + @"
     };");
-                                int y = 0, m = 0;
+                                //int y = 0, m = 0;
                                 return prodexistpreds + @"
     if (integerLiteral_)
     {
@@ -747,7 +752,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
            Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
            + @"
     };");
-                                int y = 0, m = 0;
+                                //int y = 0, m = 0;
                                 return prodexistpreds + @"
     if (floatLiteral_)
     {
@@ -840,7 +845,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
     + @"
     };");
-                         int y = 0, m = 0;
+                         //int y = 0, m = 0;
                          return prodexistpreds+@"
     if(memberExpr_){
         auto inner = memberExpr_->getBase();
@@ -878,7 +883,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
     + @"
     };");
-                         int y = 0, m = 0;
+                         //int y = 0, m = 0;
                          return prodexistpreds+@"
 
     if (implicitCastExpr_)
@@ -927,7 +932,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
     + @"
     };");
-                         int y = 0, m = 0;
+                         //int y = 0, m = 0;
                          return prodexistpreds+@"
     if (cxxBindTemporaryExpr_)
     {
@@ -970,7 +975,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
     + @"
     };");
-                         int y = 0, m = 0;
+                         //int y = 0, m = 0;
                          return prodexistpreds+@"
     if (materializeTemporaryExpr_)
         {
@@ -1014,7 +1019,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
     + @"
     };");
-                         int y = 0, m = 0;
+                         //int y = 0, m = 0;
                          return prodexistpreds+@"
     if (parenExpr_)
     {
@@ -1302,7 +1307,7 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                     prebase = 0,
                     enterbase = 1,
                     inbase = 2,
-                    outbase = 3,
+                   // outbase = 3,
                     nonprod = 4,
                     enterprod = 5,
                     inprod = 6;

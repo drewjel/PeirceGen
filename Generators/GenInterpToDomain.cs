@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,12 +12,12 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/InterpToDomain.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "InterpToDomain.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/InterpToDomain.h";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "InterpToDomain.h";
         }
         public override void GenCpp()
         {
@@ -162,7 +163,7 @@ using namespace interp2domain;
                     else if (pcase.CaseType == Grammar.CaseType.Ident)
                     {
                         break;
-                        var put = @"void InterpToDomain::put" + prod.Name + @"(interp::" + prod.Name + @"* i, domain::DomainObject* d)
+                       /* var put = @"void InterpToDomain::put" + prod.Name + @"(interp::" + prod.Name + @"* i, domain::DomainObject* d)
 {
     interp2dom_" + prod.GetTopPassthrough().Name + @"[i] = d;
     dom2interp_" + prod.GetTopPassthrough().Name + @"[d] = i;
@@ -194,7 +195,7 @@ using namespace interp2domain;
     }
     return static_cast<interp::" + prod.Name + @"*>(interp);
 }";
-                        file += "\n" + put + "\n" + erase + "\n" + getint + "\n" + getdom + "\n";
+                        file += "\n" + put + "\n" + erase + "\n" + getint + "\n" + getdom + "\n";*/
                     }
                     else
                     {
@@ -302,13 +303,13 @@ class InterpToDomain
                         continue;
                     else if (pcase.CaseType == Grammar.CaseType.Ident)
                     {
-                        break;
+                        break;/*
                         var put = @"void put" + prod.Name + "(interp::" + prod.Name + "* key, domain::DomainObject* val);";
                         var erase = @"void erase" + prod.Name + "(interp::" + prod.Name + "* key, domain::DomainObject* val);";
                         var getdom = @"domain::DomainObject* get" + prod.Name + "(interp::" + prod.Name + "* c) const;";
                         var getint = @"interp::" + prod.Name + "* get" + prod.Name + "(domain::DomainObject* d) const;";
 
-                        file += "\n\t" + put + "\n\t" + getdom + "\n\t" + getint + "\n" + erase + "\n";
+                        file += "\n\t" + put + "\n\t" + getdom + "\n\t" + getint + "\n" + erase + "\n";*/
                     }
                     else
                     {

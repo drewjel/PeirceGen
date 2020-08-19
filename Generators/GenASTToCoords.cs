@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Configuration;
+
 namespace PeirceGen.Generators
 {
     public class GenASTToCoords : GenBase
@@ -12,12 +14,12 @@ namespace PeirceGen.Generators
 
         public override string GetCPPLoc()
         {
-            return "/peirce/PeirceGen/ASTToCoords.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "ASTToCoords.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return "/peirce/PeirceGen/ASTToCoords.h";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "ASTToCoords.h";
         }
 
         public override void GenCpp()
@@ -325,7 +327,7 @@ coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pc
                                         var mkStr = @"
 coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c, std::vector<coords::" + pcase.Productions[0].Name + @"*> operands ){
     coords::" + pcase.Name + @"* coord = new coords::" + pcase.Name + @"(operands);
-    ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
+    //ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
 
     coord->state_ = new coords::ASTState(
         """",
@@ -542,7 +544,7 @@ public:
                                 }
                             case Grammar.CaseType.ArrayOp:
                                 {
-                                    int i = 0;
+                                    //int i = 0;
                                     var mkStr = "\tcoords::" + pcase.Name + "* mk" + pcase.Name + "(const ast::" + pcase.Name + "* ast, clang::ASTContext* c, std::vector<coords::" + pcase.Productions[0].Name + @"*> operands );";
                                     file += "\n" + mkStr + "\n";
                                     break;

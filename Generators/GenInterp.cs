@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,12 +12,12 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/Interp.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "Interp.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/Interp.h";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "Interp.h";
         }
         public override void GenCpp()
         {
@@ -52,7 +53,7 @@ std::string Space::toString() const {
     std::string retval = """";
     bool found = false;
     
-    int id = GLOBAL_IDS.count(const_cast<Space*>(this)) ? GLOBAL_IDS[const_cast<Space*>(this)] : GLOBAL_IDS[const_cast<Space*>(this)] = ++GLOBAL_INDEX + ++GLOBAL_INDEX - GLOBAL_INDEX; 
+    int id = GLOBAL_IDS.count(const_cast<Space*>(this)) ? GLOBAL_IDS[const_cast<Space*>(this)] : GLOBAL_IDS[const_cast<Space*>(this)] = (GLOBAL_INDEX += 2); 
     
 " + string.Join("",ParsePeirce.Instance.Spaces.Where(sp_=>!sp_.IsDerived).Select(sp_ => {
 
@@ -77,13 +78,14 @@ std::string Space::toString() const {
 std::string Space::getVarExpr() const {
     " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => {
                 return "\n\tif(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(s_)){
-            int id = GLOBAL_IDS.count(const_cast<Space*>(this)) ? GLOBAL_IDS[const_cast<Space*>(this)] : GLOBAL_IDS[const_cast<Space*>(this)] = ++GLOBAL_INDEX + ++GLOBAL_INDEX - GLOBAL_INDEX; 
+            int id = GLOBAL_IDS.count(const_cast<Space*>(this)) ? GLOBAL_IDS[const_cast<Space*>(this)] : GLOBAL_IDS[const_cast<Space*>(this)] = (GLOBAL_INDEX += 2); 
     
             return ""lang." + sp_.Prefix + @".expr.var (lang." + sp_.Prefix + @".var.mk "" + std::to_string(id) + "")"";
 
     }";
 
             })) + @"
+    return """";
 }
 
 std::string Space::getEvalExpr() const {
@@ -91,21 +93,21 @@ std::string Space::getEvalExpr() const {
 
 " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => {
                 return "\n\tif(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(s_)){
-            int id = GLOBAL_IDS.count(const_cast<Space*>(this)) ? GLOBAL_IDS[const_cast<Space*>(this)] : GLOBAL_IDS[const_cast<Space*>(this)] = ++GLOBAL_INDEX + ++GLOBAL_INDEX - GLOBAL_INDEX; 
+            int id = GLOBAL_IDS.count(const_cast<Space*>(this)) ? GLOBAL_IDS[const_cast<Space*>(this)] : GLOBAL_IDS[const_cast<Space*>(this)] = (GLOBAL_INDEX += 2); 
     
             return ""(lang." + sp_.Prefix + @".eval (lang." + sp_.Prefix + @".expr.var (lang." + sp_.Prefix + @".var.mk "" + std::to_string(id) + "")) (" + sp_.Prefix + @"Get "" + lastEnv + "") )"";
 
     }";
 
             })) + @"
-
+    return """";
 }
 
 std::string DerivedSpace::toString() const {
     std::string retval = """";
     bool found = false;
     
-    int id = GLOBAL_IDS.count(const_cast<DerivedSpace*>(this)) ? GLOBAL_IDS[const_cast<DerivedSpace*>(this)] : GLOBAL_IDS[const_cast<DerivedSpace*>(this)] = ++GLOBAL_INDEX + ++GLOBAL_INDEX - GLOBAL_INDEX; 
+    int id = GLOBAL_IDS.count(const_cast<DerivedSpace*>(this)) ? GLOBAL_IDS[const_cast<DerivedSpace*>(this)] : GLOBAL_IDS[const_cast<DerivedSpace*>(this)] = (GLOBAL_INDEX += 2); 
     
 " + string.Join("", ParsePeirce.Instance.Spaces.Where(sp_ => sp_.IsDerived).Select(sp_ => {
                     return "\n\tif(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(s_)){
@@ -294,7 +296,7 @@ std::string " + prod.Name + @"::toString() const {
                 if(prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                 {
                     var i = 0;
-                    var j = 0;
+                   // var j = 0;
                     var k = 0;
 
                     var casecons =
@@ -329,7 +331,7 @@ std::string " + prod.Name + @"::toString() const {
                     {
                         case Grammar.CaseType.ArrayOp:
                             {
-                                int i = 0, j = 0, k = 0;
+                                //int i = 0, j = 0, k = 0;
                                 var cons = "\n" + pcase.Name + "::" + pcase.Name + "(coords::" + pcase.Name + @"* c, domain::DomainObject* d, std::vector<interp::" + pcase.Productions[0].Name + @"*> operands)  :" + prod.Name + "(c, d)" + @" {
     for(auto& op : operands){
         this->operands_.push_back(op);
@@ -338,7 +340,7 @@ std::string " + prod.Name + @"::toString() const {
 };";
 
                                 file += cons;
-                                i = 0; j = 0;
+                              //  i = 0; j = 0;
                                 //foreach (var casep in pcase.Productions)
                                 //{
                                 //   var opgetter = "\n" + "coords::" + casep.Name + "* " + pcase.Name + "::getOperand" + ++i + "() { return this->operand" + i + ";}";
@@ -408,7 +410,7 @@ std::string " + prod.Name + @"::toString() const {
 
     std::string cmdwrapper = """ + pcase.Command.Production + '.' + pcase.Command.Case + @""";
 
-    int count = this->operands_.size() + links.size() + framelinks.size();
+    //int count = this->operands_.size() + links.size() + framelinks.size();
     int actualcount = 0;
     if(true)
     {
@@ -440,7 +442,7 @@ std::string " + prod.Name + @"::toString() const {
             }
         }*/
 
-        bool start = true;
+        //bool start = true;
         for(auto op: this->operands_){ 
             if(prev and op->coords_->codegen()){
                 retval += ""\n"" + op->toString() + ""\n"";
@@ -564,7 +566,7 @@ std::string " + prod.Name + @"::toString() const {
                         case Grammar.CaseType.Ident:
                             {
                                 break;
-                                var i = 0;
+                               /* var i = 0;
                                 var j = 0;
                                 var k = 0;
 
@@ -584,12 +586,12 @@ std::string " + prod.Name + @"::toString() const {
 
                                 file += "\n" + casecons;
                                 file += casestr + "\n";
-                                break;
+                                break;*/
                             }
                         default:
                             {
                                 var i = 0;
-                                var j = 0;
+                               // var j = 0;
                                 var k = 0;
                                 var l = 0;
 
@@ -712,11 +714,11 @@ class Frame;
 
             foreach (var prod in ParsePeirce.Instance.Grammar.Productions)
             {
-                if (true || prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
-                {
+                //if (true || prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
+                //{
                     file += "\n";
                     file += "class " + prod.Name + ";";
-                }
+               // }
 
                 if (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                     continue;
@@ -875,7 +877,7 @@ public:
                             }
                         case Grammar.CaseType.Ident:
                             {
-                                break;
+                                break;/*
                                 var caseStr = @"
 
 class " + prod.Name + @" : public " + prod.Name + @" {
@@ -895,7 +897,7 @@ public:
 
 ";
                                 file += caseStr;
-                                break;
+                                break;*/
                             }
                         default:
                             {

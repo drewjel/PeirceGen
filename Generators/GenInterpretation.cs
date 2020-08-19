@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Configuration;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -11,12 +12,12 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/Interpretation.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "Interpretation.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/Interpretation.h";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "Interpretation.h";
         }
         public override void GenCpp()
         {
@@ -110,7 +111,7 @@ std::string Interpretation::toString_AST(){
                         case Grammar.ProductionType.CaptureSingle:
                         case Grammar.ProductionType.Single:
                             {
-                                int i = 0, j = 0, k = 0, l = 0, m = 0, n = 0, o = 0, p = 0;
+                                int i = 0, j = 0, k = 0, l = 0, m = 0, n = 0, p = 0;
                                 var mkstr =
 
             @"void Interpretation::mk" + prod.Name + @"(const ast::" + prod.Name + @" * ast " + (pcase.Productions.Count > 0 ? "," +
@@ -150,7 +151,7 @@ std::string Interpretation::toString_AST(){
                                     case Grammar.CaseType.Hidden:
                                     case Grammar.CaseType.Pure:
                                         {
-                                            int i = 0, j = 0, k = 0, l = 0, m = 0, n = 0, o = 0, p = 0;
+                                            int i = 0, j = 0, k = 0, l = 0, m = 0, n = 0, p = 0;
                                             var mkstr =
 
                         @"void Interpretation::mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast " + (pcase.Productions.Count > 0 ? "," +
@@ -193,7 +194,7 @@ std::string Interpretation::toString_AST(){
                                         }
                                     case Grammar.CaseType.ArrayOp:
                                         {
-                                            int i = 0, j = 0, k = 0, l = 0, m = 0, n = 0, o = 0;
+                                            //int i = 0,  k = 0, l = 0, m = 0, n = 0, o = 0;
 
                                             var mkStr = @"
 
@@ -235,7 +236,7 @@ void Interpretation::mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast 
 
     for(auto op : operand_coords)
     {
-        auto p = coords2interp_->get" + pcase.Productions[0].Name + @"(op);
+        //auto p = coords2interp_->get" + pcase.Productions[0].Name + @"(op);
         operand_interp.push_back(coords2interp_->get" + pcase.Productions[0].Name + @"(op));
     }
 
@@ -323,11 +324,11 @@ void Interpretation::mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast 
 }";
                 file += "\n" + printprod + "\n";
             }
-            int q = 0;
+            //int q = 0;
             var printspace = @"
 
 std::string Interpretation::toString_Spaces() {
-        int index = 0;
+      //  int index = 0;
     std::string retval = """";
     //std::vector<domain::Space*> & s = domain_->getSpaces();
     //for (std::vector<domain::Space*>::iterator it = s.begin(); it != s.end(); ++it)
@@ -366,7 +367,7 @@ std::vector<std::string> Interpretation::getSpaceNames() {
     " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => "\n\tauto " + sp_.Name + @"s = domain_->get" + sp_.Name + @"Spaces();
     for (auto it = " + sp_.Name + @"s.begin(); it != " + sp_.Name + @"s.end(); it++)
     {
-        auto sp = interp2domain_->getSpace(*it);
+        //auto sp = interp2domain_->getSpace(*it);
         names.push_back((*it)->getName());
     }
             ")) + @"
@@ -610,8 +611,10 @@ void Interpretation::printFrames(){
 
 }
 
-void Interpretation::mkVarTable(){
-    int idx = 0;
+void Interpretation::mkVarTable(){" +
+    (ParsePeirce.Instance.Grammar.Productions.Where(p => p.ProductionType == Grammar.ProductionType.Capture || p.ProductionType == Grammar.ProductionType.CaptureSingle).ToList().Count > 0 ? @"
+    int idx = 0; " : "")
+    + @"
   
 " + string.Join("\n\t", ParsePeirce.Instance.Grammar.Productions.Where(p => p.ProductionType == Grammar.ProductionType.Capture || p.ProductionType == Grammar.ProductionType.CaptureSingle).Select(p => @"
     for(auto it = this->" + p.Name + @"_vec.begin(); it != this->" + p.Name + @"_vec.end(); it++){
@@ -623,7 +626,9 @@ void Interpretation::mkVarTable(){
 }
 
 //print the indexed variable table for the user
-void Interpretation::printVarTable(){
+void Interpretation::printVarTable(){ " +
+    (ParsePeirce.Instance.Grammar.Productions.Where(p => p.ProductionType == Grammar.ProductionType.Capture || p.ProductionType == Grammar.ProductionType.CaptureSingle).ToList().Count > 0 ? @"
+    
   int sz = this->index2coords_.size();
 
   for(int i = 1; i<=sz;i++)
@@ -638,7 +643,7 @@ void Interpretation::printVarTable(){
 + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc);
         std::cout<<""Index: ""<<i<<"",""<<" + (string.IsNullOrEmpty(c_.Description) ? "" : @"""" + c_.Description + @",""<<") + @"dc->toString()<<"", SourceLocation:""<<dc->getSourceLoc()<<""\nExisting Interpretation: ""<<dom->toString()<<std::endl;
 
-    }"))));
+    }"))))  : "{");
 
             file += @"
     
@@ -854,12 +859,12 @@ public:
                             }
                         case Grammar.CaseType.Ident:
                             {
-                                break;
+                                break;/*
                                 var mkStr = @"void mk" + prod.Name + @"(const ast::" + prod.Name + @" * ast " + (pcase.Productions.Count > 0 ? "," +
                         string.Join(",", pcase.Productions.Select(p_ => "ast::" + p_.Name + "* operand" + ++i)) : "") + @");
                     ";
                                 file += "\n\t" + mkStr;
-                                break;
+                                break;*/
                             }
                         case Grammar.CaseType.ArrayOp:
                         {

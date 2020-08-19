@@ -5,6 +5,8 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
+using System.Configuration;
+
 namespace PeirceGen
 {
 
@@ -259,7 +261,7 @@ namespace PeirceGen
 
                 var spl = toParse.Split(',');
 
-                var parsed = Regex.Match(spl[0], @"(?:(\d*)([^0-9]*))*");
+                //var parsed = Regex.Match(spl[0], @"(?:(\d*)([^0-9]*))*");
 
                 this.InterpTranslation = (prod, sp, spobj) =>
                 {

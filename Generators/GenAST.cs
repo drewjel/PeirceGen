@@ -5,6 +5,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Configuration;
+
 namespace PeirceGen.Generators
 {
     public class GenAST //: GenBase
@@ -13,8 +15,8 @@ namespace PeirceGen.Generators
         {
 
             GenHeader();
-            if (!Directory.Exists(@"/peirce/PeirceGen/symlinkme"))
-                Directory.CreateDirectory(@"/peirce/PeirceGen/symlinkme");
+            //if (!Directory.Exists(@"C:\Users\msfti\OneDrive\Desktop\myoutput"))
+            //    Directory.CreateDirectory(@"C:\Users\msfti\OneDrive\Desktop\myoutput");
             System.IO.File.WriteAllText(this.GetHeaderLoc(), this.HeaderFile);
         }
 
@@ -113,7 +115,7 @@ using RealScalar = double;
                         case Grammar.ProductionType.CaptureSingle:
                             {
                                 break;
-                                if (pcase.CaseType == Grammar.CaseType.Ident)
+                                /*if (pcase.CaseType == Grammar.CaseType.Ident)
                                 {
                                     if(pcase.IsFuncDeclare)
                                     {
@@ -136,7 +138,7 @@ using RealScalar = double;
                                         file += "\n";
                                         file += "using " + prod.Name + " = const clang::VarDecl;";
                                     }
-                                }break;
+                                }break;*/
                             }
                         default:
                             {
@@ -194,7 +196,7 @@ using RealScalar = double;
 
         public string GetHeaderLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/AST.h";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "AST.h";//Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\AST.h";
         }
     }
 }

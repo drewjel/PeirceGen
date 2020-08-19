@@ -5,18 +5,20 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using System.Configuration;
+
 namespace PeirceGen.Generators
 {
     public class GenCoordsToDomain : GenBase
     {
         public override string GetCPPLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/CoordsToDomain.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "CoordsToDomain.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return "/peirce/PeirceGen/symlinkme/CoordsToDomain.h";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "CoordsToDomain.h";
         }
         public override void GenCpp()
         {
