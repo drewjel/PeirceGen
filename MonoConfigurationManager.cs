@@ -19,6 +19,12 @@ namespace PeirceGen
     <add key="GenPath" value="C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\"/>
     <add key="MatcherPath" value="C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\ros_matchers\"/>
              
+            { "GrammarPath", @"/peirce/PeirceGen/" },
+            { "GenPath", @"/peirce/PeirceGen/symlinkme/"},
+            { "MatcherPath", @"/peirce/PeirceGen/symlinkme/ros_matchers/"}
+            { "GrammarPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\" },
+            { "GenPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\"},
+            { "MatcherPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\ros_matchers\"}
              */
 
         public Dictionary<string, string> config = new Dictionary<string, string>()

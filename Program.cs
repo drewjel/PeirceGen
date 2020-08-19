@@ -15,34 +15,34 @@ namespace PeirceGen
             //var tt = Peirce.Grammar.Productions.SelectMany(p => p.Cases.Where(c_ => c_.CaseType == Grammar.CaseType.Pure));
 
             var Coords = new Generators.GenCoords();
+            //Coords = null;//remove warning
             Coords.GetType();
-            //Coords = Coords;//remove warning
             var Interp = new Generators.GenInterp();
+            //Interp = null;
             Interp.GetType();
-            //Interp = Interp;
             var Domain = new Generators.GenDomain();
-            //Domain = Domain;
+            //Domain = null;
             Domain.GetType();
             var ASTToCoords = new Generators.GenASTToCoords();
             //ASTToCoords = null;
             ASTToCoords.GetType();
             var CoordsToDomain = new Generators.GenCoordsToDomain();
-            //CoordsToDomain = CoordsToDomain;
+            //CoordsToDomain = null;
             CoordsToDomain.GetType();
             var CoordsToInterp = new Generators.GenCoordsToInterp();
-            //CoordsToInterp = CoordsToInterp;
+            // CoordsToInterp = null;
             CoordsToInterp.GetType();
             var InterpToDomain = new Generators.GenInterpToDomain();
-            //InterpToDomain = InterpToDomain;
+            // InterpToDomain = null;
             InterpToDomain.GetType();
             var Interpretation = new Generators.GenInterpretation();
-            //Interpretation = Interpretation;
+            // Interpretation = null;
             Interpretation.GetType();
             var Oracle = new Generators.GenOracle();
-            //Oracle = Oracle;
+            //Oracle = null;
             Oracle.GetType();
             var AST = new Generators.GenAST(42);
-            //AST = AST;
+            // AST = null;
             AST.GetType();
             Peirce.MatcherProductions.ForEach(prod => new Generators.GenMatcher(prod));
             Generators.GenMatcher.GenTopLevelMatchers();

@@ -54,7 +54,7 @@ namespace PeirceGen
 
     public class ParsePeirce
     {
-        public static readonly string GrammarFile = PeirceGen.MonoConfigurationManager.Instance["GrammarPath"] + "/GrammarEmpty";//Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\GrammarEmpty";
+        public static readonly string GrammarFile = PeirceGen.MonoConfigurationManager.Instance["GrammarPath"] + "GrammarEmpty";//Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\GrammarEmpty";
 
         public static readonly Peirce Instance = new Peirce();
         
@@ -589,7 +589,7 @@ namespace PeirceGen
                         foreach (var pref in pcase.ProductionRefs)
                         {
                             t = Instance.Grammar.Productions.Where(p_ => p_.Name == Grammar.TrimProductionType(pref)).ToList();
-                            //Console.WrConsole.WriteLine(pcase.Name + " " + pref);
+                            //Console.WriteLine(pcase.Name + " " + pref);
                             pcase.Productions.Add(Instance.Grammar.Productions.Single(p_ => p_.Name == Grammar.TrimProductionType(pref)));
                         }
 

@@ -95,7 +95,7 @@ std::string Space::getEvalExpr() const {
                 return "\n\tif(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(s_)){
             int id = GLOBAL_IDS.count(const_cast<Space*>(this)) ? GLOBAL_IDS[const_cast<Space*>(this)] : GLOBAL_IDS[const_cast<Space*>(this)] = (GLOBAL_INDEX += 2); 
     
-            return ""(lang." + sp_.Prefix + @".eval (lang." + sp_.Prefix + @".expr.var (lang." + sp_.Prefix + @".var.mk "" + std::to_string(id) + "")) (" + sp_.Prefix + @"Get "" + lastEnv + "") )"";
+            return ""(" + sp_.Prefix + @"Eval (lang." + sp_.Prefix + @".expr.var (lang." + sp_.Prefix + @".var.mk "" + std::to_string(id) + "")) (" +  @" "" + lastEnv + "" ))"";
 
     }";
 
@@ -714,11 +714,11 @@ class Frame;
 
             foreach (var prod in ParsePeirce.Instance.Grammar.Productions)
             {
-                //if (true || prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
+               // if (true || prod.ProductionType != Grammar.ProductionType.Single && prod.ProductionType != Grammar.ProductionType.CaptureSingle)
                 //{
                     file += "\n";
                     file += "class " + prod.Name + ";";
-               // }
+              //  }
 
                 if (prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                     continue;
