@@ -481,23 +481,23 @@ void Interpretation::buildSpace(){
                 return;
             }
             int choice;
-            label1st:
+            " + sp_.Name + @"label1st:
             std::cout<<""Select First Base Space : ""<<""\n"";
             std::cin>>choice;
             if(choice >0 and choice <=index){
                 base1 = index_to_sp[choice];
             }
             else
-                goto label1st;
+                goto " + sp_.Name + @"label1st;
             
-            label2nd:
+            " + sp_.Name + @"label2nd:
             std::cout<<""Select Second Base Space : ""<<""\n"";
             std::cin>>choice;
             if(choice >0 and choice <=index){
                 base2 = index_to_sp[choice];
             }
             else
-                goto label2nd;
+                goto " + sp_.Name + @"label2nd;
             auto sp = this->domain_->mk" + sp_.Name + @"(name, name, base1, base2);
             auto ib1 = this->interp2domain_->getSpace(base1);
             auto ib2 = this->interp2domain_->getSpace(base2);
