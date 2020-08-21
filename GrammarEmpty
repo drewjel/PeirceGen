@@ -32,6 +32,7 @@ _FUNC_DECL :=
 	EuclideanGeometry, Euclidean,{Dimension=*},classicalGeometry
 	ClassicalTime, Affine, {Dimension=1},classicalTime
 	ClassicalVelocity, Vector, {Derived=true},classicalVelocity
+	ClassicalAcceleration, Vector, {Derived=true},classicalAcceleration
 }
 --Define instances
 {
