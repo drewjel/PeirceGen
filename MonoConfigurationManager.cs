@@ -29,9 +29,9 @@ namespace PeirceGen
 
         public Dictionary<string, string> config = new Dictionary<string, string>()
         {
-            { "GrammarPath", @"/peirce/PeirceGen/" },
-            { "GenPath", @"/peirce/PeirceGen/symlinkme/"},
-            { "MatcherPath", @"/peirce/PeirceGen/symlinkme/ros_matchers/"}
+            { "GrammarPath", @"/peirce/gen/" },
+            { "GenPath", @"/peirce/gen/symlinkme/"},
+            { "MatcherPath", @"/peirce/gen/symlinkme/ros_matchers/"}
         };
 
         public string this[string key]
