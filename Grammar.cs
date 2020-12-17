@@ -107,6 +107,16 @@ namespace PeirceGen
 
             public string Description { get; set; }
 
+            public enum InterpType
+            {
+                Decl,
+                Var,
+                Expr,
+                Unk
+            }
+
+            public InterpType InterpType_ { get; set; }
+
             public bool HasPassthrough { get; set; }
             public Production Passthrough;
             public bool HasInherits { get; set; }
@@ -163,9 +173,34 @@ namespace PeirceGen
             public List<Production> Productions = new List<Production>();
             public List<string> ProductionRefs = new List<string>();
 
-            public Func<Production, string> CoordsToString { get; set; }
+           // public Func<Production, string> CoordsToString { get; set; }
 
-            public Func<Production, Space, Space.SpaceObject, string> InterpTranslation { get; set; }
+            public bool HasCoordsAndInterp { get; set; }
+            //public Func<Production, Space, Space.SpaceObject, string> InterpTranslation { get; set; }
+
+            public class Interp
+            {
+                public enum Fix
+                {
+                    Pre,
+                    In,
+                    Post
+                }
+                public Fix Location;
+                public string Symbol;
+
+                public enum PrintType
+                {
+                    Binary,
+                    Child,
+                    FrameChange,
+                    Unk
+                }
+
+                public PrintType PrintType_;
+            }
+
+            public Interp Interp_ { get; set; }
 
             public Command Command { get; set; }
 
@@ -195,7 +230,7 @@ namespace PeirceGen
                 var retval = "std::string(\"\")";
                 if (true)
                     retval += @"+" + @" ""COMMAND.B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)";
-                this.CoordsToString = (prod) => { return @"(this->getIndex() > 0 ? ""INDEX""+std::to_string(this->getIndex())+""."":"""")+" + "\"" + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name).Replace("_", ".") + "\" + " + retval; };
+                //this.CoordsToString = (prod) => { return @"(this->getIndex() > 0 ? ""INDEX""+std::to_string(this->getIndex())+""."":"""")+" + "\"" + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name).Replace("_", ".") + "\" + " + retval; };
             }
 
             public void ParseCoordsToString(string toParse)
@@ -213,22 +248,41 @@ namespace PeirceGen
                     int end_col_no_;
 
                  * */
-                var retval = "std::string(\"\")";
-                if (toParse.Contains("$NAME"))
-                    retval += @" + state_->name_";
-                if (toParse.Contains("$LOC"))
-                    retval += @"+" + @" "".B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)";
-                this.CoordsToString = (prod) => { return @"(this->getIndex() > 0 ? ""INDEX""+std::to_string(this->getIndex())+""."":"""")+" + "\"" + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name).Replace("_", ".") + "\" + " + retval; };
+                if (this.Production.ProductionType == ProductionType.Capture || this.Production.ProductionType == ProductionType.CaptureSingle)
+                {
+                    //"std::string(\"\")" + @" + state_->name_" + @"+" + @" "".B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)"
+                    var retval = "std::string(\"\")";
+                    if (toParse.Contains("$NAME"))
+                        retval += @" + state_->name_";
+                    if (toParse.Contains("$LOC"))
+                        retval += @"+" + @" "".B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)";
+                    // this.CoordsToString = (prod) => { return @"(this->getIndex() > 0 ? ""INDEX""+std::to_string(this->getIndex())+""."":"""")+" + "\"" + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name).Replace("_", ".") + "\" + " + retval; };
+
+                }
+                else
+                {
+                    // this.CoordsToString = (prod) => { @"()"; };
+                }
             }
+            
 
             public void ParseInterpTranslation(bool fromCommand)
             {
-                this.InterpTranslation = (prod, sp, spobj) =>
+                /*this.InterpTranslation = (prod, sp, spobj) =>
                 {
                     int i = 0;
                     var retval = @"
             auto case_coords = dynamic_cast<coords::" + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name) + @"*>(this->coords_);";
-                    if (this.Command is Grammar.Command && prod.Command is Grammar.Command)
+
+                    retval += @"
+            //retval += ""def " + @""" + case_coords->toString() + "" " + sp.Name+spobj.Name 
+                + @"Assmt (⟨⟨"" + std::to_string(id) + ""⟩⟩) ("+ sp.Name+spobj.Name 
+                    + @".build (" + sp.Name + @"Eval sid) " 
+                        + (spobj.HasFrame? "(" + sp.Name + @"FrameEval fid)" : "") +@")
+";
+           
+
+                    /*if (this.Command is Grammar.Command && prod.Command is Grammar.Command)
                     {
                         retval += @"
             retval += ""def " + @""" + case_coords->toString() + """ + this.Command.NameSuffix + "" + @" : " + this.Command.Production + " := " + this.Command.ToLeanConstructor() + @" " + @""" + " + (this.Productions.Count > 0 ? string.Join(" + ", (this.Productions.Select(p_ => "operand_" + ++i + "->coords_->toString()"))) : "\"\"") + @";
@@ -249,9 +303,9 @@ namespace PeirceGen
             retval += ""def " + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name) + @""" + case_coords->toString() + """ + "" + @" : " + prod.Command.Production + " := " + prod.Command.ToLeanConstructor() + @" " + @""" + " + (this.Productions.Count > 0 ? string.Join(" + ", (this.Productions.Select(p_ => "operand_" + ++i + "->coords_->toString()"))) : "\"\"") + @";
 ";
 
-                    }
-                    return retval;
-                };
+                    }*/
+                    //return retval;//
+                //};
             }
 
             public void ParseInterpTranslation(string toParse)
@@ -261,8 +315,21 @@ namespace PeirceGen
 
                 var spl = toParse.Split(',');
 
-                //var parsed = Regex.Match(spl[0], @"(?:(\d*)([^0-9]*))*");
+                this.Interp_ = new Interp()
+                { 
+                    Location = spl[0] == "P" ? Interp.Fix.Pre:
+                                spl[0] == "I" ? Interp.Fix.In :
+                                 Interp.Fix.Post,
+                     Symbol = spl[1]
+                              ,
+                      PrintType_ = spl[2] == "C" ? Interp.PrintType.Child : 
+                      spl[2] == "T" ? Interp.PrintType.FrameChange : 
+                      spl[2] == "B" ? Interp.PrintType.Binary : Interp.PrintType.Unk
+                };
 
+
+                //var parsed = Regex.Match(spl[0], @"(?:(\d*)([^0-9]*))*");
+                /*
                 this.InterpTranslation = (prod, sp, spobj) =>
                 {
                     var defaultStr = (sp == default(Space) || spobj == default(Space.SpaceObject)) ? "_" : sp.Prefix + spobj.Name + "Default";
@@ -327,6 +394,8 @@ namespace PeirceGen
 
                     return retval;
                 };
+
+                */
             }
         }
 

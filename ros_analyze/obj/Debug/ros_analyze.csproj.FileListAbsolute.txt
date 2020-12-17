@@ -1,0 +1,6 @@
+C:\Users\msfti\source\repos\givemeros\ros_analyze\bin\Debug\ros_analyze.exe.config
+C:\Users\msfti\source\repos\givemeros\ros_analyze\bin\Debug\ros_analyze.exe
+C:\Users\msfti\source\repos\givemeros\ros_analyze\bin\Debug\ros_analyze.pdb
+C:\Users\msfti\source\repos\givemeros\ros_analyze\obj\Debug\ros_analyze.csprojAssemblyReference.cache
+C:\Users\msfti\source\repos\givemeros\ros_analyze\obj\Debug\ros_analyze.exe
+C:\Users\msfti\source\repos\givemeros\ros_analyze\obj\Debug\ros_analyze.pdb

@@ -480,8 +480,9 @@ namespace PeirceGen
                                     : new List<string>(),
                             Productions = new List<Grammar.Production>(), //fix this.... these need to "resolve" incrementally
                             Description = captionmatch.Groups.Count > 2 ? captionmatch.Groups[3].Value : ""
-                            , CoordsToString = (p) => { return "\"Not implemented\";"; },
-                             InterpTranslation = (p, s, sp) => { return "\"Not implemented\";"; },
+                            , 
+                            //CoordsToString = (p) => { return "\"Not implemented\";"; },
+                             //InterpTranslation = (p, s, sp) => { return "\"Not implemented\";"; },
                               Production = curProd,
                               Command = cmd,
                               IsTranslationDeclare = isTransDeclare,
@@ -494,13 +495,15 @@ namespace PeirceGen
                         };
 
                         if (coordsandinterp.Count == 2) {
+                            curCase.HasCoordsAndInterp = true;
                             curCase.ParseCoordsToString(coordsandinterp[0]);
                             curCase.ParseInterpTranslation(coordsandinterp[1]);
+                            //curCase.ParseInterpTranslation(coordsandinterp[1]);
                         }
                         else if (cmd is Grammar.Command || curProd.Command is Grammar.Command)
                         {
                             curCase.ParseCoordsToString(true);
-                            curCase.ParseInterpTranslation(true);
+                            //curCase.ParseInterpTranslation(true);
                         }
                         curProd.Cases.Add(curCase);
 
@@ -542,33 +545,87 @@ namespace PeirceGen
                         var valueType = "";
                         var valueCount = 0;
                         var valueDefault = "";
+                        var interpType = Grammar.Production.InterpType.Unk;
                         Grammar.ValueContainer vc = default(Grammar.ValueContainer);
                         if (toksvcheck.Count > 1)
                         {
-                            var vstr = toksvcheck[1].Substring(toksvcheck[1].IndexOf("(") + 1, toksvcheck[1].Length - toksvcheck[1].IndexOf("(") - 2).Split(',');
-                            valueType = vstr[0];
-                            valueCount = int.Parse(vstr[1]);
-                            if (vstr.Length > 2)
-                                valueDefault = vstr[2];
+                            if (toksvcheck[1].Contains("VALUE"))
+                            {
+                                var vstr = toksvcheck[1].Substring(toksvcheck[1].IndexOf("(") + 1, toksvcheck[1].Length - toksvcheck[1].IndexOf("(") - 2).Split(',');
+                                valueType = vstr[0];
+                                try
+                                {
+                                    valueCount = int.Parse(vstr[1]);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine("hm");
+                                }
+                                if (vstr.Length > 2)
+                                    valueDefault = vstr[2];
 
-                            vc = new Grammar.ValueContainer() { ValueCount = valueCount, ValueDefault = valueDefault, ValueType = valueType };
+                                vc = new Grammar.ValueContainer() { ValueCount = valueCount, ValueDefault = valueDefault, ValueType = valueType };
+                            }
+                            else if(toksvcheck[1].Contains("INTERP"))
+                            {
+                                var interpTypeStr = toksvcheck[1].Replace("INTERP:", "");
+                                interpType = interpTypeStr == "D" ? Grammar.Production.InterpType.Decl
+                                        : interpTypeStr == "E" ? Grammar.Production.InterpType.Expr :
+                                        interpTypeStr == "V" ? Grammar.Production.InterpType.Var :
+                                        Grammar.Production.InterpType.Unk;
+                            }
                         }
-
-                        curProd = new Grammar.Production()
+                        if (toksvcheck.Count > 2)
                         {
-                            ProductionType = Grammar.TokenToProductionTypeMap[fixedline[0]],
+                            if (toksvcheck[2].Contains("VALUE"))
+                            {
+                                var vstr = toksvcheck[1].Substring(toksvcheck[1].IndexOf("(") + 1, toksvcheck[1].Length - toksvcheck[1].IndexOf("(") - 2).Split(',');
+                                valueType = vstr[0];
+                                try
+                                {
+                                    valueCount = int.Parse(vstr[1]);
+                                }
+                                catch (Exception ex)
+                                {
+                                    Console.WriteLine("hm");
+                                }
+                                if (vstr.Length > 2)
+                                    valueDefault = vstr[2];
 
-                            Name = Grammar.TrimProductionType(toksvcheck[0]).Trim(),
-                            HasPassthrough = false,
-                            Passthrough = default(Grammar.Production),
-                             Command = cmd,
-                            IsTranslationDeclare = isTransDeclare,
-                            IsFuncDeclare = isFuncDeclare,
-                             IsVarDeclare = isVarDeclare,
-                              Cases = new List<Grammar.Case>(),
-                               ValueContainer = vc
-                               
-                        };
+                                vc = new Grammar.ValueContainer() { ValueCount = valueCount, ValueDefault = valueDefault, ValueType = valueType };
+                            }
+                            else if (toksvcheck[2].Contains("INTERP"))
+                            {
+                                var interpTypeStr = toksvcheck[2].Replace("INTERP:", "");
+                                interpType = interpTypeStr == "D" ? Grammar.Production.InterpType.Decl
+                                        : interpTypeStr == "E" ? Grammar.Production.InterpType.Expr :
+                                        interpTypeStr == "V" ? Grammar.Production.InterpType.Var :
+                                        Grammar.Production.InterpType.Unk;
+                            }
+                        }
+                        try
+                        {
+                            curProd = new Grammar.Production()
+                            {
+                                ProductionType = Grammar.TokenToProductionTypeMap[fixedline[0]],
+
+                                Name = Grammar.TrimProductionType(toksvcheck[0]).Trim(),
+                                HasPassthrough = false,
+                                Passthrough = default(Grammar.Production),
+                                Command = cmd,
+                                IsTranslationDeclare = isTransDeclare,
+                                IsFuncDeclare = isFuncDeclare,
+                                IsVarDeclare = isVarDeclare,
+                                Cases = new List<Grammar.Case>(),
+                                ValueContainer = vc,
+                                InterpType_ = interpType
+
+                            };
+                        }
+                        catch(Exception ex)
+                        {
+                            Console.WriteLine(ex.StackTrace);
+                        }
 
                         Instance.Grammar.Productions.Add(curProd);
                     }
@@ -589,9 +646,16 @@ namespace PeirceGen
                         foreach (var pref in pcase.ProductionRefs)
                         {
                             t = Instance.Grammar.Productions.Where(p_ => p_.Name == Grammar.TrimProductionType(pref)).ToList();
-                            //Console.WriteLine(pcase.Name + " " + pref);
-                            pcase.Productions.Add(Instance.Grammar.Productions.Single(p_ => p_.Name == Grammar.TrimProductionType(pref)));
-                        }
+                            Console.WriteLine(pcase.Name + " " + pref);
+                            try
+                            {
+                                pcase.Productions.Add(Instance.Grammar.Productions.Single(p_ => p_.Name == Grammar.TrimProductionType(pref)));
+                            }
+                            catch(Exception ex)
+                            {
+
+                            }
+                         }
 
                         if (pcase.CaseType == Grammar.CaseType.Passthrough)
                         {

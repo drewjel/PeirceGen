@@ -40,7 +40,160 @@ using namespace oracle;
 ";
             var file = header;
 
-            var getFrame = @"domain::Frame* Oracle_AskAll::getFrame(domain::Space* space){
+            var getFrameplusSpaceInterpretation = @"
+
+virtual domain::Frame* Oracle_AskAll::getFrameInterpretation(){
+    while(true){
+        std::cout<<""Select Space : ""<<""\n"";
+        int index = 0;
+        std::unordered_map<int, domain::Space*> index_to_sp;
+    " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => "\n\tauto " + sp_.Name + @"s = domain_->get" + sp_.Name + @"Spaces();
+        for (auto it = " + sp_.Name + @"s.begin(); it != " + sp_.Name + @"s.end(); it++)
+        {
+            std::cout<<""(""<<std::to_string(++index)<<"")""<<(*it)->toString() + ""\n"";
+            index_to_sp[index] = *it;
+        }")) + @"
+        int choice;
+        std::cin>>choice;
+        if(choice >0 and choice <=index){
+            auto chosen = index_to_sp[choice];
+            std::cout<<""Building Frame For : ""<<chosen->toString()<<""\n"";
+            auto frames = chosen->getFrames();
+            std::cout<<""Select Parent Frame : ""<<""\n"";
+            index = 0;
+            std::unordered_map<int, domain::Frame*> index_to_fr;
+        
+            auto frs = chosen->getFrames();
+            for(auto fr : frs){
+            std::cout<<""(""<<std::to_string(++index)<<"")""<<(fr)->toString()<<""\n"";
+            index_to_fr[index] = fr;
+            }
+            choice = 0;
+            std::cin>>choice;
+            if(choice > 0 and choice<= index){
+                auto parent = index_to_fr[index];
+                std::cout<<""Enter Name of Frame:\n"";
+                std::string name;
+                std::cin>>name;
+                auto child = domain_->mkFrame(name, chosen, parent);
+                interp::Frame* interp = new interp::Frame(child);
+                interp2domain_->putFrame(interp, child);
+                return;
+            }
+            
+        }
+
+    }
+}
+virtual domain::Space* Oracle_AskAll::getSpaceInterpretation(){
+    int index = 0;
+    int choice = 0;
+    int size = " + ParsePeirce.Instance.Spaces.Count + @";
+    if (size == 0){
+        std::cout<<""Warning: No Available Spaces to Build"";
+        return;
+    }
+    while((choice <= 0 or choice > size)){ 
+        std::cout<<""Available types of Spaces to build:\n"";
+        " +
+        string.Join("\n\t\t", (ParsePeirce.Instance.Spaces.Select(sp_ => "std::cout <<\"(\"<<std::to_string(++index)<<\")\"<<\"" + sp_.Name + "\\n\";")))
+        + @"
+        std::cin>>choice;
+    }
+    index = 0;
+    " +
+    string.Join("\n\t", ParsePeirce.Instance.Spaces.Select(sp_ =>
+    {
+        //bool hasName = sp_.MaskContains(Space.FieldType.Name);
+        //bool hasDim = sp_.MaskContains(Space.FieldType.Dimension);
+        if (sp_.IsDerived)
+        {
+            var str = @"
+        if(choice==++index){
+            std::string name;
+            domain::Space *base1,*base2;
+            std::cout<<""Enter Name (string):\n"";
+            std::cin>>name;
+            int index = 0;
+            std::unordered_map<int, domain::Space*> index_to_sp;
+        " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp__ => "\n\tauto " + sp__.Name + @"s = domain_->get" + sp__.Name + @"Spaces();
+            for (auto it = " + sp__.Name + @"s.begin(); it != " + sp__.Name + @"s.end(); it++)
+            {
+                std::cout<<""(""<<std::to_string(++index)<<"")""<<(*it)->toString() + ""\n"";
+                index_to_sp[index] = *it;
+            }")) + @"
+
+            if(index==0){
+                std::cout<<""Unable to Proceed - No Existing Spaces\n"";
+                return;
+            }
+            int choice;
+            " + sp_.Name + @"label1st:
+            std::cout<<""Select First Base Space : ""<<""\n"";
+            std::cin>>choice;
+            if(choice >0 and choice <=index){
+                base1 = index_to_sp[choice];
+            }
+            else
+                goto " + sp_.Name + @"label1st;
+            
+            " + sp_.Name + @"label2nd:
+            std::cout<<""Select Second Base Space : ""<<""\n"";
+            std::cin>>choice;
+            if(choice >0 and choice <=index){
+                base2 = index_to_sp[choice];
+            }
+            else
+                goto " + sp_.Name + @"label2nd;
+            auto sp = this->domain_->mk" + sp_.Name + @"(name, name, base1, base2);
+            auto ib1 = this->interp2domain_->getSpace(base1);
+            auto ib2 = this->interp2domain_->getSpace(base2);
+
+            auto isp = new interp::DerivedSpace(sp, ib1, ib2);
+            interp2domain_->putSpace(isp, sp);
+            auto standard_framesp = sp->getFrames()[0];
+            auto interp_framesp = new interp::Frame(standard_framesp);
+            interp2domain_->putFrame(interp_framesp, sp->getFrames()[0]);
+        }
+";
+            return str;
+        }
+        else
+        {
+            var str = @"
+        if(choice==++index){
+            std::string name;
+            std::cout<<""Enter Name (string):\n"";
+            std::cin>>name;
+            "
+            +
+            (sp_.DimensionType == Space.DimensionType_.ANY ? @"
+            int dimension;
+            std::cout<<""Enter Dimension (integer):\n"";
+            std::cin>>dimension;
+            auto sp = this->domain_->mk" + sp_.Name + @"(name, name, dimension);
+    " : @"
+            auto sp = this->domain_->mk" + sp_.Name + @"(name, name);")
+            +
+            @"
+            auto isp = new interp::Space(sp);
+            interp2domain_->putSpace(isp, sp);
+            auto standard_framesp = sp->getFrames()[0];
+            auto interp_framesp = new interp::Frame(standard_framesp);
+            interp2domain_->putFrame(interp_framesp, sp->getFrames()[0]);
+        }
+
+    " +
+        @"";
+            return str;
+        }
+    })) +
+    @"
+}
+";
+
+            
+            var getFrame = @"domain::Frame* Oracle_AskAll::getFrameForInterpretation(domain::Space* space){
 
     auto frames = space->getFrames();
     auto sz = (int)frames.size();
@@ -135,7 +288,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
             domain::" + sppair.Item1.Name + @"* " + inst.InstanceName + @" = (domain::"+sppair.Item1.Name+@"*)this->domain_->getSpace(""" + inst.InstanceName + @""");
             auto ret = this->domain_->mk" + sppair.Item1.Name + sppair.Item2.Name + "(" + inst.InstanceName + @");" + 
                 (sppair.Item2.HasFrame ? @"
-            auto frame = (domain::" + sppair.Item1.Name + @"Frame*)this->getFrame(" + inst.InstanceName + @"); 
+            auto frame = (domain::" + sppair.Item1.Name + @"Frame*)this->getFrameForInterpretation(" + inst.InstanceName + @"); 
             ret->setFrame(frame);" : "")
             + @"
             }"; 
@@ -176,7 +329,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                 "<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + ">" : "") 
                                 + @"(sp" + (cur.HasValueContainer() ? ",cp" : "") + @");
                         //delete[] cp;
-                        auto frame = (domain::" + sppair.Item1.Name + @"Frame*)this->getFrame(sp); 
+                        auto frame = (domain::" + sppair.Item1.Name + @"Frame*)this->getFrameForInterpretation(sp); 
                         ret->setFrame(frame);"
 + (cur.HasValueContainer() ? new List<string>() {"one" }.Select(x =>
 {
@@ -233,28 +386,28 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                         while(true){
                             auto frs = sp->getFrames();
                             std::cout<<""Enter Frame of Transform Domain : \n"";
-                            std::unordered_map<int, domain::Frame*> index_to_dom;
+                            std::unordered_map<int, domain::" + sppair.Item1.Name + @"Frame*> index_to_dom;
                             int dom_index = 0,
                                 cod_index = 0;
                             int dom_choice = 0, 
                                 cod_choice = 0;
                             for(auto fr: frs){
-                                index_to_dom[++dom_index] = fr;
+                                index_to_dom[++dom_index] = (domain::" + sppair.Item1.Name + @"Frame*)fr;
                                 std::cout<<""(""<<std::to_string(index)<<"") ""<<fr->toString()<<""\n"";
                             }
                             std::cin>>dom_choice;
 
                         
                             std::cout<<""Enter Frame of Transform Co-Domain : \n"";
-                            std::unordered_map<int, domain::Frame*> index_to_cod;
+                            std::unordered_map<int, domain::" + sppair.Item1.Name + @"Frame*> index_to_cod;
                             for(auto fr: frs){
-                                index_to_cod[++cod_index] = fr;
+                                index_to_cod[++cod_index] = (domain::" + sppair.Item1.Name + @"Frame*)fr;
                                 std::cout<<""(""<<std::to_string(index)<<"") ""<<fr->toString()<<""\n"";
                             }
                             std::cin>>cod_choice;
 
                             if(dom_choice >0 and dom_choice <= dom_index and cod_choice >0 and cod_choice <= cod_index){
-                                auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
+                                //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                 " + (cur.HasValueContainer() ? "std::shared_ptr<" + cur.GetPriorityValueContainer().ValueType + "> cp[" + cur.GetPriorityValueContainer().ValueCount + @"];
                                 auto vals = ((coords::ValueCoords<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + @">*)coords)->getValues();
                                 for(int idx = 0;idx < " + cur.GetPriorityValueContainer().ValueCount + @";idx++){
@@ -262,7 +415,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                 }" : "") + @"
 
                                 auto ret = this->domain_->mk" + sppair.Item1.Name + sppair.Item2.Name + (cur.HasValueContainer() ?
-                                "<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + ">" : "") + @"(mapsp" 
+                                "<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + ">" : "<float,1>") + @"(sp, index_to_dom[dom_choice], index_to_cod[cod_index]"
                                     + (cur.HasValueContainer() ?
                                         ",cp" : "") + @");
                                // delete[] cp;
@@ -274,7 +427,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                         try{
                             int vchoice = 0;
                             std::cin >> vchoice;
-                            if (vchoice == 1)
+                            if (vchoice > 1)
                             {
                                 for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
                                 {
@@ -475,9 +628,13 @@ class Oracle_AskAll : public Oracle
 public:
 	Oracle_AskAll(domain::Domain* d) " + (ParsePeirce.Instance.Grammar.Productions.Where(p_ => p_.ProductionType == Grammar.ProductionType.Capture || p_.ProductionType == Grammar.ProductionType.CaptureSingle).ToList().Count > 0 ? @" : domain_(d)" : "") + @" { };
 
+    
+    //virtual domain::Frame* getFrameInterpretation();
+    //virtual domain::Space* getSpaceInterpretation();
+
     domain::DomainObject* getInterpretation(coords::Coords* coords, domain::DomainObject* dom);
 
-    domain::Frame* getFrame(domain::Space* space);
+    domain::Frame* getFrameForInterpretation(domain::Space* space);
 
     //domain::Space &getSpace();
     //domain::MapSpace &getMapSpace();";
@@ -569,7 +726,11 @@ protected:
 namespace oracle {
 
 class Oracle {
-public:";
+public:
+   // virtual domain::Frame* getFrameInterpretation();
+   // virtual domain::Space* getSpaceInterpretation();
+
+    ";
             var file = header;
 
             var footer = @"

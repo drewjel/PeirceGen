@@ -4,3 +4,4 @@ C:\Users\msfti\source\repos\givemeros\PeirceGen\bin\Debug\PeirceGen.exe
 C:\Users\msfti\source\repos\givemeros\PeirceGen\bin\Debug\PeirceGen.pdb
 C:\Users\msfti\source\repos\givemeros\PeirceGen\obj\Debug\PeirceGen.exe
 C:\Users\msfti\source\repos\givemeros\PeirceGen\obj\Debug\PeirceGen.pdb
+C:\Users\msfti\source\repos\givemeros\PeirceGen\obj\Debug\PeirceGen.csproj.CoreCompileInputs.cache

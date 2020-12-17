@@ -1,0 +1,701 @@
+﻿--
+--#### demarcates sections
+--Major sections are: Grammar, Spaces, Space Objects & Operations, Grammar Rule->Object+Operation Map, (Unimplemented yet) AST+Annotation->DSL Map, (Unimplemented yet) AST->D Object/Operation Map
+
+--Grammar begins here
+--Begin _ indicates "don't generate code for this production"
+--Begin + generates code
+
+--must add frames into this
+
+_tPROGRAM :=
+	tSEQ *sGLOBALSTMT @PhysCommand,Seq,globalseq@ ~A Compound Global Statement
+
+_fGLOBALSTMT :=
+--	SEQ *GLOBALSTMT @PhysCommand,Seq,globalseq@ | ~A Compound Global Statement
+	=FUNC_DECL ~Function Declaration
+
+_STMT := 
+	=ASSIGNMENT | ~An Assignment Statement
+	=DECLARE | ~A Declaration Statement
+	=REXPR | ~An R-Value Expression
+	=LEXPR | ~An L-Value Expression
+	=IFCOND | ~An If Condition
+	=WHILE | ~A While Statement
+	COMPOUND *sSTMT @cmd,seq,seq@ ~A Compound Statement
+
+_FUNC_DECL :=
+	=MAIN_FUNC | ~Main Function Declaration
+	=VOID_FUNC | ~A Void OR Ignored-Return Function Declaration
+	=INT_FUNC | ~ A Function that Returns an Integer
+	=REAL1_FUNC | ~A Function That Returns a Member of R1
+	=REAL3_FUNC | ~A Function That Returns a Member of R3
+	=REAL4_FUNC | ~A Function That Returns a Member of R4
+	=REALMATRIX3_FUNC | ~A Function That Returns a Member of the set of 3x3 Matrices
+	=REALMATRIX4_FUNC ~A Function That Returns a Member of the set of 4x4 Matrices
+
+--THIS WON'T WORK WHEN WE NEED TO SUPPORT ASSIGNMENT EXPRESSIONS
+_ASSIGNMENT := 
+	ASSIGN +REAL1_LEXPR +REAL1_EXPR <$OP$NAME$LOC> <B,⊢=⊢,Command> | ~Assignment : R1 L-Value = R1 Expression;
+	ASSIGN +REAL3_LEXPR +REAL3_EXPR <$OP$NAME$LOC> <B,⊢=⊢,Command> | ~Assignment : R3 L-Value = R3 Expression;
+	ASSIGN +REAL4_LEXPR +REAL4_EXPR <$OP$NAME$LOC> <B,⊢=⊢,Command> | ~Assignment : R4 L-Value = R4 Expression;
+	ASSIGN +REALMATRIX3_LEXPR +REALMATRIX3_EXPR <$OP$NAME$LOC> <B,⊢=⊢,Command> | ~Assignment : Matrix L-Value = Matrix Expression;
+	ASSIGN +REALMATRIX4_LEXPR +REALMATRIX4_EXPR <$OP$NAME$LOC> <B,⊢=⊢,Command> ~Assignment : Matrix L-Value = Matrix Expression;
+
+
+
+
+_DECLARE :=
+	DECL +REAL1_VAR +REAL1_EXPR <$NAME$LOC> <B,⊢=⊢,Command> | ~ Declaration : Declare R1 Var = R1 Expression;
+	DECL +REAL3_VAR +REAL3_EXPR <$NAME$LOC> <B,⊢=⊢,Command> | ~ Declaration : Declare R3 Var = R3 Expression;
+	DECL +REAL4_VAR +REAL4_EXPR <$NAME$LOC> <B,⊢=⊢,Command> | ~ Declaration : Declare R4 Var = R4 Expression;
+	DECL +REALMATRIX3_VAR +REALMATRIX3_EXPR <$NAME$LOC> <B,⊢=⊢,Command> | ~ Declaration : Declare Matrix 3x3 Var = Matrix 3x3 Expression;
+	DECL +REALMATRIX4_VAR +REALMATRIX4_EXPR <$NAME$LOC> <B,⊢=⊢,Command> | ~ Declaration : Declare Matrix 4x4 Var = Matrix 4x4 Expression;
+	DECL +INT_VAR +INT_EXPR | ~ Declaration : Declare Int Var = Int Expression;
+	DECL +BOOL_VAR +BOOL_EXPR | ~ Declaration : Declare Boolean Var = Boolean Expression;
+	DECL +REAL1_VAR | ~ Declaration : Declare R1 Var;
+	DECL +REAL3_VAR | ~ Declaration : Declare R3 Var;
+	DECL .REAL4_VAR | ~ Declaration : Declare R4 Var;
+	DECL +REALMATRIX3_VAR | ~ Declaration : Declare Matrix 3x3 Var;
+	DECL +REALMATRIX4_VAR | ~ Declaration : Declare Matrix 4x4 Var;
+	DECL +INT_VAR | ~ Declaration : Declare Int Var;
+	DECL +BOOL_VAR ~ Declaration : Declare Boolean Var;
+
+_WHILE :=
+	WHILE +BOOL_EXPR +STMT ~A Standard While Statement with a condition and body
+
+_IFCOND :=
+	IFTHEN +BOOL_EXPR +STMT | ~An If-Then Statement
+	IFTHENELSEIF +BOOL_EXPR +STMT +IFCOND | ~An If-Then-Else-If Statement 
+	IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
+	
+_REXPR :=
+	=REAL3_EXPR | ~An R-Value Expression in R3
+	=REAL1_EXPR | ~An R-Value Expression in R1
+	=REALMATRIX3_EXPR | ~An R-Value 3x3 Matrix Expression
+	=REALMATRIX4_EXPR | ~An R-Value 4x4 Matrix Expression
+	=REAL4_EXPR | ~An R-Value Expression in R4
+	=BOOL_EXPR | ~An R-Value Boolean Expression
+	=INT_EXPR ~An R-Value Integer Expression
+
+_LEXPR :=
+	>REAL3_LEXPR | ~An L-Value Expression in R3
+	>REAL1_LEXPR | ~An L-Value Expression in R1
+	>REALMATRIX3_LEXPR | ~An L-Value 3x3 Matrix Expression
+	>REALMATRIX4_LEXPR | ~An L-Value 4x4 Matrix Expression
+	>REAL4_LEXPR | ~An L-Value Expression in R4
+	>BOOL_LEXPR | ~An L-Value Boolean Expression
+	>INT_LEXPR ~An R-Value Integer Expression
+
+.BOOL_EXPR VALUE(bool,1) :=
+	ANDINT +INT_EXPR +INT_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	ORINT +INT_EXPR +INT_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	EQINT +INT_EXPR +INT_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	LEQINT +INT_EXPR +INT_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	GEQINT +INT_EXPR +INT_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	GTINT +INT_EXPR +INT_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	LTINT +INT_EXPR +INT_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	EQVEC +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	GEQVEC +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	LEQVEC +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	GTVEC +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	LTVEC +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	EQS +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	GEQS +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	LEQS +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	GTS +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	LTS +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	NEQVEC +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	PAREN +BOOL_EXPR <$OP$LOC> <P,$,Expression> | ~ Paren Expression (Boolean Expression)
+	NOT +BOOL_EXPR <$OP$LOC> <P,$,Expression> | ~ Not Expression !Boolean Expression 
+	AND +BOOL_EXPR +BOOL_EXPR <$OP$LOC> <P,$,Expression> | ~ And Expression : Boolean Expression ^ Boolean Expression
+	OR +BOOL_EXPR +BOOL_EXPR <$OP$LOC> <P,$,Expression> | ~ Or Expression : Boolean Expression U Boolean Expression
+	ZERO +REAL3_EXPR  <$OP$LOC> <P,$,Expression> | ~ Is Zero Expression : x E R3 == [0,0,0]
+	EQ +BOOL_EXPR +BOOL_EXPR <$OP$LOC> <P,$,Expression> | ~ x,y E R3, x == y
+	NEQ +BOOL_EXPR +BOOL_EXPR <$OP$LOC> <P,$,Expression> | ~ x,y E R3, x != y
+	REF .BOOL_VAR <$OP$NAME$LOC> <P,%,Expression> | ~Var Expression : Boolean Variable Expression As R-Value
+	BOOL_CALL <$OP$NAME$LOC> <P,%,Expression> | ~Var Expression : Boolean Variable Expression As R-Value
+	=BOOL_LITERAL
+
+_INT_EXPR VALUE(int,1) :=
+	REF .INT_VAR <$OP$NAME$LOC> <P,%,Expression> | ~Var Expression : Integer Variable Expression As R-Value
+	INT_CALL <$OP$NAME$LOC> <P,%,Expression> | ~Var Expression : Integer Variable Expression As R-Value
+	=INT_LITERAL 
+
+
++REAL1_EXPR VALUE(float,1) := 
+	FROMR4 +REAL4_EXPR <$OP$LOC> <P,•,Expression> | ~From R4 : An Expression in R4 that has been mysteriously condensed into R1
+	FROMR4X2 +REAL4_EXPR +REAL4_EXPR <$OP$LOC> <P,•,Expression> | ~From R4 : An Expression deriving from x,y E R4 that has been mysteriously condensed into R1
+	FROMR3 +REAL3_EXPR <$OP$LOC> <P,•,Expression> | ~From R3 : An Expression in R3 that has been mysteriously condensed into R1
+	FROMR3X2 +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,•,Expression> | ~From R3 : An Expression deriving from x,y E R3 that has been mysteriously condensed into R1
+	DOT +REAL3_EXPR  +REAL3_EXPR <$OP$LOC> <P,•,Expression> | ~Coordinate Expression : R1 Coordinate Access of R3 Expression
+	COORD +REAL1_EXPR <$OP$LOC> <P,•,Expression> | ~Coordinate Expression : R1 Coordinate Access of R3 Expression
+	NORM +REAL3_EXPR <$OP$LOC> <P,•,Expression> | ~Norm Expression : Unit R3 Expression
+	PAREN +REAL1_EXPR <$OP$LOC> <P,$,Expression> | ~Paren Expression : (R1 Expression)
+	INV +REAL1_EXPR <$OP$LOC> <A,⁻¹,Expression> | ~Inverse Expression : R1 Expression⁻¹
+	NEG +REAL1_EXPR <$OP$LOC> <P,-,Expression> | ~Negation Expression : -R1 Expression
+	ADD +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,+,Expression> | ~Addition Expression : R1 Expression + R1 Expression
+	SUB +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,-,Expression> | ~Subtraction Expression : R1 Expression - R1 Expression
+	MUL +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,⬝,Expression> | ~Multiplication Expression : R1 Expression * R1 Expression
+	DIV +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,/,Expression> | ~Division Expression : R1 Expression / R1 Expression
+	REF .REAL1_VAR <$OP$NAME$LOC> <P,%,Expression> | ~Var Expression : R1 Variable As R-Value
+	REAL1_CALL <$OP$NAME$LOC> <P,%,Expression> | ~Call Expression : R1-Valued Function Call
+	=REAL1_LITERAL
+
++REAL3_EXPR VALUE(float,3) := 
+    UNOP +REAL3_EXPR <$OP$LOC> <P,$,Expression> | ~A Generic Unary Operation Taking x From R3 To R3
+    BINOP +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,$,Expression> | ~A Generic Binary Operation Taking x,y From R3 To R3
+	CROSS +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,$,Expression> | ~Cross Expression : (R3 Expression) X (R3 Expression)
+	PAREN +REAL3_EXPR <$OP$LOC> <P,$,Expression> | ~Paren Expression : (R3 Expression)
+	ADD +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,+,Expression> | ~Addition Expression : R3 Expression + R3 Expression
+	SUB +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <I,-,Expression> | ~Subtraction Expression : R3 Expression - R3 Expression
+	INV +REAL3_EXPR <$OP$NAME$LOC> <A,⁻¹,Expression> | ~ Inverse Expression : R3 Expression⁻¹
+	NEG +REAL3_EXPR <$OP$LOC> <P,-,Expression> | ~Negation Expression : -R3 Expression
+	MUL +REAL3_EXPR +REAL1_EXPR <$OP$LOC> <I,⬝,Expression> | ~Multiplication Expression: R3 Expression * R1 Expression
+	MUL +REALMATRIX3_EXPR +REAL3_EXPR <$OP$LOC> <I,⬝,Expression> |  ~Multiplication Expression : Matrix 3 Expression * R3 Expression
+	MUL +REALMATRIX4_EXPR +REAL3_EXPR <$OP$LOC> <I,⬝,Expression> | ~Multiplication Expression : Matrix 4 Expression * x E R3 Projected to R4
+	DIV +REAL3_EXPR +REAL1_EXPR <$OP$LOC> <I,/,Expression> | ~Division Expression : R3 Expression / R1 Expression
+	REF .REAL3_VAR <$OP$NAME$LOC> <P,%,Expression> |  ~Var Expression : R3 Variable As R-Value
+	REAL3_CALL <$OP$NAME$LOC> <P,%,Expression> | ~Call Expression : R3-Valued Function Call
+	=REAL3_LITERAL
+
+	
++REAL4_EXPR VALUE(float,4) :=
+	PAREN +REAL4_EXPR <$OP$LOC> <P,$,Expression> | ~Paren Expression : (R4 Expression)
+	ADD +REAL4_EXPR +REAL4_EXPR <$OP$LOC> <I,+,Expression> |  ~Addition Expression : R4 Expression + R4 Expression
+	MUL +REAL4_EXPR +REAL4_EXPR <$OP$LOC> <I,⬝,Expression> | ~Multiplication Expression : R4 Expression * R1 Expression
+	MUL +REALMATRIX4_EXPR +REAL4_EXPR <$OP$LOC> <I,⬝,Expression> | ~Multiplication Expression : R4 Expression * R1 Expression
+	REF .REAL4_VAR <$OP$NAME$LOC> <P,%,Expression> | ~Var Expression : R4 Variable As R-Value
+	REAL4_CALL <$OP$NAME$LOC> <P,%,Expression> | ~Call Expression : R4-Valued Function Call
+	=REAL4_LITERAL 
+
+	
++REALMATRIX3_EXPR VALUE(float,9) :=
+	UNOP +REALMATRIX3_EXPR <$OP$LOC> <P,$,Expression> | ~Unary Operation Expression : (Matrix 3 Expression)
+	PAREN +REALMATRIX3_EXPR <$OP$LOC> <P,$,Expression> | ~Paren Expression : (Matrix 3 Expression)
+	MUL +REALMATRIX3_EXPR +REALMATRIX3_EXPR <$OP$LOC> <P,*,Expression> |   ~Multiplication Expression : Matrix 3 Expression * Matrix 3 Expression
+	REF .REALMATRIX3_VAR <$OP$NAME$LOC> <P,%,Expression> | ~Var Expression : Matrix 3 Variable As R-Value
+	REALMATRIX3_CALL <$OP$NAME$LOC> <P,%,Expression> | ~Call Expression : Matrix 3-Valued Function Call
+	=REALMATRIX3_LITERAL 
+
+
++REALMATRIX4_EXPR VALUE(float,16) :=
+	UNOP +REALMATRIX4_EXPR <$OP$LOC> <P,$,Expression> | ~Unary Operation Expression : (Matrix 4 Expression)
+	PAREN +REALMATRIX4_EXPR <$OP$LOC> <P,$,Expression> | ~Paren Expression : (Matrix 4 Expression)
+	MUL +REALMATRIX4_EXPR +REALMATRIX4_EXPR <$OP$LOC> <P,*,Expression> |   ~Multiplication Expression : Matrix 4 Expression * Matrix 4 Expression
+	REF .REALMATRIX4_VAR <$OP$NAME$LOC> <P,%,Expression> | ~Var Expression : Matrix 4 Variable As R-Value
+	REALMATRIX4_CALL <$OP$NAME$LOC> <P,%,Expression> | ~Call Expression : Matrix 4-Valued Function Call
+	=REALMATRIX4_LITERAL 
+	
++REAL1_LEXPR VALUE(float,1) :=
+	LREF .REAL1_VAR <$OP$NAME$LOC> <P,%,Expression> ~Var Expression : R1 Variable As L-Value
++REAL3_LEXPR VALUE(float,3) :=
+	LREF .REAL3_VAR <$OP$NAME$LOC> <P,%,Expression> ~Var Expression : R3 Variable As L-Value
++REAL4_LEXPR VALUE(float,4) :=
+	LREF .REAL4_VAR <$OP$NAME$LOC> <P,%,Expression> ~Var Expression : R4 Variable As L-Value
++REALMATRIX3_LEXPR VALUE(float,9) :=
+	LREF .REALMATRIX3_VAR <$OP$NAME$LOC> <P,%,Expression> ~Var Expression : Matrix 3 Variable As L-Value	
++REALMATRIX4_LEXPR VALUE(float,16) :=
+	LREF .REALMATRIX4_VAR <$OP$NAME$LOC> <P,%,Expression> ~Var Expression : Matrix 4 Variable As L-Value
+_BOOL_LEXPR VALUE(bool,1) :=
+	LREF .BOOL_VAR <$OP$NAME$LOC> <P,%,Expression> ~Var Expression : Boolean Expression As L-Value
+_INT_LEXPR VALUE(int,1) :=
+	LREF .INT_VAR <$OP$NAME$LOC> <P,%,Expression> ~Var Expression : Integer Expression As L-Value
+
+1VOID_FUNC :=
+	fDECL +STMT <$NAME> <P,!I,Var> ~Function Declaration With Void OR Unrecognized Type
+
+1MAIN_FUNC :=
+	fDECL +STMT <$NAME> <P,!I,Var> ~Main Function Declaration
+
+iREAL1_FUNC :=
+	fDECL +STMT <$NAME> <P,!I,Var> ~Function Declaration With Return Type E R1
+iREAL3_FUNC :=
+	fDECL +STMT <$NAME> <P,!I,Var> ~Function Declaration With Return Type E R3
+iREAL4_FUNC :=
+	fDECL +STMT <$NAME> <P,!I,Var> ~Function Declaration With Return Type E R4
+iREALMATRIX3_FUNC :=
+	fDECL +STMT <$NAME> <P,!I,Var> ~Function Declaration With Return Type E Matrix3x3 (Set)
+iREALMATRIX4_FUNC :=
+	fDECL +STMT <$NAME> <P,!I,Var> ~Function Declaration With Return Type E Matrix4x4 (Set)
+1BOOL_FUNC :=
+	fDECL +STMT <$NAME> <P,!I,Var> ~Function Declaration With Boolean Return Type
+1INT_FUNC :=
+	fDECL +STMT <$NAME> <P,!I,Var> ~Function Declaration With Integer Return Type
+
+iREAL1_VAR VALUE(float,1) := 
+	vIDENT <$NAME> <P,!I,Var> ~R1 Variable Identifier
+iREAL3_VAR VALUE(float,3) := 
+	vIDENT <$NAME> <P,!I,Var> ~R3 Variable Identifier
+iREAL4_VAR VALUE(float,4) := 
+	vIDENT <$NAME> <P,!I,Var>  ~R4 Variable Identifier
+iREALMATRIX3_VAR VALUE(float,9) := 
+	vIDENT <$NAME> <P,!I,Var> ~3x3 Matrix Variable Identifier
+iREALMATRIX4_VAR VALUE(float,16) := 
+	vIDENT <$NAME> <P,!I,Var> ~4x4 Matrix Variable Identifier
+1BOOL_VAR VALUE(bool,1) := 
+	vIDENT <$NAME> <P,!I,Var> ~Boolean Variable Identifier
+1INT_VAR VALUE(int,1) := 
+	vIDENT <$NAME> <P,!I,Var> ~Integer Variable Identifier
+
+_BOOL_LITERAL VALUE(bool,1,true) :=
+	BOOL_LIT
+
+_INT_LITERAL VALUE(int,1,0) :=
+	INT_LIT
+
++REAL1_LITERAL VALUE(float,1) := 
+	REAL1_LIT | ~ Real 1 Literal
+	--VALUE(float,1,0) <$OP$LOC> <P,⬝D,Expression> | ~ R1 Literal From Real Value
+	REAL1_EMPTY ~ Real 1 Literal With Empty Constructor
++REAL3_LITERAL VALUE(float,3) := 
+	REAL3_LIT +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,⬝,Expression> | ~R3 Literal From 3 R1 Expressions
+	REAL3_EMPTY ~ Real 3 Literal With Empty Constructor
+--	VALUE(float,3,0) <$OP$LOC> <I,⬝D,Expression> ~R3 Literal From 3 Real Values
++REAL4_LITERAL VALUE(float,4) := 
+	REAL4_LIT +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,⬝,Expression> | ~R4 Literal From 4 R1 Expressions
+	REAL4_EMPTY ~ Real 4 Literal With Empty Constructor
+--	VALUE(float,4,0) <$OP$LOC> <P,%D,Expression> ~ R4 Literal From 4 Real Values
++REALMATRIX3_LITERAL VALUE(float,9) := 
+	REAL3_EXPR_LIT +REAL3_EXPR +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <I,⬝,Expression> | ~ Matrix Literal From 3 R3 Expressions
+	REAL1_EXPR_LIT +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR +REAL1_EXPR <$OP$LOC> <I,⬝,Expression> | ~ Matrix Literal From 9 R1 Expressions
+	REALMATRIX3_EMPTY ~ Real 3 Matrix With Empty Constructor
+--	VALUE(float,9,0) <$OP$LOC> <I,⬝D,Expression> ~ Matrix Literal from 9 Real Values
++REALMATRIX4_LITERAL VALUE(float,16) := 
+	R3R4_LIT +REAL3_EXPR REAL4_EXPR | ~A Real 4x4 Matrix instantiated with x E R3 and y E R4
+	R4R3_LIT +REAL4_EXPR REAL3_EXPR | ~A Real 4x4 Matrix instantiated with x E R3 and y E R4
+	R3R3X3_LIT +REAL3_EXPR REALMATRIX3_EXPR | ~A Real 4x4 Matrix instantiated with x E R3 and y E R3x3
+	R3X3R3_LIT REALMATRIX3_EXPR +REAL3_EXPR | ~A Real 4x4 Matrix instantiated with x E R3 and y E R3x3
+	REALMATRIX4_EMPTY ~ Real 4x4 Matrix With Empty Constructor
+--	VALUE(float,16,0)
+
+####
+
+--Define instantiable spaces
+
+{
+	EuclideanGeometry, Euclidean,{Dimension=*},classicalGeometry
+	ClassicalTime, Affine, {Dimension=1},classicalTime
+	ClassicalVelocity, Vector, {Derived=true},classicalVelocity
+}
+--Define instances
+{
+	EuclideanGeometry,geom3d,{worldGeometry-3}
+	ClassicalTime,time,{worldTime},
+	ClassicalVelocity,vel,{worldVelocity-3}
+}
+
+####
+
+--Define instantiable objects & operations contingent on space type 
+--Code is generated for these
+--These turn into annotations, for example, Euclidean Geometry is Euclidean with prefix Geometric -} generate annotation GeometricAddAddVector
+
+Vector={fVector,Scalar,tBasisChange,tScaling,tShear}
+Affine={tFrameChange,fPoint,HomogenousPoint},Vector
+Euclidean={Rotation,Orientation,Angle},Affine
+
+--etc
+--do operations go here or just objects?
+--and operations are resolved in Lean...?
+
+####
+
+--not checking for operational consistency here. should i be?
+--these are the "CATEGORIES" referred to in email
+
+
+{
+	REAL1_EXPR={Euclidean.Angle,Vector.Scalar}
+	REAL1_LITERAL={Euclidean.Angle,Vector.Scalar}
+	REAL1_VAR={Euclidean.Angle,Vector.Scalar}
+	REAL3_EXPR={Euclidean.Rotation,Euclidean.Orientation,Vector.Vector,Affine.Point}
+	REAL3_VAR={Euclidean.Rotation,Euclidean.Orientation,Vector.Vector,Affine.Point}
+	REAL3_LITERAL={Euclidean.Rotation,Euclidean.Orientation,Vector.Vector,Affine.Point}
+	REALMATRIX3_EXPR={Vector.Scaling,Vector.Shear,Vector.BasisChange, Affine.FrameChange, Euclidean.Rotation}
+	REALMATRIX3_LITERAL={Vector.Scaling,Vector.Shear,Vector.BasisChange, Affine.FrameChange, Euclidean.Rotation}
+	REALMATRIX3_VAR={Vector.Scaling,Vector.Shear,Vector.BasisChange, Affine.FrameChange, Euclidean.Rotation}
+	REAL4_EXPR={Euclidean.Rotation,Euclidean.Orientation,Affine.HomogenousPoint}
+	REAL4_LITERAL={Euclidean.Rotation,Euclidean.Orientation,Affine.HomogenousPoint}
+	REAL4_VAR={Euclidean.Rotation,Euclidean.Orientation,Affine.HomogenousPoint}
+}
+
+####
+
+--here are rules from (AST Grammar Rule)x(Space,Annotation)-}LeanDSL
+--just an example for now, this can be filled out quickly
+--these demonstrate the "CATEGORIES" referred ot in email - MERGE WITH PREVIOUS SECTION?
+--Also need to dump Spaces into Lean as a "HEADER"
+{
+	REAL1_EXPR = {(EuclideanGeometry,GeometricScalar, "define "%GeometricScalar.Name"%" : peirce.geom3d.scalar = "%GeometricScalar.Value )}
+}
+####
+
+--when it's time to revisit AST parsing, consider this
+--set of rules for "Ds" when initializing annotations
+{
+	tf.Vector3 : {EuclideanGeometry, Euclidean.Vector }
+	geometry_msgs/Accel.linear : {ClassicalAcceleration,Vector.Vector}
+	tf.Point : {EuclideanGeometry,Euclidean.Point}
+}
+
+####
+
+####
+
+Base
+{
+    Discard:
+    {
+        ExprWithCleanups,
+        MaterializeTemporaryExpr,
+        CXXBindTemporaryExpr
+    }
+    Capture:
+    {
+        ParenExpr:&.PAREN,
+        DeclRefExpr:&.REF
+    }
+}
+
+bool ROSBooleanMatcher BOOL_EXPR BOOL_LITERAL.0
+{
+	Capture:
+	{
+		BinaryOperator(int,int).&&@$.ANDINT
+		BinaryOperator(int,int).||@$.ORINT
+		BinaryOperator(int,int).==@$.EQINT
+		BinaryOperator(int,int).>=@$.GEQINT
+		BinaryOperator(int,int).<=@$.LEQINT
+		BinaryOperator(int,int).>@$.GTINT
+		BinaryOperator(int,int).<@$.LTINT
+		BinaryOperator(bool,bool).==@$.EQ
+		BinaryOperator(bool,bool).&&@$.AND
+		BinaryOperator(bool,bool).||@$.OR
+		BinaryOperator(tf::Vector3,tf::Vector3).==@$.EQVEC
+		BinaryOperator(tf::Vector3,tf::Vector3).>=@$.GEQVEC
+		BinaryOperator(tf::Vector3,tf::Vector3).<=@$.LEQVEC
+		BinaryOperator(tf::Vector3,tf::Vector3).>@$.GTVEC
+		BinaryOperator(tf::Vector3,tf::Vector3).<@$.LTVEC
+		BinaryOperator(tfScalar,tfScalar).==@$.EQS
+		BinaryOperator(tfScalar,tfScalar).>=@$.GEQS
+		BinaryOperator(tfScalar,tfScalar).<=@$.LEQS
+		BinaryOperator(tfScalar,tfScalar).>@$.GTS
+		BinaryOperator(tfScalar,tfScalar).<@$.LTS
+		CXXBoolLiteralExpr()@DEFAULT
+	}
+}
+
+_Bool~bool ROS_BoolMatcher BOOL_EXPR BOOL_LITERAL.0
+{
+
+}
+
+int ROSIntegerMatcher INT_EXPR INT_LITERAL.0
+{
+	Capture:
+	{
+		IntegerLiteral()@DEFAULT
+	}
+}
+
+
+tfScalar ROSTFScalarMatcher REAL1_EXPR REAL1_LITERAL.0
+{
+	Capture:
+    {
+        BinaryOperator(tfScalar,tfScalar).+@$.ADD
+        BinaryOperator(tfScalar,tfScalar)./@$.DIV
+        BinaryOperator(tfScalar,tfScalar).*@$.MUL
+		CXXMemberCallExpr(tf::Vector3).angle@$.FROMR3
+		CXXMemberCallExpr(tf::Vector3).distance@$.FROMR3
+		CXXMemberCallExpr(tf::Vector3).distance2@$.FROMR3
+		CXXMemberCallExpr(tf::Vector3).dot@$.FROMR3
+		CXXMemberCallExpr(tf::Vector3).length@$.FROMR3
+		CXXMemberCallExpr(tf::Vector3).length2@$.FROMR3
+        CXXMemberCallExpr(tf::Vector3).x@$.FROMR3
+        CXXMemberCallExpr(tf::Vector3).y@$.FROMR3
+        CXXMemberCallExpr(tf::Vector3).z@$.FROMR3
+		CXXMemberCallExpr(tf::Vector3).getX@$.FROMR3
+		CXXMemberCallExpr(tf::Vector3).getY@$.FROMR3
+		CXXMemberCallExpr(tf::Vector3).getZ@$.FROMR3
+		CXXMemberCallExpr(tf::Quaternion,tf::Quaternion).angle@$.FROMR4X2
+		CXXMemberCallExpr(tf::Quaternion,tf::Quaternion).dot@$.FROMR4X2
+		--ImplicitCastExpr(tf::)
+    }
+}
+
+double ROSDoubleMatcher REAL1_EXPR REAL1_LITERAL.0
+{
+	Capture:
+	{
+		FloatingLiteral()@DEFAULT
+	}
+}
+
+
+
+tf::Vector3 ROSTFVector3Matcher REAL3_EXPR
+{
+	Capture:
+    {	
+		CXXMemberCallExpr(tf::Vector3).absolute@$.UNOP
+        CXXMemberCallExpr(tf::Vector3,tf::Vector3).cross@$.BINOP
+		CXXMemberCallExpr(tf::Vector3).normalized@$.UNOP
+		--CXXMemberCallExpr(tf::Vector3).lerp@+. !!NOT SUPPORTED YET
+		CXXOperatorCallExpr(tf::Vector3,tf::Vector3).*@$.CROSS
+		CXXOperatorCallExpr(tf::Vector3,tfScalar).*@$.MUL
+		CXXOperatorCallExpr(tf::Vector3,tfScalar)./@$.DIV
+		CXXOperatorCallExpr(tf::Vector3,tf::Vector3).-@$.SUB
+		CXXOperatorCallExpr(tf::Vector3,tf::Vector3).+@$.ADD
+		CXXOperatorCallExpr(tf::Transform,tf::Vector3).*@$.MUL
+		CXXConstructExpr(tfScalar,tfScalar,tfScalar)@REAL3_LITERAL.?
+    }
+}
+
+tf::Point~tf::Vector3 ROSTFPointMatcher REAL3_EXPR
+{
+
+}
+
+--tfScalar *~tf::Vector3 ROSTFScalarPtrMatcher REAL3_EXPR
+--{
+
+--}
+
+tf::Stamped<tf::Point>~tf::Vector3 ROSTFPointStamped REAL3_EXPR
+{
+
+}
+
+tf::Stamped<tf::Vector3>~tf::Vector3 ROSTFVector3Stamped REAL3_EXPR
+{
+
+}
+
+tf::Quaternion ROSTFQuaternionMatcher REAL4_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr(tfScalar,tfScalar,tfScalar,tfScalar)@REAL4_LITERAL.?
+		CXXOperatorCallExpr(tf::Transform,tf::Quaternion).*@$.MUL
+		CXXOperatorCallExpr(tf::Quaternion,tf::Quaternion).+@$.ADD
+		CXXOperatorCallExpr(tf::Quaternion,tf::Quaternion).*@$.MUL
+	}
+}
+
+tf::Stamped<tf::Quaternion>~tf::Quaternion ROSTFQuaternionStampedMatcher REAL4_EXPR
+{
+
+}
+
+
+tf::Matrix3x3 ROSTFMatrixMatcher REALMATRIX3_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr(tfScalar,tfScalar,tfScalar,tfScalar,tfScalar,tfScalar,tfScalar,tfScalar,tfScalar)@REALMATRIX3_LITERAL.?
+		CXXOperatorCallExpr(tf::Matrix3x3,tf::Matrix3x3).*@$.MUL
+	}
+}
+
+tf::Stamped<tf::Matrix3x3>~tf::Matrix3x3 ROSTFMatrixStampedMatcher REALMATRIX3_EXPR
+{
+}
+
+tf::Transform ROSTFTransformMatcher REALMATRIX4_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr(tf::Quaternion,tf::Vector3)@REALMATRIX4_LITERAL.?
+		CXXConstructExpr(tf::Matrix3x3,tf::Vector3)@REALMATRIX4_LITERAL.?
+		CXXOperatorCallExpr(tf::Transform,tf::Transform).*@$.MUL
+	}
+}
+
+tf::Stamped<tf::Transform>~tf::Transform ROSTFTransformStampedMatcher REALMATRIX4_EXPR
+{
+
+}
+
+tf::Pose~tf::Transform ROSTFPoseMatcher REALMATRIX4_EXPR
+{
+
+}
+
+tf::Stamped<tf::Pose>~tf::Transform ROSTFPoseStampedMatcher REALMATRIX4_EXPR
+{
+
+}
+
+--geometry_msgs::Accel 
+--{
+
+--}
+
+--geometry_msgs::AccelStamped
+--{
+
+--}
+
+--geometry_msgs::AccelWithCovariance
+--{
+
+--}
+
+--geometry_msgs::AccelWithCovarianceStamped
+--{
+
+--}
+
+--geometry_msgs::Inertia
+--{
+
+--}
+
+--geometry_msgs::InertiaStamped
+--{
+
+--}
+
+geometry_msgs::Point ROSGeometryMsgsPointMatcher REAL3_EXPR
+{
+	CXXConstructExpr()@REAL3_LITERAL.?
+}
+
+--geometry_msgs::Point32
+--{
+
+--}
+
+geometry_msgs::PointStamped ROSGeometryMsgsPointStampedMatcher REAL3_EXPR
+{
+	Capture: 
+	{
+		CXXConstructExpr()@REAL3_LITERAL.?
+	}
+}
+
+--geometry_msgs::Polygon
+--{
+
+--}
+
+--geometry_msgs::PolygonStamped
+--{
+
+--}
+
+geometry_msgs::Pose ROSGeometryMsgsPoseMatcher REALMATRIX4_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr()@REALMATRIX4_LITERAL.?
+	}
+}
+
+--geometry_msgs::Pose2D
+--{
+
+--}
+
+--geometry_msgs::PoseArray
+--{
+
+--}
+
+geometry_msgs::PoseStamped ROSGeometryMsgsPoseStampedMatcher REALMATRIX4_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr()@REALMATRIX4_LITERAL.?
+	}
+}
+
+--geometry_msgs::PoseWithCovariance
+--{
+
+--}
+
+--geometry_msgs::PoseWithCovarianceStamped
+--{
+
+--}
+
+geometry_msgs::Quaternion ROSGeometryMsgsQuaternionMatcher REAL4_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr()@REAL4_LITERAL.?
+	}
+}
+
+geometry_msgs::QuaternionStamped ROSGeometryMsgsQuaternionStampedMatcher REAL4_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr()@REAL4_LITERAL.?
+	}
+}
+
+geometry_msgs::Transform ROSGeometryMsgsTransformStampedMatcher REALMATRIX4_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr()@REALMATRIX4_LITERAL.?
+	}
+}
+
+geometry_msgs::TransformStamped ROSGeometryMsgsTransformStampedMatcher REALMATRIX4_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr()@REALMATRIX4_LITERAL.?
+	}
+}
+
+--geometry_msgs::Twist
+--{
+
+--}
+
+--geometry_msgs::TwistStamped
+--{
+
+--}
+
+--geometry_msgs::TwistWithCovariance
+--{
+
+--}
+
+--geometry_msgs::TwistWithCovarianceStamped
+--{
+
+--}
+
+geometry_msgs::Vector3 ROSGeometryMsgsVector3Matcher REAL3_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr()@REAL3_LITERAL.?
+	}
+}
+
+geometry_msgs::Vector3Stamped ROSGeometryMsgsVector3StampedMatcher REAL3_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr()@REAL3_LITERAL.?
+	}
+}
+
+--geometry_msgs::Wrench
+--{
+
+--}
+
+--geometry_msgs::WrenchStamped
+--{
+
+--}

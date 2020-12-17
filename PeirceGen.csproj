@@ -57,7 +57,7 @@
     <Compile Include="Generators\GenMatcher.cs" />
     <Compile Include="Generators\GenOracle.cs" />
     <Compile Include="Grammar.cs" />
-    <None Include="GrammarEmpty" />
+    <None Include="Grammars\GrammarEmpty" />
     <Compile Include="MonoConfigurationManager.cs" />
     <Compile Include="ParseGrammar.cs" />
     <Compile Include="ParseMatchers.cs" />
@@ -66,10 +66,10 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
-    <None Include="Grammar" />
+    <None Include="Grammars\Grammar" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="GrammarOld" />
+    <None Include="Grammars\GrammarOld" />
   </ItemGroup>
   <ItemGroup>
     <Content Include="symlinkme\AST.h" />

@@ -140,9 +140,16 @@ Space* Domain::getSpace(std::string key){
 void Space::addFrame(Frame* frame){
     this->frames_.push_back(frame);
 };
-
+/*
 void Frame::setParent(Frame* parent){
     this->parent_ = parent;
+};*/
+
+void DerivedFrame::setParent(Frame* parent){
+    this->parent_ = parent;
+};
+void AliasedFrame::setAliased(Frame* original){
+    this->original_ = original;
 };
 
 DomainObject* Domain::mkDefaultDomainContainer(){
@@ -156,7 +163,7 @@ DomainObject* Domain::mkDefaultDomainContainer(std::initializer_list<DomainObjec
 DomainObject* Domain::mkDefaultDomainContainer(std::vector<DomainObject*> operands){
     return new domain::DomainContainer(operands);
 };
-
+/*
 Frame* Domain::mkFrame(std::string name, Space* space, Frame* parent){
     " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => {
 
@@ -172,11 +179,46 @@ Frame* Domain::mkFrame(std::string name, Space* space, Frame* parent){
             })) + @"
     return nullptr;
 };
+*/
+/*Frame* Domain::mkFrame(std::string name, Space* space, Frame* parent){
+    
 
+};*/
+/*
+template<Space* sp> 
+Frame<sp>* mkAliasedFrame(std::string name, Frame* aliased){
+    var frm = new domain::AliasedFrame<sp>(name, aliased);
+    sp->addFrame(frm);
+    return frm;
+};
 
+template<Space* sp>
+Frame<sp>* mkDerivedFrame(std::string name, Frame* parent){
+    var frm = new domain::DerivedFrame<sp>(name, parent);
+    sp->addFrame(frm);
+    return frm;
+};
+*/
 ";
             file += getspace;
 
+
+            var mkSystems = @"
+SIMeasurementSystem* Domain::mkSIMeasurementSystem(std::string name){
+    auto si = new SIMeasurementSystem(name);
+    this->measurementSystems.push_back(si);
+    return si;
+};
+
+ImperialMeasurementSystem* Domain::mkImperialMeasurementSystem(std::string name){
+    auto imp = new ImperialMeasurementSystem(name);
+    this->measurementSystems.push_back(imp);
+    return imp;
+
+};
+
+";
+            file += "\n" + mkSystems + "\n";
 
             var mkTransformMap = @"MapSpace* Domain::mkMapSpace(Space* space, Frame* dom, Frame* cod){
     return new MapSpace(space, dom, cod);
@@ -194,7 +236,7 @@ Frame* Domain::mkFrame(std::string name, Space* space, Frame* parent){
                 {
                     var mkSpace = sp.Name + "* Domain::mk" + sp.Name + @"(std::string key,std::string name_, Space* base1, Space* base2){
         " + sp.Name + @"* s = new " + sp.Name + @"(name_, base1, base2);
-        s->addFrame(new domain::" + sp.Name + @"Frame(""Standard"", s, nullptr));
+        s->addFrame(new domain::" + sp.Name + @"StandardFrame(s));
         this->" + sp.Name + @"_vec.push_back(s);
         this->Space_vec.push_back(s);
         this->Space_map[key] = s;
@@ -215,7 +257,8 @@ Frame* Domain::mkFrame(std::string name, Space* space, Frame* parent){
                            ",std::string name_") + @"){
         " + sp.Name + @"* s = new " + sp.Name + @"(" + (sp.DimensionType == Space.DimensionType_.ANY ? "name_, dimension_"
                                                     : "name_") + @");
-        s->addFrame(new domain::" + sp.Name + @"Frame(""Standard"", s, nullptr));
+        //s->addFrame(new domain::" + sp.Name + @"Frame(""Standard"", s, nullptr));
+        s->addFrame(new domain::" + sp.Name + @"StandardFrame(s));
         this->" + sp.Name + @"_vec.push_back(s);
         this->Space_vec.push_back(s);
         this->Space_map[key] = s;
@@ -233,86 +276,37 @@ Frame* Domain::mkFrame(std::string name, Space* space, Frame* parent){
                     
 
 
-                var mkFrame = sp.Name + "Frame* Domain::mk" + sp.Name + "Frame(std::string name, domain::" + sp.Name + @"* space, domain::" + sp.Name + @"Frame* parent){
-    " + sp.Name + @"Frame* child = new domain::" + sp.Name + @"Frame(name, space, parent);
+                var mkAliasedFrame = "" +sp.Name + "AliasedFrame* Domain::mk" + sp.Name + 
+                    "AliasedFrame(std::string name, domain::" + sp.Name + @"* space, domain::" + sp.Name + @"Frame* parent, domain::MeasurementSystem* ms){
+    " + sp.Name + @"AliasedFrame* child = new domain::" + sp.Name + @"AliasedFrame(name, space, parent,ms);
     space->addFrame(child);
     return child;
 }
             ";
-                file += "\n" + mkFrame + "\n";
+               
+
+                file += "\n" + mkAliasedFrame + "\n";
+                
+                var mkDerivedFrame = "" + sp.Name + "DerivedFrame* Domain::mk" + sp.Name + "DerivedFrame(std::string name, domain::" + sp.Name + @"* space, domain::" + sp.Name + @"Frame* parent){
+    " + sp.Name + @"DerivedFrame* child = new domain::" + sp.Name + @"DerivedFrame(name, space, parent);
+    space->addFrame(child);
+    return child;
+}
+            ";
 
 
+                file += "\n" + mkDerivedFrame + "\n";
 
-                var addFrame = "void " + sp.Name + "::addFrame(" + sp.Name + @"Frame* frame){
+
+                var addFrame = "/*void " + sp.Name + "::addFrame(" + sp.Name + @"Frame* frame){
+    ((Space*)this)->addFrame(frame);
+}*/" + @"
+void " + sp.Name + @"::addFrame(" + sp.Name + @"Frame* frame){
     ((Space*)this)->addFrame(frame);
 }";
 
                 file += "\n" + addFrame + "\n";
-                /*
-                foreach (var spObj in sp.Category.Objects)
-                {
-                    var mkWithSpace = "";
-
-                    if (spObj.IsTransform)
-                    {
-                        mkWithSpace = @"
-template <class ValueType, int ValueCount>
-" +
-                            sp.Name + spObj.Name + "<ValueType,ValueCount>* Domain::mk" + sp.Name + spObj.Name + @"(MapSpace* sp, ValueType* values[ValueCount]){
-    " + sp.Name + spObj.Name + @"<ValueType,ValueCount>* dom_ = new " + sp.Name + spObj.Name + @"<ValueType,ValueCount>(sp, {});
-    dom_->setValues(values);
-    //this->" + sp.Name + spObj.Name + @"_vec.push_back(dom_);
-    int i = 0;
-    for(auto val : values){
-        dom_->setValue(values[i],i++);
-    }
-    return dom_;
-}
-                ";
-
-                    }
-                    else
-                    {
-                        mkWithSpace = @"
-template <class ValueType, int ValueCount>
-" + sp.Name + spObj.Name + "<ValueType,ValueCount>* Domain::mk" + sp.Name + spObj.Name + "(" + sp.Name + @"* sp, ValueType* values[ValueCount]){
-    " + sp.Name + spObj.Name + @"<ValueType,ValueCount>* dom_ = new " + sp.Name + spObj.Name + @"<ValueType,ValueCount>(sp, {});
-    //dom_->setValues(values);
-    //this->" + sp.Name + spObj.Name + @"_vec.push_back(dom_);
-    int i = 0;
-    for(auto val : values){
-        dom_->setValue(values[i],i++);
-    }
-
-    return dom_;
-}
-                ";
-                    }
-
-                    var mkSansSpace = @"
-template <class ValueType, int ValueCount>
-" +
-                            sp.Name + spObj.Name + "<ValueType,ValueCount>* Domain::mk" + sp.Name + spObj.Name + @"(){
-    " + sp.Name + spObj.Name + @"<ValueType,ValueCount>* dom_ = new " + sp.Name + spObj.Name + @"<ValueType,ValueCount>({});
-    //this->" + sp.Name + spObj.Name + @"_vec.push_back(dom_);
-    /*int i = 0;
-    for(auto val : values){
-        dom_->setValue(values[i],i++);
-    } 
-    return dom_;
-}";
-
-                    file += "\n" + mkWithSpace + "\n" + mkSansSpace + "\n" ;
-                    if (spObj.HasFrame)
-                    {
-                        var setFrame = @"
-template <class ValueType, int ValueCount>
-" + "void " + sp.Name + spObj.Name + "<ValueType,ValueCount>::setFrame(" + sp.Name + @"Frame* frame){
-    this->frame_ = frame;
-};";
-                        file += "\n" + setFrame;
-                    }
-                }*/
+     
             }
 
             this.CppFile = file;
@@ -333,6 +327,7 @@ template <class ValueType, int ValueCount>
 #include <vector>
 #include <string>
 #include <memory>
+#include <typeinfo>
 
 #include ""AST.h""
 #include ""Coords.h""
@@ -358,13 +353,25 @@ namespace domain{
 
             //print all classes
 
-            file += "\nclass Space;\nclass DerivedSpace;\nclass MapSpace;\nclass Frame;\nclass DomainObject;\nclass DomainContainer;\ntemplate<typename ValueType,int ValueCount>\nclass ValueObject;\n";
+            file += "\nclass Space;\nclass DerivedSpace;\nclass MapSpace;\nclass Frame;\nclass StandardFrame;\nclass AliasedFrame;\nclass DerivedFrame;\nclass DomainObject;\nclass DomainContainer;\ntemplate<typename ValueType,int ValueCount>\nclass ValueObject;\n";
 
             foreach (var sp in ParsePeirce.Instance.Spaces)
             {
                 file += "\nclass " + sp.Name + ";\n";
 
                 file += "\nclass " + sp.Name + "Frame;\n";
+
+                file += "\nclass " + sp.Name + "StandardFrame;\n";
+
+                file += "\nclass " + sp.Name + "AliasedFrame;\n";
+
+                file += "\nclass " + sp.Name + "DerivedFrame;\n";
+
+                file += "\nclass " + "MeasurementSystem;\n";
+
+                file += "\nclass SIMeasurementSystem;\n";
+
+                file += "\nclass ImperialMeasurementSystem;\n";
 
                 foreach (var spObj in sp.Category.Objects)
                 {
@@ -401,7 +408,10 @@ public:
     DomainObject* mkDefaultDomainContainer();
     DomainObject* mkDefaultDomainContainer(std::initializer_list<DomainObject*> operands);
     DomainObject* mkDefaultDomainContainer(std::vector<DomainObject*> operands);
-    Frame* mkFrame(std::string name, Space* space, Frame* parent);
+    //Frame* mkFrame(std::string name, Space* space, Frame* parent);
+    //Frame<sp>* mkAliasedFrame(std::string name, Frame* aliased);
+
+    //Frame<sp>* mkDerivedFrame(std::string name, Frame* parent);
 ";
             file += getSpace;
 
@@ -409,6 +419,21 @@ public:
     MapSpace* mkMapSpace(Space* space, Frame* dom, Frame* cod);";
 
             file += "\n" + mkTransformMap + "\n";
+
+
+            var mkSI = @"
+    SIMeasurementSystem* mkSIMeasurementSystem(string name);";
+
+            var mkImp = @"
+    ImperialMeasurementSystem* mkImperialMeasurementSystem(string name);
+";
+
+
+            var meassys = @"
+    std::vector<MeasurementSystem*> measurementSystems;
+    std::vector<MeasurementSystem*> getMeasurementSystems() const{return measurementSystems;};
+";
+            file += "\n" + mkSI + "\n" + mkImp + "\n" + meassys + "\n";
 
             foreach (var sp in ParsePeirce.Instance.Spaces)
             {
@@ -431,9 +456,13 @@ public:
                     file += "\n\t" + mkSpace + "\n\t" + getSVec + "\n";
                 }
 
-                var mkFrame = sp.Name + "Frame* mk" + sp.Name + "Frame(std::string name," + (@" domain::" + sp.Name + @"* space") + @", domain::" + sp.Name + @"Frame* parent);";
+                var mkAliasedFrame = sp.Name + "AliasedFrame* mk" + sp.Name + "AliasedFrame(std::string name," + (@" domain::" + sp.Name + @"* space") + @", domain::" + sp.Name + @"Frame* aliased, domain::MeasurementSystem* ms);";
 
-                file += "\n\t" + mkFrame;
+                file += "\n\t" + mkAliasedFrame;
+
+                var mkDerivedFrame = sp.Name + "DerivedFrame* mk" + sp.Name + "DerivedFrame(std::string name," + (@" domain::" + sp.Name + @"* space") + @", domain::" + sp.Name + @"Frame* parent);";
+
+                file += "\n\t" + mkDerivedFrame;
 
                 foreach (var spObj in sp.Category.Objects)
                 {
@@ -443,14 +472,13 @@ public:
                     {
                         mkWithSpace = @"
 template <class ValueType, int ValueCount>
-" +
-                            sp.Name + spObj.Name + "<ValueType,ValueCount>* mk" + sp.Name + spObj.Name + @"(MapSpace* sp, std::shared_ptr<ValueType> values[ValueCount]){
-    " + sp.Name + spObj.Name + @"<ValueType,ValueCount>* dom_ = new " + sp.Name + spObj.Name + @"<ValueType,ValueCount>(sp, {});
+                        " +    sp.Name + spObj.Name + "<ValueType,ValueCount>* mk" + sp.Name + spObj.Name + @"(" + sp.Name + @"* sp," + sp.Name + @"Frame* from," + sp.Name + @"Frame* to/*,   std::shared_ptr<ValueType> values[ValueCount]*/){
+    " + sp.Name + spObj.Name + @" <ValueType,ValueCount>* dom_ = new " + sp.Name + spObj.Name + @" <ValueType,ValueCount>(sp, from, to, {});
     //((ValueObject<ValueType,ValueCount>)(dom_))->setValues(values);
     //this->" + sp.Name + spObj.Name + @"_vec.push_back(dom_);
-    for(int i = 0; i < ValueCount;i++){
+    /*for(int i = 0; i < ValueCount;i++){
         dom_->setValue(values[i],i);
-    }
+    }*/
     return dom_;
 }
                 ";
@@ -602,27 +630,109 @@ protected:
 
 };
 
+class MeasurementSystem {
+public :
+    MeasurementSystem(std::string name) : name_(name) {};
+    virtual ~MeasurementSystem() {};
+    virtual std::string toString() = 0;
+
+    virtual std::string getName() const { return this->name_; };
+
+protected :
+    std::string name_;
+};
+
+class SIMeasurementSystem : public MeasurementSystem {
+public:
+    SIMeasurementSystem(std::string name) : MeasurementSystem(name) {};
+    //virtual ~SIMeasurementSystem() {};
+    virtual std::string toString() override { return ""@@SI "" + this->name_; };
+};
+
+class ImperialMeasurementSystem : public MeasurementSystem {
+public:
+    ImperialMeasurementSystem(std::string name) : MeasurementSystem(name) {};
+   // virtual ~SIMeasurementSystem() {};
+    virtual std::string toString() override { return ""@@Imperial "" + this->name_; };
+};
+
 class Frame {
 public:
-    Frame(std::string name, Space* space, Frame* parent) : parent_(parent), space_(space), name_(name) {};
+    Frame(std::string name, Space* sp) : name_(name), sp_(sp) {};
     Frame() {};
     virtual ~Frame(){};
     virtual std::string toString() const {
-        return ""This is a mixin interface"";
+        return std::string(""@@"") + typeid(sp_).name() + ""Frame "" + this->getName();
     }
 
-    Frame* getParent() const{ return parent_; };
-    void setParent(Frame* parent);
+    //Frame* getParent() const{ return parent_; };
+    //void setParent(Frame* parent);
+
+    virtual std::string getName() const { return name_; };
+
+    Space* getSpace() const { return sp_; };
+
+protected:
+    std::string name_;
+    Space* sp_;
+};
+
+class StandardFrame : public Frame {
+public:
+    StandardFrame(Space* sp) : Frame(""Standard"", sp) {};
+    StandardFrame() {};
+    virtual ~StandardFrame(){};
+
+    virtual std::string toString() const override { return this->getName() + ""("" + this->sp_->getName() + "")""; };
+
+    virtual std::string getName() const override { return this->sp_->getName() + "".standardFrame""; };
+
+    //Space* getSpace() const { return space_; };
+
+protected:
+    std::string alias_;
+};
+
+class AliasedFrame : public Frame {
+public:
+    AliasedFrame(std::string name, Space* sp, Frame* original, domain::MeasurementSystem* ms) : Frame(name, sp), original_(original), units_(ms) {};
+    AliasedFrame() {};
+    virtual ~AliasedFrame(){};
+    virtual std::string toString() const {
+        return this->getName() + std::string(""("") + this->sp_->getName() + "","" + original_->getName() + "")"";
+    }
+
+    Frame* getAliased() const{ return original_; };
+    MeasurementSystem* getUnits() const { return units_; };
+    void setAliased(Frame* original);
 
     std::string getName() const { return name_; };
 
-    Space* getSpace() const { return space_; };
+    //Space* getSpace() const { return this->sp_; };
 
 protected:
-    Frame* parent_;
-    Space* space_;
-    std::string name_;
+    Frame* original_;
+    MeasurementSystem* units_;
+    //std::string name_;
+};
 
+class DerivedFrame : public Frame {
+public:
+    DerivedFrame(std::string name, domain::Space* sp, Frame* parent) : Frame(name, sp), parent_(parent) {};
+    DerivedFrame() {};
+    virtual ~DerivedFrame(){};
+    virtual std::string toString() const override {
+        return this->getName() + std::string(""("") + this->sp_->getName() + "","" + parent_->getName() + "")"";
+    }
+
+    Frame* getParent() const{ return parent_; };
+    MeasurementSystem* getUnits() const { return units_; };
+    void setParent(Frame* parent);
+
+    //std::string getName() const { return name_; };
+protected:
+    Frame* parent_;
+    MeasurementSystem* units_;
 };
 
 class DerivedSpace : public Space {
@@ -871,20 +981,75 @@ public:
     };";
                     file += spclass;
                 }
-                
+
                 var spframeclass = "\n\nclass " + sp.Name + @"Frame : public Frame {
 public:
-	" + sp.Name + @"Frame(std::string name,  " + sp.Name + @"* space, " + sp.Name + @"Frame* parent) : Frame(name, space, parent) {};
-	std::string toString() const override {
+	" + sp.Name + @"Frame(std::string name,  " + sp.Name + @"* space) : Frame(name, space) {};
+    " + sp.Name + @"Frame(){};
+	/*std::string toString() const override {
         std::string parentName = ((" + sp.Name + @"*)this->space_)->getName();
 		return ""@@" + sp.Name + @"Frame  "" + this->getName() + ""("" + parentName + (this->parent_? "","" + parentName + ""."" + this->parent_->getName() : """") + "")"";
-	}
+	}*/
 
 private:
 };";
 
                 file += "\n" + spframeclass + "\n";
-                
+
+                var spstandardframeclass = "\n\nclass " + sp.Name + @"StandardFrame : public StandardFrame, public " + sp.Name + @"Frame {
+public:
+	" + sp.Name + @"StandardFrame(" + sp.Name + @"* space) : StandardFrame(space) {};
+	/*std::string toString() const override {
+        std::string parentName = ((" + sp.Name + @"*)this->space_)->getName();
+		return ""@@" + sp.Name + @"Frame  "" + this->getName() + ""("" + parentName + (this->parent_? "","" + parentName + ""."" + this->parent_->getName() : """") + "")"";
+	}*/
+
+    virtual std::string getName() const override {
+        return StandardFrame::getName();
+    };
+
+    virtual std::string toString() const override {
+        return std::string(""" + sp.Name + @"StandardFrame "") + StandardFrame::toString();
+    };
+
+private:
+};";
+
+                file += "\n" + spstandardframeclass + "\n";
+
+                var spaliasedframeclass = "\n\nclass " + sp.Name + @"AliasedFrame : public AliasedFrame, public " + sp.Name + @"Frame {
+public:
+	" + sp.Name + @"AliasedFrame(std::string name,  " + sp.Name + @"* space, " + sp.Name + @"Frame* aliased, domain::MeasurementSystem* ms) : AliasedFrame(name, space, aliased,  ms) {};
+	/*std::string toString() const override {
+        std::string parentName = ((" + sp.Name + @"*)this->space_)->getName();
+		return ""@@" + sp.Name + @"Frame  "" + this->getName() + ""("" + parentName + (this->parent_? "","" + parentName + ""."" + this->parent_->getName() : """") + "")"";
+	}*/
+    virtual std::string toString() const override {
+        return std::string(""" + sp.Name + @"AliasedFrame "") + AliasedFrame::toString();
+    };
+
+private:
+};";
+
+                file += "\n" + spaliasedframeclass + "\n";
+
+                var spderivedframeclass = "\n\nclass " + sp.Name + @"DerivedFrame : public DerivedFrame, public " + sp.Name + @"Frame {
+public:
+	" + sp.Name + @"DerivedFrame(std::string name,  " + sp.Name + @"* space, " + sp.Name + @"Frame* parent) : DerivedFrame(name, space, parent) {};
+	/*std::string toString() const override {
+        std::string parentName = ((" + sp.Name + @"*)this->space_)->getName();
+		return ""@@" + sp.Name + @"Frame  "" + this->getName() + ""("" + parentName + (this->parent_? "","" + parentName + ""."" + this->parent_->getName() : """") + "")"";
+	}*/
+    virtual std::string toString() const override {
+        return std::string(""" + sp.Name + @"DerivedFrame "") + DerivedFrame::toString();
+    };
+
+private:
+};";
+
+                file += "\n" + spderivedframeclass + "\n";
+
+
                 foreach (var spObj in sp.Category.Objects)
                 {
                     var spobjclass = @"
@@ -892,8 +1057,8 @@ private:
 template <class ValueType, int ValueCount>
 class " + sp.Name +  spObj.Name + @" : public ValueObject<ValueType,ValueCount> {
 public:
-    " + sp.Name + spObj.Name + @"(" + (spObj.IsTransform ? "MapSpace" : sp.Name) + @"* s, std::initializer_list<DomainObject*> args) : 
-			ValueObject<ValueType,ValueCount>::ValueObject(args), space_(s)  {}
+    " + sp.Name + spObj.Name + @"(" + (spObj.IsMap ? "MapSpace" : sp.Name) + @"* s," + (spObj.IsTransform ? sp.Name + "Frame* from," + sp.Name + "Frame* to,":"" ) + @" std::initializer_list<DomainObject*> args) : 
+			ValueObject<ValueType,ValueCount>::ValueObject(args), space_(s)" + ( spObj.IsTransform ? ",from_(from),to_(to)" : "" ) + @"   {}
     " + sp.Name + spObj.Name + @"(std::initializer_list<DomainObject*> args ) :
 	 		ValueObject<ValueType,ValueCount>::ValueObject(args) {}
 	virtual ~" + sp.Name + spObj.Name + @"(){}
@@ -903,15 +1068,20 @@ public:
         + "+\",\"+ValueObject<ValueType,ValueCount>::toString()" 
         + (spObj.HasFrame ? "+\",\"+(frame_?frame_->getName():\"\")" : "") + @" + "")"";
     }
-    
+
+    " + (!spObj.IsMap ? sp.Name + @"* getSpace() const {return this->space_;};" :"") + @"
+    " + (spObj.IsTransform ? sp.Name + @"* getFrom() const {return this->from_;};" : "") + @"
+    " + (spObj.IsTransform ? sp.Name + @"* getTo() const {return this->to_;};" : "") + @"
     " + (spObj.HasFrame ? (sp.Name + @"Frame* getFrame() const { return this->frame_; };") : "") + @"
     " + (spObj.HasFrame ? (@"void setFrame(" + sp.Name + @"Frame* frame){
             this->frame_ = frame;
         };") : "") + @"
 private:
-    " + (!spObj.IsMap && !spObj.IsTransform ? sp.Name + @"* space_;" : "") + @" 
+    " + (!spObj.IsMap ? sp.Name + @"* space_;" : "") + @" 
     " + (spObj.HasFrame?(sp.Name + @"Frame* frame_;"):"") + @"
-    " + (spObj.IsMap || spObj.IsTransform ? (@"MapSpace* space_;") : "") + @"
+    " + (spObj.IsMap ? (@"MapSpace* space_;") : "") + @"
+    " + (spObj.IsTransform ? (sp.Name + @"Frame* from_;") : "") + @"
+    " + (spObj.IsTransform ? (sp.Name + @"Frame* to_;") : "") + @"
 };
 ";
                     file += "\n\n" +  spobjclass;

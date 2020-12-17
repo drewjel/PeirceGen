@@ -489,12 +489,19 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                     //CXXConstructExpr(tfScalar, tfScalar, tfScalar, tfScalar, tfScalar, tfScalar, tfScalar, tfScalar, tfScalar)
                     //:REALMATRIX3_LITERAL.?
                     //                var numargs = asttoks[0]
-                    var args = asttoks[0].Substring(asttoks[0].IndexOf('(') + 1, asttoks[0].Length - asttoks[0].IndexOf('(') - 2).Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+                    //try
+                    //{
+                        var args = asttoks[0].Substring(asttoks[0].IndexOf('(') + 1, asttoks[0].Length - asttoks[0].IndexOf('(') - 2).Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
 
-                    var numargs = args.Length;
+                        var numargs = args.Length;
 
-                    var prodArgs = args.Select(a => allProductions.Single(p_ => p_.TypeName == a)).ToList();
-                    var targetCase = MatcherProduction.FindCase(production, grammartype, prodArgs);
+                        var prodArgs = args.Where(a => a != "IGNORE").Select(a => allProductions.Single(p_ => p_.TypeName == a)).ToList();
+                        var targetCase = MatcherProduction.FindCase(production, grammartype, prodArgs);
+                   /* }
+                    catch(Exception ex)
+                    {
+                        Console.WriteLine(ex.StackTrace);
+                    }*/
 
                     //var switchers =
                     retval.Add(new MatcherCase()
@@ -532,7 +539,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         //if all children exists, declare a match in interp, or else throw a matcher wartning -invalid logic
 
                         return prodexistpreds + @"
-    if(cxxConstructExpr_ and cxxConstructExpr_->getNumArgs() == " + prodArgs.Count + @"){" +
+    if(cxxConstructExpr_ and cxxConstructExpr_->getNumArgs() == " + args.Length + @"){" +
      Peirce.Join("", prodArgs, p_ => @"
         clang::Stmt* arg" + i++ + "stmt;\n")
      +
@@ -573,6 +580,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     }";
                          }
                     });
+                    /*
                     retval.Add(new MatcherCase()
                     {
                         ClangName = "CXXTemporaryObjectExpr",
@@ -608,7 +616,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         //if all children exists, declare a match in interp, or else throw a matcher wartning -invalid logic
 
                         return prodexistpreds + @"
-    if(cxxTemporaryObjectExpr_ and cxxTemporaryObjectExpr_->getNumArgs() == " + prodArgs.Count + @"){" +
+    if(cxxTemporaryObjectExpr_ and cxxTemporaryObjectExpr_->getNumArgs() == " + args.Length + @"){" +
      Peirce.Join("", prodArgs, p_ => @"
         clang::Stmt* arg" + i++ + "stmt;\n")
      +
@@ -649,6 +657,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     }";
                         }
                     });
+                    */
                     /*retval.Add(new MatcherCase()
                     {
                          Args = new List<MatcherProduction>(),
@@ -1096,6 +1105,38 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                 },
                 new MatcherCase()
                 {
+                     ClangName = "CXXFunctionalCastExpr",
+                      LocalName = "cxxFunctionalCastExpr_",
+                      Args = new List<MatcherProduction>(),
+                       BuildMatcher = (prod) => "cxxFunctionalCastExpr().bind(\"CXXFunctionalCastExpr\")",
+                       BuildCallbackHandler = (prod) =>
+                     {
+                        return @"
+    if (cxxFunctionalCastExpr_)
+        {
+            " + prod.ClassName + @" exprMatcher{ context_, interp_};
+            exprMatcher.setup();
+            exprMatcher.visit(*cxxFunctionalCastExpr_->getSubExpr());
+            this->childExprStore_ = (clang::Stmt*)exprMatcher.getChildExprStore();
+        
+            if(this->childExprStore_){}
+        " + (defaultcase != null ?@"
+            else{
+                this->childExprStore_ = (clang::Stmt*)cxxFunctionalCastExpr_;
+                interp_->mk" + defaultcase.Name + @"((clang::Stmt*)cxxFunctionalCastExpr_);
+                return;
+            }
+        }
+    " : @"
+            else{
+                std::cout<<""WARNING: Capture Escaping! Dump : \n"";
+                cxxFunctionalCastExpr_->dump();
+            }
+
+    }");               }
+                },
+                /*new MatcherCase()
+                {
                     ClangName = "CallExpr",
                     LocalName = "callExpr_",
                     Args = new List<MatcherProduction>(),
@@ -1114,7 +1155,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     }
 ";
                     }
-                }/*,
+                }*//*,
                 new MatcherCase()
                 {
                     ClangName = "ReturnStmt",

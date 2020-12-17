@@ -59,6 +59,32 @@ using namespace interp2domain;
 
             file += "\n\t" + putspace + "\n\t" + getdomspace + "\n\t" + getintspace + "\n";
 
+            var putms = @"void InterpToDomain::putMeasurementSystem(interp::MeasurementSystem* key, domain::MeasurementSystem* val){
+    interp2dom_MeasurementSystems[key] = val;
+    dom2interp_MeasurementSystems[val] = key;
+}";
+            var getms = @"domain::MeasurementSystem* InterpToDomain::getMeasurementSystem(interp::MeasurementSystem* i) const{
+    domain::MeasurementSystem* dom = NULL;
+    try {
+        dom = interp2dom_MeasurementSystems.at(i);
+    }
+    catch (std::out_of_range &e) {
+        dom = NULL;
+    }
+    return dom;
+}";
+            var getms2 = @"interp::MeasurementSystem* InterpToDomain::getMeasurementSystem(domain::MeasurementSystem* d) const{
+    interp::MeasurementSystem *interp = NULL;
+    try {
+        interp = dom2interp_MeasurementSystems.at(d);
+    }
+    catch (std::out_of_range &e) {
+        interp = NULL;
+    }
+    return interp;
+}";
+            file += "\n\t" + putms + "\n\t" + getms + "\n\t" + getms2 + "\n";
+
             var putFrame = @"void InterpToDomain::putFrame(interp::Frame* key, domain::Frame* val){
     interp2dom_Frames[key] = val;
     dom2interp_Frames[val] = key;
@@ -247,7 +273,24 @@ using namespace interp2domain;
 
 #include <iostream>
 #include ""Domain.h""
+
+namespace interp
+{
+    class Space;
+    class MeasurementSystem;
+    class Frame;
+    "
+    +
+    Peirce.Join("\n",ParsePeirce.Instance.Grammar.Productions,p=>"class " + p.Name + ";")
+    +
+    Peirce.Join("\n", ParsePeirce.Instance.Grammar.Productions.SelectMany(p_=>p_.Cases), p => "class " + p.Name + ";")
+    +
+    @"
+} // namespace
+
+#ifndef INTERP_H
 #include ""Interp.h""
+#endif
 
 #include <unordered_map>
 
@@ -264,7 +307,12 @@ class InterpToDomain
             var getdomspace = @"domain::Space* getSpace(interp::Space* c) const;";
             var getintspace = @"interp::Space* getSpace(domain::Space* d) const;";
 
+            var putms = @"void putMeasurementSystem(interp::MeasurementSystem* key, domain::MeasurementSystem* val);";
+            var getms = @"domain::MeasurementSystem* getMeasurementSystem(interp::MeasurementSystem* c) const;";
+            var getms2 = @"interp::MeasurementSystem* getMeasurementSystem(domain::MeasurementSystem* d) const;";
+
             file += "\n\t" + putspace + "\n\t" + getdomspace + "\n\t" + getintspace + "\n";
+            file += "\n\t" + putms + "\n\t" + getms + "\n\t" + getms2 + "\n";
             var putFrame = @"void putFrame(interp::Frame* key, domain::Frame* val);";
             var getdomFrame = @"domain::Frame* getFrame(interp::Frame* c) const;";
             var getintFrame = @"interp::Frame* getFrame(domain::Frame* d) const;";
@@ -327,6 +375,8 @@ class InterpToDomain
 
             file += "\nstd::unordered_map<interp::Space*, domain::Space*> interp2dom_Spaces;\n";
             file += "\nstd::unordered_map<domain::Space*, interp::Space*> dom2interp_Spaces;\n";
+            file += "\nstd::unordered_map<interp::MeasurementSystem*, domain::MeasurementSystem*> interp2dom_MeasurementSystems;\n";
+            file += "\nstd::unordered_map<domain::MeasurementSystem*, interp::MeasurementSystem*> dom2interp_MeasurementSystems;\n";
             file += "\nstd::unordered_map<interp::Frame*, domain::Frame*> interp2dom_Frames;\n";
             file += "\nstd::unordered_map<domain::Frame*, interp::Frame*> dom2interp_Frames;\n";
 

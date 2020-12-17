@@ -532,8 +532,8 @@ std::string Coords::getSourceLoc() const {
                 //file += prodcons;
                 if(prod.ProductionType == Grammar.ProductionType.Single || prod.ProductionType == Grammar.ProductionType.CaptureSingle)
                 {
-
-                    file += "\nstd::string " + prod.Name + "::toString() const{ return " + prod.Cases[0].CoordsToString(prod) + @";}";
+                    
+                    file += "\nstd::string " + prod.Name + "::toString() const{ return " + "std::string(\"\")" + @" + state_->name_" + @"+" + @" "".B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)" + @";}";
                     continue;
                 }
 
@@ -572,7 +572,15 @@ std::string Coords::getSourceLoc() const {
                                     var opgetter = "\n" + "coords::" + casep.Name + "* " + pcase.Name + "::getOperand" + ++i + "() { return this->operand" + i + ";}";
                                     file += opgetter;
                                 }
-                                file += "\nstd::string " + pcase.Name + "::toString() const{ return " + (prod.ProductionType == Grammar.ProductionType.Hidden ? "\"\"" : pcase.CoordsToString(prod)) + @";}";
+                                file += "\nstd::string " + pcase.Name + "::toString() const{ return " + (prod.ProductionType == Grammar.ProductionType.Hidden ? "\"\""
+                                    :
+                                        prod.ProductionType == Grammar.ProductionType.Capture || prod.ProductionType == Grammar.ProductionType.CaptureSingle ?
+                                        "std::string(\"\")" + @" + state_->name_" + @"+" + @" "".B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)" :
+                                        pcase.Productions.Count > 0 ? "operand1->toString()" : @""""""
+                                    )
+                                    
+                                    
+                                    + @";}";
                                 file += "\n\n";
                                 break;
                             }
@@ -614,12 +622,28 @@ std::string Coords::getSourceLoc() const {
 
                                 file += cons;
                                 //i = 0; j = 0;
-                               //foreach (var casep in pcase.Productions)
+                                //foreach (var casep in pcase.Productions)
                                 //{
-                                 //   var opgetter = "\n" + "coords::" + casep.Name + "* " + pcase.Name + "::getOperand" + ++i + "() { return this->operand" + i + ";}";
-                                  //  file += opgetter;
+                                //   var opgetter = "\n" + "coords::" + casep.Name + "* " + pcase.Name + "::getOperand" + ++i + "() { return this->operand" + i + ";}";
+                                //  file += opgetter;
                                 //}
-                                file += "\nstd::string " + pcase.Name + "::toString() const{ return " + pcase.CoordsToString(prod) + @";}";
+
+                                /*
+                                 * 
+                                    var retval = "std::string(\"\")";
+                                    if (toParse.Contains("$NAME"))
+                                        retval += @" + state_->name_";
+                                    if (toParse.Contains("$LOC"))
+                                        retval += @"+" + @" "".B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)";
+                                    // this.CoordsToString = (prod) => { return @"(this->getIndex() > 0 ? ""INDEX""+std::to_string(this->getIndex())+""."":"""")+" + "\"" + (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name).Replace("_", ".") + "\" + " + retval; };
+
+                                 * 
+                                 * */
+                                //(this->getIndex() > 0 ? ""INDEX""+std::to_string(this->getIndex())+""."":"""")+" + "\"" 
+                                //+ (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name).Replace("_", ".") + "\" + " + retval;
+                                file += "\nstd::string " + pcase.Name + "::toString() const{ return " 
+                                    + @"(this->getIndex() > 0 ? ""INDEX"" + std::to_string(this->getIndex()) + ""."":"""")+" + "\"" +
+                                    (prod.Passthrough != null ? prod.Passthrough.Name : prod.Name).Replace("_", ".") + "\" + "+ "std::string(\"\")" + @";}";
                                 file += "\n\n";
                                 break;
 

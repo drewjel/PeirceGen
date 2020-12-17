@@ -256,7 +256,11 @@ void Interpretation::mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast 
     std::string retval = """";
     for(auto interp_ : interps){" +
         (pcase.LinkSpace ? @"
-        retval += ""\n"" + interp_->toStringLinked(this->getSpaceInterps(), this->getSpaceNames(), this->getFrameInterps(), this->getFrameNames(), true) + ""\n"";
+        retval += ""\n"" + interp_->toStringLinked(
+            this->getSpaceInterps(), 
+            this->getSpaceNames(), 
+            this->getMSInterps(), this->getMSNames(),    
+            this->getFrameInterps(), this->getFrameNames(), interp2domain_, true) + ""\n"";
 " : 
      @"
         retval += ""\n"" + interp_->toString() + ""\n"";") + @"
@@ -362,6 +366,17 @@ std::vector<interp::Space*> Interpretation::getSpaceInterps() {
     return interps;
 }   
 
+std::vector<interp::MeasurementSystem*> Interpretation::getMSInterps(){
+    std::vector<interp::MeasurementSystem*> interps;
+    auto mss = domain_->getMeasurementSystems();
+    for (auto& m : mss)
+    {
+        auto ms = interp2domain_->getMeasurementSystem(m);
+        interps.push_back(ms);
+    }
+    return interps;
+};
+
 std::vector<std::string> Interpretation::getSpaceNames() {
     std::vector<std::string> names;
     " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => "\n\tauto " + sp_.Name + @"s = domain_->get" + sp_.Name + @"Spaces();
@@ -375,6 +390,17 @@ std::vector<std::string> Interpretation::getSpaceNames() {
     return names;
 }
 
+std::vector<std::string> Interpretation::getMSNames(){
+    std::vector<std::string> names;
+    auto mss = domain_->getMeasurementSystems();
+    for (auto& m : mss)
+    {
+        names.push_back(m->getName());
+    }
+    return names;
+};
+
+
 std::vector<interp::Frame*> Interpretation::getFrameInterps() {
     std::vector<interp::Frame*> interps;
     " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => "\n\tauto " + sp_.Name + @"s = domain_->get" + sp_.Name + @"Spaces();
@@ -383,8 +409,19 @@ std::vector<interp::Frame*> Interpretation::getFrameInterps() {
         auto frs = (*it)->getFrames();
 
         for(auto fr : frs){
-            auto intfr = interp2domain_->getFrame(fr);
-            interps.push_back(intfr);
+            /*if(auto dc = dynamic_cast<domain::" + sp_.Name + @"AliasedFrame*>(fr)){
+                auto intfr = interp2domain_->getFrame(fr);
+                interps.push_back(intfr);
+            }*/
+            if(auto dc = dynamic_cast<domain::" + sp_.Name + @"StandardFrame*>(fr)){
+                
+            }
+            else{
+                auto intfr = interp2domain_->getFrame(fr);
+                interps.push_back(intfr);
+                
+            }
+            
         }
     }
             ")) + @"
@@ -400,8 +437,18 @@ std::vector<std::string> Interpretation::getFrameNames() {
         auto frs = (*it)->getFrames();
 
         for(auto fr : frs){
-            //auto intfr = interp2domain_->getFrame(fr);
-            names.push_back((*it)->getName()+"".""+fr->getName());
+            //if(auto dc = dynamic_cast<domain::" + sp_.Name + @"AliasedFrame*>(fr)){
+            //if(!(domain::StandardFrame*)fr){
+                names.push_back((*it)->getName()+"".""+fr->getName());
+            //}
+            //}
+            
+            if(auto dc = dynamic_cast<domain::" + sp_.Name + @"StandardFrame*>(fr)){
+                
+            }
+            else{
+                names.push_back((*it)->getName()+"".""+fr->getName());
+            }
         }
     }
             ")) + @"
@@ -505,7 +552,7 @@ void Interpretation::buildSpace(){
             auto isp = new interp::DerivedSpace(sp, ib1, ib2);
             interp2domain_->putSpace(isp, sp);
             auto standard_framesp = sp->getFrames()[0];
-            auto interp_framesp = new interp::Frame(standard_framesp);
+            auto interp_framesp = new interp::Frame(standard_framesp, isp);
             interp2domain_->putFrame(interp_framesp, sp->getFrames()[0]);
         }
 ";
@@ -531,7 +578,7 @@ void Interpretation::buildSpace(){
             auto isp = new interp::Space(sp);
             interp2domain_->putSpace(isp, sp);
             auto standard_framesp = sp->getFrames()[0];
-            auto interp_framesp = new interp::Frame(standard_framesp);
+            auto interp_framesp = new interp::Frame(standard_framesp, isp);
             interp2domain_->putFrame(interp_framesp, sp->getFrames()[0]);
         }
 
@@ -539,9 +586,47 @@ void Interpretation::buildSpace(){
         @"";
             return str;
         }
-    })) + 
+    })) +
     @"
 }
+
+void Interpretation::buildMeasurementSystem(){
+    while(true){
+        std::cout<<""Build Measurement System : \n"";
+        std::cout<<""(1) SI Measurement System \n"";
+        std::cout<<""(2) Imperial Measurement System\n"";
+        int choice = 0;
+        std::cin>>choice;
+        if(choice == 1){
+            std::cout<<""Enter reference name:"";
+            std::string nm;
+            std::cin>>nm;
+            auto ms = this->domain_->mkSIMeasurementSystem(nm);
+            auto ims = new interp::MeasurementSystem(ms);
+            interp2domain_->putMeasurementSystem(ims, ms);
+            return;
+        }
+        else if (choice == 2){
+            std::cout<<""Enter reference name:"";
+            std::string nm;
+            std::cin>>nm;
+            auto ms = this->domain_->mkImperialMeasurementSystem(nm);
+            auto ims = new interp::MeasurementSystem(ms);
+            interp2domain_->putMeasurementSystem(ims, ms);
+            return;
+        }
+    }
+
+};
+
+void Interpretation::printMeasurementSystems(){
+    auto ms = this->domain_->getMeasurementSystems();
+    for(auto& m:ms){
+        std::cout<<m->toString()<<""\n"";
+    }
+
+};
+
 
 void Interpretation::buildFrame(){
     while(true){
@@ -559,29 +644,105 @@ void Interpretation::buildFrame(){
         if(choice >0 and choice <=index){
             auto chosen = index_to_sp[choice];
             std::cout<<""Building Frame For : ""<<chosen->toString()<<""\n"";
-            auto frames = chosen->getFrames();
-            std::cout<<""Select Parent Frame : ""<<""\n"";
-            index = 0;
-            std::unordered_map<int, domain::Frame*> index_to_fr;
+            int frameType = 0;
+
+            while(true){
+                std::cout<<""Select Frame Type : \n"";
+                std::cout<<"" (1) Alias For Existing Frame \n"";
+                std::cout<<"" (2) Derived Frame From Existing Frame \n"";
+                std::cin>>frameType;
+
+                if(frameType == 1){
+                    auto frames = chosen->getFrames();
+                    std::cout<<""Select Frame To Alias : ""<<""\n"";
+                    index = 0;
+                    std::unordered_map<int, domain::Frame*> index_to_fr;
         
-            auto frs = chosen->getFrames();
-            for(auto fr : frs){
-            std::cout<<""(""<<std::to_string(++index)<<"")""<<(fr)->toString()<<""\n"";
-            index_to_fr[index] = fr;
+                    auto frs = chosen->getFrames();
+                    for(auto fr : frs){
+                    std::cout<<""(""<<std::to_string(++index)<<"")""<<(fr)->toString()<<""\n"";
+                    index_to_fr[index] = fr;
+                    }
+                    choice = 0;
+                    std::cin>>choice;
+
+                    if(choice > 0 and choice<= index){
+                        auto aliased = index_to_fr[choice];
+                        std::cout<<""Enter Name:\n"";
+                        std::string name;
+                        std::cin>>name;
+                        domain::MeasurementSystem* ms;
+                        auto mss = this->domain_->getMeasurementSystems();
+                        choice = 0;
+                        std::unordered_map<int, domain::MeasurementSystem*> index_to_ms;
+                        index = 0;
+                        std::cout<<""Select Measurement System to Interpret Frame With : \n"";
+                        for(auto& m : mss){
+                            std::cout<<""(""<<std::to_string(++index)<<"")""<<(m)->toString()<<""\n"";
+                            index_to_ms[index] = m;
+                        }
+                        std::cin>>choice;
+                        if(choice>0 and choice<=index){
+                        auto cms = index_to_ms[choice];
+
+" + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ =>
+    {
+
+        //   var hasName = sp_.MaskContains(Space.FieldType.Name);
+        // var hasDim = sp_.MaskContains(Space.FieldType.Dimension);
+        //PhysSpaceExpression.ClassicalTimeLiteral (ClassicalTimeSpaceExpression.ClassicalTimeLiteral
+        return @"
+                        if(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(chosen)){
+
+                            auto child = (domain::" + sp_.Name + @"Frame*)domain_->mk" + sp_.Name + @"AliasedFrame(name, dc, (domain::" + sp_.Name + @"Frame*)aliased,cms);
+                            auto isp = interp2domain_->getSpace(dc);
+                            auto ims = interp2domain_->getMeasurementSystem(cms);
+                            interp::Frame* interp = new interp::Frame(child, isp, ims);
+                            interp2domain_->putFrame(interp, child);
+                            return;
+                        }";
+    })) + @"
+                    }
+                    }
+                }
+                else if (frameType == 2){
+                    auto frames = chosen->getFrames();
+                    std::cout<<""Select Parent Frame : ""<<""\n"";
+                    index = 0;
+                    std::unordered_map<int, domain::Frame*> index_to_fr;
+        
+                    auto frs = chosen->getFrames();
+                    for(auto fr : frs){
+                    std::cout<<""(""<<std::to_string(++index)<<"")""<<(fr)->toString()<<""\n"";
+                    index_to_fr[index] = fr;
+                    }
+                    choice = 0;
+                    std::cin>>choice;
+                    if(choice > 0 and choice<= index){
+                        auto parent = index_to_fr[index];
+                        std::cout<<""Enter Name of Frame:\n"";
+                        std::string name;
+                        std::cin>>name;
+" + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ =>
+    {
+
+        //   var hasName = sp_.MaskContains(Space.FieldType.Name);
+        // var hasDim = sp_.MaskContains(Space.FieldType.Dimension);
+        //PhysSpaceExpression.ClassicalTimeLiteral (ClassicalTimeSpaceExpression.ClassicalTimeLiteral
+        return @"
+                        if(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(chosen)){
+
+                            auto child = (domain::" + sp_.Name + @"Frame*)domain_->mk" + sp_.Name + @"DerivedFrame(name, dc, (domain::" + sp_.Name + @"Frame*)parent);
+                            auto isp = interp2domain_->getSpace(dc);
+                            interp::Frame* interp = new interp::Frame(child,isp);
+                            interp2domain_->putFrame(interp, child);
+                            return;
+                        }";
+    })) + @"
+                    }
+                }
             }
-            choice = 0;
-            std::cin>>choice;
-            if(choice > 0 and choice<= index){
-                auto parent = index_to_fr[index];
-                std::cout<<""Enter Name of Frame:\n"";
-                std::string name;
-                std::cin>>name;
-                auto child = domain_->mkFrame(name, chosen, parent);
-                interp::Frame* interp = new interp::Frame(child);
-                interp2domain_->putFrame(interp, child);
-                return;
-            }
-            
+
         }
 
     }
@@ -669,14 +830,26 @@ void Interpretation::updateVarTable(){
         std::cout<<""Enter -2 to create a New Space\n"";
         std::cout<<""Enter -3 to print Available Frames\n"";
         std::cout<<""Enter -4 to create a New Frame\n"";
+        std::cout<<""Enter -5 to print available Measurement Systems\n"";
+        std::cout<<""Enter -6  to create a Measurement System\n"";
         std::cout<<""Enter 0 to print the Variable Table again.\n"";
         std::cout << ""Enter the index of a Variable to update its physical type. Enter "" << sz << "" to exit and check."" << std::endl;
         std::cin >> choice;
         std::cout << std::to_string(choice) << ""\n"";
 
 
-        while ((choice == -3 || choice == -2 || choice == -1 || choice == 0 || this->index2coords_.find(choice) != this->index2coords_.end()) && choice != sz)
+        while (((choice >= -6 and choice <= 0) || this->index2coords_.find(choice) != this->index2coords_.end()) && choice != sz)
         {
+            if (choice == -6)
+            {
+                this->buildMeasurementSystem();
+            }
+
+            if (choice == -5)
+            {
+                this->printMeasurementSystems();
+            }
+
             if (choice == -4)
             {
                 this->buildFrame();
@@ -731,6 +904,9 @@ void Interpretation::updateVarTable(){
             std::cout<<""Enter -2 to create a New Space\n"";
             std::cout<<""Enter -3 to print Available Frames\n"";
             std::cout<<""Enter -4 to create a New Frame\n"";
+            std::cout<<""Enter -5 to print available Measurement Systems\n"";
+            std::cout<<""Enter -6  to create a Measurement System\n"";
+
             std::cout<<""Enter 0 to print the Variable Table again.\n"";
             std::cout << ""Enter the index of a Variable to update its physical type. Enter "" << sz << "" to exit and check."" << std::endl;
             std::cin >> choice;
@@ -894,11 +1070,15 @@ public:
             }
 
             file += "\n\tstd::string toString_Spaces();\n\tstd::vector<interp::Space*> getSpaceInterps();\n\tstd::vector<std::string> getSpaceNames();";
+            file += "\n\tstd::vector<interp::MeasurementSystem*> getMSInterps();std::vector<std::string> getMSNames();";
             file += "\n\tstd::vector<interp::Frame*> getFrameInterps();\n\tstd::vector<std::string> getFrameNames();\n\t";
             var footer = @"    void buildDefaultSpaces();
 
     void buildSpace();
     void buildFrame();
+
+    void buildMeasurementSystem();
+    void printMeasurementSystems();
 
     //void setAll_Spaces();
     void printSpaces();
