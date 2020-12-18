@@ -1237,45 +1237,45 @@ DECL_REALMATRIX4_VAR_REALMATRIX4_EXPR::DECL_REALMATRIX4_VAR_REALMATRIX4_EXPR(coo
 std::string DECL_REALMATRIX4_VAR_REALMATRIX4_EXPR::toString() const {
     bool found = false;
     std::string retval = "";
-    if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(this->operand_1->dom_)){
+    if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(this->operand_1->dom_)){
         
         auto env = getEnvName();
-        retval += "def " + this->coords_->toString() + " := cmd.classicalTimeFrameChangeAssmt (" + this->operand_1->toString() + ") (" + this->operand_2->toString() +")\n";
+        retval += "def " + this->coords_->toString() + " := cmd.classicalTimeTransformAssmt (" + this->operand_1->toString() + ") (" + this->operand_2->toString() +")\n";
             
         retval += "def " + env + " := cmdEval " + this->coords_->toString() + " " + getLastEnv();
     }
-    if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(this->operand_1->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(this->operand_1->dom_)){
         
         auto env = getEnvName();
-        retval += "def " + this->coords_->toString() + " := cmd.classicalGeometryFrameChangeAssmt (" + this->operand_1->toString() + ") (" + this->operand_2->toString() +")\n";
+        retval += "def " + this->coords_->toString() + " := cmd.classicalGeometryTransformAssmt (" + this->operand_1->toString() + ") (" + this->operand_2->toString() +")\n";
             
         retval += "def " + env + " := cmdEval " + this->coords_->toString() + " " + getLastEnv();
     }
-    if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(this->operand_1->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(this->operand_1->dom_)){
         
         auto env = getEnvName();
-        retval += "def " + this->coords_->toString() + " := cmd.euclideanGeometry3FrameChangeAssmt (" + this->operand_1->toString() + ") (" + this->operand_2->toString() +")\n";
+        retval += "def " + this->coords_->toString() + " := cmd.euclideanGeometry3TransformAssmt (" + this->operand_1->toString() + ") (" + this->operand_2->toString() +")\n";
             
         retval += "def " + env + " := cmdEval " + this->coords_->toString() + " " + getLastEnv();
     }
     if (auto cont = dynamic_cast<domain::DomainContainer*>(this->operand_1->dom_)){
         if(cont->hasValue()){
                         
-            if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(cont->getValue())){
                 auto env = getEnvName();
-                retval += "def " + this->coords_->toString() + " := cmd.classicalTimeFrameChangeAssmt (" + this->operand_1->toString() + ") (" + this->operand_2->toString() +")\n";
+                retval += "def " + this->coords_->toString() + " := cmd.classicalTimeTransformAssmt (" + this->operand_1->toString() + ") (" + this->operand_2->toString() +")\n";
                 
                 retval += "def " + env + " := cmdEval " + this->coords_->toString() + " " + getLastEnv();
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(cont->getValue())){
                 auto env = getEnvName();
-                retval += "def " + this->coords_->toString() + " := cmd.classicalGeometryFrameChangeAssmt (" + this->operand_1->toString() + ") (" + this->operand_2->toString() +")\n";
+                retval += "def " + this->coords_->toString() + " := cmd.classicalGeometryTransformAssmt (" + this->operand_1->toString() + ") (" + this->operand_2->toString() +")\n";
                 
                 retval += "def " + env + " := cmdEval " + this->coords_->toString() + " " + getLastEnv();
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(cont->getValue())){
                 auto env = getEnvName();
-                retval += "def " + this->coords_->toString() + " := cmd.euclideanGeometry3FrameChangeAssmt (" + this->operand_1->toString() + ") (" + this->operand_2->toString() +")\n";
+                retval += "def " + this->coords_->toString() + " := cmd.euclideanGeometry3TransformAssmt (" + this->operand_1->toString() + ") (" + this->operand_2->toString() +")\n";
                 
                 retval += "def " + env + " := cmdEval " + this->coords_->toString() + " " + getLastEnv();
             }
@@ -1455,48 +1455,48 @@ std::string REF_REALMATRIX4_VAR::toEvalString() const {
                         std::string retval = "";
                         bool found = false;
         
-    if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
-        retval += "(classicalTimeFrameChangeEval (lang.classicalTime.FrameChangeExpr.var ";
+        retval += "(classicalTimeTransformEval (lang.classicalTime.TransformExpr.var ";
         retval += this->operand_1->toString();
         retval += ") " + env +")";
     }
-    if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
-        retval += "(classicalGeometryFrameChangeEval (lang.classicalGeometry.FrameChangeExpr.var ";
+        retval += "(classicalGeometryTransformEval (lang.classicalGeometry.TransformExpr.var ";
         retval += this->operand_1->toString();
         retval += ") " + env +")";
     }
-    if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
-        retval += "(euclideanGeometry3FrameChangeEval (lang.euclideanGeometry3.FrameChangeExpr.var ";
+        retval += "(euclideanGeometry3TransformEval (lang.euclideanGeometry3.TransformExpr.var ";
         retval += this->operand_1->toString();
         retval += ") " + env +")";
     }
     if (auto cont = dynamic_cast<domain::DomainContainer*>(this->dom_)){
         if(cont->hasValue()){
                         
-            if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(cont->getValue())){
                 
                 auto env = getLastEnv();
-                retval += "(classicalTimeFrameChangeEval (lang.classicalTime.FrameChangeExpr.var ";
+                retval += "(classicalTimeTransformEval (lang.classicalTime.TransformExpr.var ";
                 retval += this->operand_1->toString();
                 retval += ") " + env +")";
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(cont->getValue())){
                 
                 auto env = getLastEnv();
-                retval += "(classicalGeometryFrameChangeEval (lang.classicalGeometry.FrameChangeExpr.var ";
+                retval += "(classicalGeometryTransformEval (lang.classicalGeometry.TransformExpr.var ";
                 retval += this->operand_1->toString();
                 retval += ") " + env +")";
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(cont->getValue())){
                 
                 auto env = getLastEnv();
-                retval += "(euclideanGeometry3FrameChangeEval (lang.euclideanGeometry3.FrameChangeExpr.var ";
+                retval += "(euclideanGeometry3TransformEval (lang.euclideanGeometry3.TransformExpr.var ";
                 retval += this->operand_1->toString();
                 retval += ") " + env +")";
             }
@@ -1537,27 +1537,27 @@ std::string REF_REALMATRIX4_VAR::toAlgebraString() const {
 
                         //  ret += "(";
                         //ret += "def var_" + std::to_string(++GLOBAL_INDEX) + ":= 1";
-    if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REF_REALMATRIX4_VAR*>(this)) ? GLOBAL_IDS[const_cast<REF_REALMATRIX4_VAR*>(this)] : GLOBAL_IDS[const_cast<REF_REALMATRIX4_VAR*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(classicalTimeFrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(classicalTimeTransformAlgebra " + this->toEvalString() + ")";
         
     }
 
-    if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REF_REALMATRIX4_VAR*>(this)) ? GLOBAL_IDS[const_cast<REF_REALMATRIX4_VAR*>(this)] : GLOBAL_IDS[const_cast<REF_REALMATRIX4_VAR*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(classicalGeometryFrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(classicalGeometryTransformAlgebra " + this->toEvalString() + ")";
         
     }
 
-    if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REF_REALMATRIX4_VAR*>(this)) ? GLOBAL_IDS[const_cast<REF_REALMATRIX4_VAR*>(this)] : GLOBAL_IDS[const_cast<REF_REALMATRIX4_VAR*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(euclideanGeometry3FrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(euclideanGeometry3TransformAlgebra " + this->toEvalString() + ")";
         
     }
 
@@ -1565,25 +1565,25 @@ std::string REF_REALMATRIX4_VAR::toAlgebraString() const {
         if(cont->hasValue()){
 
                         
-            if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(cont->getValue())){
                 found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REF_REALMATRIX4_VAR*>(this)) ? GLOBAL_IDS[const_cast<REF_REALMATRIX4_VAR*>(this)] : GLOBAL_IDS[const_cast<REF_REALMATRIX4_VAR*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(classicalTimeFrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(classicalTimeTransformAlgebra " + this->toEvalString() + ")";
         
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(cont->getValue())){
                 found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REF_REALMATRIX4_VAR*>(this)) ? GLOBAL_IDS[const_cast<REF_REALMATRIX4_VAR*>(this)] : GLOBAL_IDS[const_cast<REF_REALMATRIX4_VAR*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(classicalGeometryFrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(classicalGeometryTransformAlgebra " + this->toEvalString() + ")";
         
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(cont->getValue())){
                 found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REF_REALMATRIX4_VAR*>(this)) ? GLOBAL_IDS[const_cast<REF_REALMATRIX4_VAR*>(this)] : GLOBAL_IDS[const_cast<REF_REALMATRIX4_VAR*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(euclideanGeometry3FrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(euclideanGeometry3TransformAlgebra " + this->toEvalString() + ")";
         
             }
         }
@@ -1621,42 +1621,42 @@ REF_REALMATRIX4_VAR::REF_REALMATRIX4_VAR(coords::REF_REALMATRIX4_VAR* c, domain:
 std::string REF_REALMATRIX4_VAR::toString() const {
     bool found = false;
     std::string retval = "";
-    if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(this->dom_)){
         found = true;
-        retval += "(ClassicalTimeFrameChangeExpr.var ";
+        retval += "(ClassicalTimeTransformExpr.var ";
         retval += this->operand_1->toString();
         retval += ")";
     }
-    if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(this->dom_)){
         found = true;
-        retval += "(EuclideanGeometryFrameChangeExpr.var ";
+        retval += "(EuclideanGeometryTransformExpr.var ";
         retval += this->operand_1->toString();
         retval += ")";
     }
-    if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(this->dom_)){
         found = true;
-        retval += "(EuclideanGeometry3FrameChangeExpr.var ";
+        retval += "(EuclideanGeometry3TransformExpr.var ";
         retval += this->operand_1->toString();
         retval += ")";
     }
     if (auto cont = dynamic_cast<domain::DomainContainer*>(this->dom_)){
         if(cont->hasValue()){
                         
-            if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(cont->getValue())){
                 found = true;
-                retval += "(ClassicalTimeFrameChangeExpr.var ";
+                retval += "(ClassicalTimeTransformExpr.var ";
                 retval += this->operand_1->toString();
                 retval += ")";
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(cont->getValue())){
                 found = true;
-                retval += "(EuclideanGeometryFrameChangeExpr.var ";
+                retval += "(EuclideanGeometryTransformExpr.var ";
                 retval += this->operand_1->toString();
                 retval += ")";
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(cont->getValue())){
                 found = true;
-                retval += "(EuclideanGeometry3FrameChangeExpr.var ";
+                retval += "(EuclideanGeometry3TransformExpr.var ";
                 retval += this->operand_1->toString();
                 retval += ")";
             }
@@ -2459,8 +2459,6 @@ std::string ADD_REAL3_EXPR_REAL3_EXPR::toString() const {
         retval += "(classicalVelocityCoordinateVector.fromalgebra ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalVelocityFrameEval ") + "(lang.classicalVelocity.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -2478,8 +2476,6 @@ std::string ADD_REAL3_EXPR_REAL3_EXPR::toString() const {
         retval += "(classicalTimeCoordinateVector.fromalgebra ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -2497,8 +2493,6 @@ std::string ADD_REAL3_EXPR_REAL3_EXPR::toString() const {
         retval += "(classicalGeometryCoordinateVector.fromalgebra ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -2516,8 +2510,6 @@ std::string ADD_REAL3_EXPR_REAL3_EXPR::toString() const {
         retval += "(euclideanGeometry3CoordinateVector.fromalgebra ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -2535,8 +2527,6 @@ std::string ADD_REAL3_EXPR_REAL3_EXPR::toString() const {
         retval += "(classicalTimeCoordinatePoint.fromalgebra ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -2554,8 +2544,6 @@ std::string ADD_REAL3_EXPR_REAL3_EXPR::toString() const {
         retval += "(classicalGeometryCoordinatePoint.fromalgebra ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -2573,8 +2561,6 @@ std::string ADD_REAL3_EXPR_REAL3_EXPR::toString() const {
         retval += "(euclideanGeometry3CoordinatePoint.fromalgebra ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3088,8 +3074,6 @@ std::string LMUL_REAL1_EXPR_REAL3_EXPR::toString() const {
         retval += "(classicalVelocityCoordinateVector.fromalgebra ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalVelocityFrameEval ") + "(lang.classicalVelocity.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3107,8 +3091,6 @@ std::string LMUL_REAL1_EXPR_REAL3_EXPR::toString() const {
         retval += "(classicalTimeCoordinateVector.fromalgebra ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3126,8 +3108,6 @@ std::string LMUL_REAL1_EXPR_REAL3_EXPR::toString() const {
         retval += "(classicalGeometryCoordinateVector.fromalgebra ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3145,8 +3125,6 @@ std::string LMUL_REAL1_EXPR_REAL3_EXPR::toString() const {
         retval += "(euclideanGeometry3CoordinateVector.fromalgebra ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3164,8 +3142,6 @@ std::string LMUL_REAL1_EXPR_REAL3_EXPR::toString() const {
         retval += "(classicalTimeCoordinatePoint.fromalgebra ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3183,8 +3159,6 @@ std::string LMUL_REAL1_EXPR_REAL3_EXPR::toString() const {
         retval += "(classicalGeometryCoordinatePoint.fromalgebra ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3202,8 +3176,6 @@ std::string LMUL_REAL1_EXPR_REAL3_EXPR::toString() const {
         retval += "(euclideanGeometry3CoordinatePoint.fromalgebra ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3717,8 +3689,6 @@ std::string RMUL_REAL3_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalVelocityCoordinateVector.fromalgebra ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalVelocityFrameEval ") + "(lang.classicalVelocity.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3736,8 +3706,6 @@ std::string RMUL_REAL3_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalTimeCoordinateVector.fromalgebra ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3755,8 +3723,6 @@ std::string RMUL_REAL3_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalGeometryCoordinateVector.fromalgebra ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3774,8 +3740,6 @@ std::string RMUL_REAL3_EXPR_REAL1_EXPR::toString() const {
         retval += "(euclideanGeometry3CoordinateVector.fromalgebra ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3793,8 +3757,6 @@ std::string RMUL_REAL3_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalTimeCoordinatePoint.fromalgebra ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3812,8 +3774,6 @@ std::string RMUL_REAL3_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalGeometryCoordinatePoint.fromalgebra ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -3831,8 +3791,6 @@ std::string RMUL_REAL3_EXPR_REAL1_EXPR::toString() const {
         retval += "(euclideanGeometry3CoordinatePoint.fromalgebra ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -5187,8 +5145,6 @@ std::string ADD_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalVelocityCoordinateVector.fromalgebra ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalVelocityFrameEval ") + "(lang.classicalVelocity.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -5206,8 +5162,6 @@ std::string ADD_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalTimeCoordinateVector.fromalgebra ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -5225,8 +5179,6 @@ std::string ADD_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalGeometryCoordinateVector.fromalgebra ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -5244,8 +5196,6 @@ std::string ADD_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(euclideanGeometry3CoordinateVector.fromalgebra ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -5263,8 +5213,6 @@ std::string ADD_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalTimeCoordinatePoint.fromalgebra ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -5282,8 +5230,6 @@ std::string ADD_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalGeometryCoordinatePoint.fromalgebra ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -5301,8 +5247,6 @@ std::string ADD_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(euclideanGeometry3CoordinatePoint.fromalgebra ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -5319,8 +5263,6 @@ std::string ADD_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalVelocityScalar.fromalgebra ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -5337,8 +5279,6 @@ std::string ADD_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalTimeScalar.fromalgebra ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -5355,8 +5295,6 @@ std::string ADD_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalGeometryScalar.fromalgebra ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -5373,8 +5311,6 @@ std::string ADD_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(euclideanGeometry3Scalar.fromalgebra ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "+ᵥ" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -6092,8 +6028,6 @@ std::string MUL_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalVelocityCoordinateVector.fromalgebra ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalVelocityFrameEval ") + "(lang.classicalVelocity.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -6111,8 +6045,6 @@ std::string MUL_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalTimeCoordinateVector.fromalgebra ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -6130,8 +6062,6 @@ std::string MUL_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalGeometryCoordinateVector.fromalgebra ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -6149,8 +6079,6 @@ std::string MUL_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(euclideanGeometry3CoordinateVector.fromalgebra ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -6168,8 +6096,6 @@ std::string MUL_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalTimeCoordinatePoint.fromalgebra ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -6187,8 +6113,6 @@ std::string MUL_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalGeometryCoordinatePoint.fromalgebra ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -6206,8 +6130,6 @@ std::string MUL_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(euclideanGeometry3CoordinatePoint.fromalgebra ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) +"⟩⟩) "+getLastEnv() + ")\n";
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -6224,8 +6146,6 @@ std::string MUL_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalVelocityScalar.fromalgebra ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -6242,8 +6162,6 @@ std::string MUL_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalTimeScalar.fromalgebra ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -6260,8 +6178,6 @@ std::string MUL_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalGeometryScalar.fromalgebra ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -6278,8 +6194,6 @@ std::string MUL_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(euclideanGeometry3Scalar.fromalgebra ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
-            
-            
         retval += std::string("(") + this->operand_1->toAlgebraString() + "•" + this->operand_2->toAlgebraString() + ")))";
         
     }
@@ -7295,27 +7209,27 @@ std::string REALMATRIX4_VAR_IDENT::toAlgebraString() const {
 
                         //  ret += "(";
                         //ret += "def var_" + std::to_string(++GLOBAL_INDEX) + ":= 1";
-    if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_VAR_IDENT*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(classicalTimeFrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(classicalTimeTransformAlgebra " + this->toEvalString() + ")";
         
     }
 
-    if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_VAR_IDENT*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(classicalGeometryFrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(classicalGeometryTransformAlgebra " + this->toEvalString() + ")";
         
     }
 
-    if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_VAR_IDENT*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(euclideanGeometry3FrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(euclideanGeometry3TransformAlgebra " + this->toEvalString() + ")";
         
     }
 
@@ -7323,25 +7237,25 @@ std::string REALMATRIX4_VAR_IDENT::toAlgebraString() const {
         if(cont->hasValue()){
 
                         
-            if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(cont->getValue())){
                 found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_VAR_IDENT*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(classicalTimeFrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(classicalTimeTransformAlgebra " + this->toEvalString() + ")";
         
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(cont->getValue())){
                 found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_VAR_IDENT*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(classicalGeometryFrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(classicalGeometryTransformAlgebra " + this->toEvalString() + ")";
         
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(cont->getValue())){
                 found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_VAR_IDENT*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(euclideanGeometry3FrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(euclideanGeometry3TransformAlgebra " + this->toEvalString() + ")";
         
             }
         }
@@ -7379,27 +7293,27 @@ std::string REALMATRIX4_VAR_IDENT::toEvalString() const {
 
                         //  ret += "(";
                         //ret += "def var_" + std::to_string(++GLOBAL_INDEX) + ":= 1";
-    if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
         int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_VAR_IDENT*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] = (GLOBAL_INDEX += 2); 
-        return std::string("(classicalTimeFrameChangeEval (lang.classicalTime.FrameChangeExpr.var ") + "⟨⟨" + std::to_string(id) +"⟩⟩) " + getLastEnv() + ")";
+        return std::string("(classicalTimeTransformEval (lang.classicalTime.TransformExpr.var ") + "⟨⟨" + std::to_string(id) +"⟩⟩) " + getLastEnv() + ")";
         
     }
 
-    if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
         int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_VAR_IDENT*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] = (GLOBAL_INDEX += 2); 
-        return std::string("(classicalGeometryFrameChangeEval (lang.classicalGeometry.FrameChangeExpr.var ") + "⟨⟨" + std::to_string(id) +"⟩⟩) " + getLastEnv() + ")";
+        return std::string("(classicalGeometryTransformEval (lang.classicalGeometry.TransformExpr.var ") + "⟨⟨" + std::to_string(id) +"⟩⟩) " + getLastEnv() + ")";
         
     }
 
-    if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
         int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_VAR_IDENT*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] = (GLOBAL_INDEX += 2); 
-        return std::string("(euclideanGeometry3FrameChangeEval (lang.euclideanGeometry3.FrameChangeExpr.var ") + "⟨⟨" + std::to_string(id) +"⟩⟩) " + getLastEnv() + ")";
+        return std::string("(euclideanGeometry3TransformEval (lang.euclideanGeometry3.TransformExpr.var ") + "⟨⟨" + std::to_string(id) +"⟩⟩) " + getLastEnv() + ")";
         
     }
 
@@ -7407,25 +7321,25 @@ std::string REALMATRIX4_VAR_IDENT::toEvalString() const {
         if(cont->hasValue()){
 
                         
-            if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(cont->getValue())){
                 found = true;
         auto env = getLastEnv();
         int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_VAR_IDENT*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] = (GLOBAL_INDEX += 2); 
-        return std::string("(classicalTimeFrameChangeEval (lang.classicalTime.FrameChangeExpr.var ") + "⟨⟨" + std::to_string(id) +"⟩⟩) " + getLastEnv() + ")";
+        return std::string("(classicalTimeTransformEval (lang.classicalTime.TransformExpr.var ") + "⟨⟨" + std::to_string(id) +"⟩⟩) " + getLastEnv() + ")";
         
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(cont->getValue())){
                 found = true;
         auto env = getLastEnv();
         int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_VAR_IDENT*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] = (GLOBAL_INDEX += 2); 
-        return std::string("(classicalGeometryFrameChangeEval (lang.classicalGeometry.FrameChangeExpr.var ") + "⟨⟨" + std::to_string(id) +"⟩⟩) " + getLastEnv() + ")";
+        return std::string("(classicalGeometryTransformEval (lang.classicalGeometry.TransformExpr.var ") + "⟨⟨" + std::to_string(id) +"⟩⟩) " + getLastEnv() + ")";
         
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(cont->getValue())){
                 found = true;
         auto env = getLastEnv();
         int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_VAR_IDENT*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_VAR_IDENT*>(this)] = (GLOBAL_INDEX += 2); 
-        return std::string("(euclideanGeometry3FrameChangeEval (lang.euclideanGeometry3.FrameChangeExpr.var ") + "⟨⟨" + std::to_string(id) +"⟩⟩) " + getLastEnv() + ")";
+        return std::string("(euclideanGeometry3TransformEval (lang.euclideanGeometry3.TransformExpr.var ") + "⟨⟨" + std::to_string(id) +"⟩⟩) " + getLastEnv() + ")";
         
             }
         }
@@ -7956,6 +7870,8 @@ std::string REAL3_LIT_REAL1_EXPR_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalVelocityCoordinateVector.build ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalVelocityFrameEval ") + "(lang.classicalVelocity.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -7978,6 +7894,8 @@ std::string REAL3_LIT_REAL1_EXPR_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalTimeCoordinateVector.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8000,6 +7918,8 @@ std::string REAL3_LIT_REAL1_EXPR_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalGeometryCoordinateVector.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8022,6 +7942,8 @@ std::string REAL3_LIT_REAL1_EXPR_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(euclideanGeometry3CoordinateVector.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8044,6 +7966,8 @@ std::string REAL3_LIT_REAL1_EXPR_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalTimeCoordinatePoint.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8066,6 +7990,8 @@ std::string REAL3_LIT_REAL1_EXPR_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(classicalGeometryCoordinatePoint.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8088,6 +8014,8 @@ std::string REAL3_LIT_REAL1_EXPR_REAL1_EXPR_REAL1_EXPR::toString() const {
         retval += "(euclideanGeometry3CoordinatePoint.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8112,6 +8040,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalVelocityCoordinateVector.build ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalVelocityFrameEval ") + "(lang.classicalVelocity.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8132,6 +8062,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalTimeCoordinateVector.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8152,6 +8084,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalGeometryCoordinateVector.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8172,6 +8106,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(euclideanGeometry3CoordinateVector.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8192,6 +8128,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalTimeCoordinatePoint.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8212,6 +8150,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalGeometryCoordinatePoint.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8232,6 +8172,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(euclideanGeometry3CoordinatePoint.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8718,6 +8660,8 @@ std::string REAL3_EMPTY::toString() const {
         retval += "(classicalVelocityCoordinateVector.build ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalVelocityFrameEval ") + "(lang.classicalVelocity.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8740,6 +8684,8 @@ std::string REAL3_EMPTY::toString() const {
         retval += "(classicalTimeCoordinateVector.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8762,6 +8708,8 @@ std::string REAL3_EMPTY::toString() const {
         retval += "(classicalGeometryCoordinateVector.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8784,6 +8732,8 @@ std::string REAL3_EMPTY::toString() const {
         retval += "(euclideanGeometry3CoordinateVector.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8806,6 +8756,8 @@ std::string REAL3_EMPTY::toString() const {
         retval += "(classicalTimeCoordinatePoint.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8828,6 +8780,8 @@ std::string REAL3_EMPTY::toString() const {
         retval += "(classicalGeometryCoordinatePoint.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8850,6 +8804,8 @@ std::string REAL3_EMPTY::toString() const {
         retval += "(euclideanGeometry3CoordinatePoint.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
@@ -8874,6 +8830,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalVelocityCoordinateVector.build ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalVelocityFrameEval ") + "(lang.classicalVelocity.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8894,6 +8852,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalTimeCoordinateVector.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8914,6 +8874,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalGeometryCoordinateVector.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8934,6 +8896,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(euclideanGeometry3CoordinateVector.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8954,6 +8918,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalTimeCoordinatePoint.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8974,6 +8940,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalGeometryCoordinatePoint.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -8994,6 +8962,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(euclideanGeometry3CoordinatePoint.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 3; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -9684,6 +9654,8 @@ std::string REAL1_LIT::toString() const {
         retval += "(classicalVelocityCoordinateVector.build ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalVelocityFrameEval ") + "(lang.classicalVelocity.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
@@ -9706,6 +9678,8 @@ std::string REAL1_LIT::toString() const {
         retval += "(classicalTimeCoordinateVector.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
@@ -9728,6 +9702,8 @@ std::string REAL1_LIT::toString() const {
         retval += "(classicalGeometryCoordinateVector.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
@@ -9750,6 +9726,8 @@ std::string REAL1_LIT::toString() const {
         retval += "(euclideanGeometry3CoordinateVector.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
@@ -9772,6 +9750,8 @@ std::string REAL1_LIT::toString() const {
         retval += "(classicalTimeCoordinatePoint.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
@@ -9794,6 +9774,8 @@ std::string REAL1_LIT::toString() const {
         retval += "(classicalGeometryCoordinatePoint.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
@@ -9816,6 +9798,8 @@ std::string REAL1_LIT::toString() const {
         retval += "(euclideanGeometry3CoordinatePoint.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
@@ -9837,6 +9821,8 @@ std::string REAL1_LIT::toString() const {
         retval += "(classicalVelocityScalar.build ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
@@ -9858,6 +9844,8 @@ std::string REAL1_LIT::toString() const {
         retval += "(classicalTimeScalar.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
@@ -9879,6 +9867,8 @@ std::string REAL1_LIT::toString() const {
         retval += "(classicalGeometryScalar.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
@@ -9900,6 +9890,8 @@ std::string REAL1_LIT::toString() const {
         retval += "(euclideanGeometry3Scalar.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            
+            
         
            retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
@@ -9924,6 +9916,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalVelocityCoordinateVector.build ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalVelocityFrameEval ") + "(lang.classicalVelocity.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -9944,6 +9938,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalTimeCoordinateVector.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -9964,6 +9960,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalGeometryCoordinateVector.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -9984,6 +9982,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(euclideanGeometry3CoordinateVector.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -10004,6 +10004,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalTimeCoordinatePoint.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -10024,6 +10026,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalGeometryCoordinatePoint.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -10044,6 +10048,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(euclideanGeometry3CoordinatePoint.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         retval += std::string("(euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid) + "⟩⟩) " + getLastEnv() + ")\n"; 
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -10063,6 +10069,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalVelocityScalar.build ";
         retval += std::string("(classicalVelocityEval ") + "(lang.classicalVelocity.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -10082,6 +10090,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalTimeScalar.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -10101,6 +10111,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(classicalGeometryScalar.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -10120,6 +10132,8 @@ int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast
         retval += "(euclideanGeometry3Scalar.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            
+            
             retval += "(⟨[]";
         for (auto i = 0; i < 1; i++)
             retval += "++[" + std::to_string(*dc->getValue(i)) + "]";
@@ -10174,7 +10188,7 @@ std::string REALMATRIX4_LITERAL::toString() const {
 std::string REALMATRIX4_EMPTY::toEvalString() const {
                         std::string retval = "";
                         bool found = false;
-    if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(this->dom_)){
         found = true;
         //auto env = getEnvName();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_EMPTY*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] = (GLOBAL_INDEX += 2); 
@@ -10182,13 +10196,13 @@ std::string REALMATRIX4_EMPTY::toEvalString() const {
         int sid = GLOBAL_IDS.count(const_cast<Space*>(interpSp)) ? GLOBAL_IDS[const_cast<Space*>(interpSp)] : GLOBAL_IDS[const_cast<Space*>(interpSp)] = (GLOBAL_INDEX += 2); 
 
 
-        retval += "(classicalTimeFrameChange.build ";
+        retval += "(classicalTimeTransform.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
         retval += "))";
         
     }
-    if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(this->dom_)){
         found = true;
         //auto env = getEnvName();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_EMPTY*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] = (GLOBAL_INDEX += 2); 
@@ -10196,13 +10210,13 @@ std::string REALMATRIX4_EMPTY::toEvalString() const {
         int sid = GLOBAL_IDS.count(const_cast<Space*>(interpSp)) ? GLOBAL_IDS[const_cast<Space*>(interpSp)] : GLOBAL_IDS[const_cast<Space*>(interpSp)] = (GLOBAL_INDEX += 2); 
 
 
-        retval += "(classicalGeometryFrameChange.build ";
+        retval += "(classicalGeometryTransform.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
         retval += "))";
         
     }
-    if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(this->dom_)){
         found = true;
         //auto env = getEnvName();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_EMPTY*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] = (GLOBAL_INDEX += 2); 
@@ -10210,7 +10224,7 @@ std::string REALMATRIX4_EMPTY::toEvalString() const {
         int sid = GLOBAL_IDS.count(const_cast<Space*>(interpSp)) ? GLOBAL_IDS[const_cast<Space*>(interpSp)] : GLOBAL_IDS[const_cast<Space*>(interpSp)] = (GLOBAL_INDEX += 2); 
 
 
-        retval += "(euclideanGeometry3FrameChange.build ";
+        retval += "(euclideanGeometry3Transform.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
         retval += "))";
@@ -10219,40 +10233,40 @@ std::string REALMATRIX4_EMPTY::toEvalString() const {
     if (auto cont = dynamic_cast<domain::DomainContainer*>(this->dom_)){
         if(cont->hasValue()){
                         
-            if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(cont->getValue())){
                 //auto env = getEnvName();
                 //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_LITERAL*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_LITERAL*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_LITERAL*>(this)] = (GLOBAL_INDEX += 2); 
                 auto interpSp = i2d_->getSpace(dc->getSpace());
                 int sid = GLOBAL_IDS.count(const_cast<Space*>(interpSp)) ? GLOBAL_IDS[const_cast<Space*>(interpSp)] : GLOBAL_IDS[const_cast<Space*>(interpSp)] = (GLOBAL_INDEX += 2);  
 
 
-        retval += "(classicalTimeFrameChange.build ";
+        retval += "(classicalTimeTransform.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
         retval += ")";
         
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(cont->getValue())){
                 //auto env = getEnvName();
                 //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_LITERAL*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_LITERAL*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_LITERAL*>(this)] = (GLOBAL_INDEX += 2); 
                 auto interpSp = i2d_->getSpace(dc->getSpace());
                 int sid = GLOBAL_IDS.count(const_cast<Space*>(interpSp)) ? GLOBAL_IDS[const_cast<Space*>(interpSp)] : GLOBAL_IDS[const_cast<Space*>(interpSp)] = (GLOBAL_INDEX += 2);  
 
 
-        retval += "(classicalGeometryFrameChange.build ";
+        retval += "(classicalGeometryTransform.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
         retval += ")";
         
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(cont->getValue())){
                 //auto env = getEnvName();
                 //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_LITERAL*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_LITERAL*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_LITERAL*>(this)] = (GLOBAL_INDEX += 2); 
                 auto interpSp = i2d_->getSpace(dc->getSpace());
                 int sid = GLOBAL_IDS.count(const_cast<Space*>(interpSp)) ? GLOBAL_IDS[const_cast<Space*>(interpSp)] : GLOBAL_IDS[const_cast<Space*>(interpSp)] = (GLOBAL_INDEX += 2);  
 
 
-        retval += "(euclideanGeometry3FrameChange.build ";
+        retval += "(euclideanGeometry3Transform.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
         retval += ")";
@@ -10295,27 +10309,27 @@ std::string REALMATRIX4_EMPTY::toAlgebraString() const {
 
                         //  ret += "(";
                         //ret += "def var_" + std::to_string(++GLOBAL_INDEX) + ":= 1";
-    if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_EMPTY*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(classicalTimeFrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(classicalTimeTransformAlgebra " + this->toEvalString() + ")";
         
     }
 
-    if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_EMPTY*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(classicalGeometryFrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(classicalGeometryTransformAlgebra " + this->toEvalString() + ")";
         
     }
 
-    if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(this->dom_)){
         found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_EMPTY*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(euclideanGeometry3FrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(euclideanGeometry3TransformAlgebra " + this->toEvalString() + ")";
         
     }
 
@@ -10323,25 +10337,25 @@ std::string REALMATRIX4_EMPTY::toAlgebraString() const {
         if(cont->hasValue()){
 
                         
-            if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(cont->getValue())){
                 found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_EMPTY*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(classicalTimeFrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(classicalTimeTransformAlgebra " + this->toEvalString() + ")";
         
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(cont->getValue())){
                 found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_EMPTY*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(classicalGeometryFrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(classicalGeometryTransformAlgebra " + this->toEvalString() + ")";
         
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(cont->getValue())){
                 found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_EMPTY*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] = (GLOBAL_INDEX += 2); 
-        return "(euclideanGeometry3FrameChangeAlgebra " + this->toEvalString() + ")";
+        return "(euclideanGeometry3TransformAlgebra " + this->toEvalString() + ")";
         
             }
         }
@@ -10379,7 +10393,7 @@ REALMATRIX4_EMPTY::REALMATRIX4_EMPTY(coords::REALMATRIX4_EMPTY* c, domain::Domai
 std::string REALMATRIX4_EMPTY::toString() const {
     bool found = false;
     std::string retval = "";
-    if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(this->dom_)){
         found = true;
         //auto env = getEnvName();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_EMPTY*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] = (GLOBAL_INDEX += 2); 
@@ -10390,16 +10404,18 @@ std::string REALMATRIX4_EMPTY::toString() const {
 int fid1 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr1)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr1)] : GLOBAL_IDS[const_cast<Frame*>(interpFr1)] = (GLOBAL_INDEX += 2);
             auto interpFr2 = i2d_->getFrame(dc->getTo());
 int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr2)] : GLOBAL_IDS[const_cast<Frame*>(interpFr2)] = (GLOBAL_INDEX += 2);
-        retval += " (lang.classicalTime.FrameChangeExpr.lit \n"; 
+        retval += " (lang.classicalTime.TransformExpr.lit \n"; 
         
-        retval += "(classicalTimeFrameChange.build ";
+        retval += "(classicalTimeTransform.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid1) +"⟩⟩) "+getLastEnv() + ")\n";
+            retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid2) +"⟩⟩) "+getLastEnv() + ")\n";
         
         retval += "))";
         
     }
-    if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(this->dom_)){
         found = true;
         //auto env = getEnvName();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_EMPTY*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] = (GLOBAL_INDEX += 2); 
@@ -10410,16 +10426,18 @@ int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_ca
 int fid1 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr1)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr1)] : GLOBAL_IDS[const_cast<Frame*>(interpFr1)] = (GLOBAL_INDEX += 2);
             auto interpFr2 = i2d_->getFrame(dc->getTo());
 int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr2)] : GLOBAL_IDS[const_cast<Frame*>(interpFr2)] = (GLOBAL_INDEX += 2);
-        retval += " (lang.classicalGeometry.FrameChangeExpr.lit \n"; 
+        retval += " (lang.classicalGeometry.TransformExpr.lit \n"; 
         
-        retval += "(classicalGeometryFrameChange.build ";
+        retval += "(classicalGeometryTransform.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid1) +"⟩⟩) "+getLastEnv() + ")\n";
+            retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid2) +"⟩⟩) "+getLastEnv() + ")\n";
         
         retval += "))";
         
     }
-    if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(this->dom_)){
+    if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(this->dom_)){
         found = true;
         //auto env = getEnvName();
         //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_EMPTY*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_EMPTY*>(this)] = (GLOBAL_INDEX += 2); 
@@ -10430,11 +10448,13 @@ int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_ca
 int fid1 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr1)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr1)] : GLOBAL_IDS[const_cast<Frame*>(interpFr1)] = (GLOBAL_INDEX += 2);
             auto interpFr2 = i2d_->getFrame(dc->getTo());
 int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr2)] : GLOBAL_IDS[const_cast<Frame*>(interpFr2)] = (GLOBAL_INDEX += 2);
-        retval += " (lang.euclideanGeometry3.FrameChangeExpr.lit \n"; 
+        retval += " (lang.euclideanGeometry3.TransformExpr.lit \n"; 
         
-        retval += "(euclideanGeometry3FrameChange.build ";
+        retval += "(euclideanGeometry3Transform.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid1) +"⟩⟩) "+getLastEnv() + ")\n";
+            retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid2) +"⟩⟩) "+getLastEnv() + ")\n";
         
         retval += "))";
         
@@ -10442,7 +10462,7 @@ int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_ca
     if (auto cont = dynamic_cast<domain::DomainContainer*>(this->dom_)){
         if(cont->hasValue()){
                         
-            if(auto dc = dynamic_cast<domain::ClassicalTimeFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::ClassicalTimeTransform<float,1>*>(cont->getValue())){
                 //auto env = getEnvName();
                 //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_LITERAL*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_LITERAL*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_LITERAL*>(this)] = (GLOBAL_INDEX += 2); 
                 auto interpSp = i2d_->getSpace(dc->getSpace());
@@ -10452,15 +10472,17 @@ int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_ca
 int fid1 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr1)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr1)] : GLOBAL_IDS[const_cast<Frame*>(interpFr1)] = (GLOBAL_INDEX += 2);
             auto interpFr2 = i2d_->getFrame(dc->getTo());
 int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr2)] : GLOBAL_IDS[const_cast<Frame*>(interpFr2)] = (GLOBAL_INDEX += 2);
-                retval += " (lang.classicalTime.FrameChangeExpr.lit \n";
+                retval += " (lang.classicalTime.TransformExpr.lit \n";
                 
-        retval += "(classicalTimeFrameChange.build ";
+        retval += "(classicalTimeTransform.build ";
         retval += std::string("(classicalTimeEval ") + "(lang.classicalTime.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid1) +"⟩⟩) "+getLastEnv() + ")\n";
+            retval += std::string("     (classicalTimeFrameEval ") + "(lang.classicalTime.frameExpr.var ⟨⟨" + std::to_string(fid2) +"⟩⟩) "+getLastEnv() + ")\n";
          retval += "))";
         
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometryFrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometryTransform<float,1>*>(cont->getValue())){
                 //auto env = getEnvName();
                 //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_LITERAL*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_LITERAL*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_LITERAL*>(this)] = (GLOBAL_INDEX += 2); 
                 auto interpSp = i2d_->getSpace(dc->getSpace());
@@ -10470,15 +10492,17 @@ int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_ca
 int fid1 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr1)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr1)] : GLOBAL_IDS[const_cast<Frame*>(interpFr1)] = (GLOBAL_INDEX += 2);
             auto interpFr2 = i2d_->getFrame(dc->getTo());
 int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr2)] : GLOBAL_IDS[const_cast<Frame*>(interpFr2)] = (GLOBAL_INDEX += 2);
-                retval += " (lang.classicalGeometry.FrameChangeExpr.lit \n";
+                retval += " (lang.classicalGeometry.TransformExpr.lit \n";
                 
-        retval += "(classicalGeometryFrameChange.build ";
+        retval += "(classicalGeometryTransform.build ";
         retval += std::string("(classicalGeometryEval ") + "(lang.classicalGeometry.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid1) +"⟩⟩) "+getLastEnv() + ")\n";
+            retval += std::string("     (classicalGeometryFrameEval ") + "(lang.classicalGeometry.frameExpr.var ⟨⟨" + std::to_string(fid2) +"⟩⟩) "+getLastEnv() + ")\n";
          retval += "))";
         
             }
-            if(auto dc = dynamic_cast<domain::EuclideanGeometry3FrameChange<float,1>*>(cont->getValue())){
+            if(auto dc = dynamic_cast<domain::EuclideanGeometry3Transform<float,1>*>(cont->getValue())){
                 //auto env = getEnvName();
                 //int id = GLOBAL_IDS.count(const_cast< REALMATRIX4_LITERAL*>(this)) ? GLOBAL_IDS[const_cast<REALMATRIX4_LITERAL*>(this)] : GLOBAL_IDS[const_cast<REALMATRIX4_LITERAL*>(this)] = (GLOBAL_INDEX += 2); 
                 auto interpSp = i2d_->getSpace(dc->getSpace());
@@ -10488,11 +10512,13 @@ int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_ca
 int fid1 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr1)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr1)] : GLOBAL_IDS[const_cast<Frame*>(interpFr1)] = (GLOBAL_INDEX += 2);
             auto interpFr2 = i2d_->getFrame(dc->getTo());
 int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr2)] : GLOBAL_IDS[const_cast<Frame*>(interpFr2)] = (GLOBAL_INDEX += 2);
-                retval += " (lang.euclideanGeometry3.FrameChangeExpr.lit \n";
+                retval += " (lang.euclideanGeometry3.TransformExpr.lit \n";
                 
-        retval += "(euclideanGeometry3FrameChange.build ";
+        retval += "(euclideanGeometry3Transform.build ";
         retval += std::string("(euclideanGeometry3Eval ") + "(lang.euclideanGeometry3.spaceExpr.var ⟨⟨" + std::to_string(sid) + "⟩⟩) " + getLastEnv() + ")\n";
         
+            retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid1) +"⟩⟩) "+getLastEnv() + ")\n";
+            retval += std::string("     (euclideanGeometry3FrameEval ") + "(lang.euclideanGeometry3.frameExpr.var ⟨⟨" + std::to_string(fid2) +"⟩⟩) "+getLastEnv() + ")\n";
          retval += "))";
         
             }

@@ -68,7 +68,7 @@ template<typename ValueType,int ValueCount>
 class EuclideanGeometryOrientation;
 
 template<typename ValueType,int ValueCount>
-class EuclideanGeometryFrameChange;
+class EuclideanGeometryTransform;
 
 template<typename ValueType,int ValueCount>
 class EuclideanGeometryCoordinatePoint;
@@ -96,7 +96,7 @@ class SIMeasurementSystem;
 class ImperialMeasurementSystem;
 
 template<typename ValueType,int ValueCount>
-class ClassicalTimeFrameChange;
+class ClassicalTimeTransform;
 
 template<typename ValueType,int ValueCount>
 class ClassicalTimeCoordinatePoint;
@@ -130,7 +130,7 @@ template<typename ValueType,int ValueCount>
 class EuclideanGeometry3Orientation;
 
 template<typename ValueType,int ValueCount>
-class EuclideanGeometry3FrameChange;
+class EuclideanGeometry3Transform;
 
 template<typename ValueType,int ValueCount>
 class EuclideanGeometry3CoordinatePoint;
@@ -252,10 +252,10 @@ EuclideanGeometryOrientation<ValueType,ValueCount>* mkEuclideanGeometryOrientati
 
 
 template <class ValueType, int ValueCount>
-                        EuclideanGeometryFrameChange<ValueType,ValueCount>* mkEuclideanGeometryFrameChange(EuclideanGeometry* sp,EuclideanGeometryFrame* from,EuclideanGeometryFrame* to/*,   std::shared_ptr<ValueType> values[ValueCount]*/){
-    EuclideanGeometryFrameChange <ValueType,ValueCount>* dom_ = new EuclideanGeometryFrameChange <ValueType,ValueCount>(sp, from, to, {});
+                        EuclideanGeometryTransform<ValueType,ValueCount>* mkEuclideanGeometryTransform(EuclideanGeometry* sp,EuclideanGeometryFrame* from,EuclideanGeometryFrame* to/*,   std::shared_ptr<ValueType> values[ValueCount]*/){
+    EuclideanGeometryTransform <ValueType,ValueCount>* dom_ = new EuclideanGeometryTransform <ValueType,ValueCount>(sp, from, to, {});
     //((ValueObject<ValueType,ValueCount>)(dom_))->setValues(values);
-    //this->EuclideanGeometryFrameChange_vec.push_back(dom_);
+    //this->EuclideanGeometryTransform_vec.push_back(dom_);
     /*for(int i = 0; i < ValueCount;i++){
         dom_->setValue(values[i],i);
     }*/
@@ -264,9 +264,9 @@ template <class ValueType, int ValueCount>
                 
 
 template <class ValueType, int ValueCount>
-EuclideanGeometryFrameChange<ValueType,ValueCount>* mkEuclideanGeometryFrameChange(){
-    EuclideanGeometryFrameChange<ValueType,ValueCount>* dom_ = new EuclideanGeometryFrameChange<ValueType,ValueCount>({});
-    //this->EuclideanGeometryFrameChange_vec.push_back(dom_);
+EuclideanGeometryTransform<ValueType,ValueCount>* mkEuclideanGeometryTransform(){
+    EuclideanGeometryTransform<ValueType,ValueCount>* dom_ = new EuclideanGeometryTransform<ValueType,ValueCount>({});
+    //this->EuclideanGeometryTransform_vec.push_back(dom_);
     /*int i = 0;
     for(auto val : values){
         dom_->setValue(values[i],i++);
@@ -356,10 +356,10 @@ EuclideanGeometryScalar<ValueType,ValueCount>* mkEuclideanGeometryScalar(){
 	ClassicalTimeDerivedFrame* mkClassicalTimeDerivedFrame(std::string name, domain::ClassicalTime* space, domain::ClassicalTimeFrame* parent);
 
 template <class ValueType, int ValueCount>
-                        ClassicalTimeFrameChange<ValueType,ValueCount>* mkClassicalTimeFrameChange(ClassicalTime* sp,ClassicalTimeFrame* from,ClassicalTimeFrame* to/*,   std::shared_ptr<ValueType> values[ValueCount]*/){
-    ClassicalTimeFrameChange <ValueType,ValueCount>* dom_ = new ClassicalTimeFrameChange <ValueType,ValueCount>(sp, from, to, {});
+                        ClassicalTimeTransform<ValueType,ValueCount>* mkClassicalTimeTransform(ClassicalTime* sp,ClassicalTimeFrame* from,ClassicalTimeFrame* to/*,   std::shared_ptr<ValueType> values[ValueCount]*/){
+    ClassicalTimeTransform <ValueType,ValueCount>* dom_ = new ClassicalTimeTransform <ValueType,ValueCount>(sp, from, to, {});
     //((ValueObject<ValueType,ValueCount>)(dom_))->setValues(values);
-    //this->ClassicalTimeFrameChange_vec.push_back(dom_);
+    //this->ClassicalTimeTransform_vec.push_back(dom_);
     /*for(int i = 0; i < ValueCount;i++){
         dom_->setValue(values[i],i);
     }*/
@@ -368,9 +368,9 @@ template <class ValueType, int ValueCount>
                 
 
 template <class ValueType, int ValueCount>
-ClassicalTimeFrameChange<ValueType,ValueCount>* mkClassicalTimeFrameChange(){
-    ClassicalTimeFrameChange<ValueType,ValueCount>* dom_ = new ClassicalTimeFrameChange<ValueType,ValueCount>({});
-    //this->ClassicalTimeFrameChange_vec.push_back(dom_);
+ClassicalTimeTransform<ValueType,ValueCount>* mkClassicalTimeTransform(){
+    ClassicalTimeTransform<ValueType,ValueCount>* dom_ = new ClassicalTimeTransform<ValueType,ValueCount>({});
+    //this->ClassicalTimeTransform_vec.push_back(dom_);
     /*int i = 0;
     for(auto val : values){
         dom_->setValue(values[i],i++);
@@ -510,10 +510,10 @@ EuclideanGeometry3Orientation<ValueType,ValueCount>* mkEuclideanGeometry3Orienta
 
 
 template <class ValueType, int ValueCount>
-                        EuclideanGeometry3FrameChange<ValueType,ValueCount>* mkEuclideanGeometry3FrameChange(EuclideanGeometry3* sp,EuclideanGeometry3Frame* from,EuclideanGeometry3Frame* to/*,   std::shared_ptr<ValueType> values[ValueCount]*/){
-    EuclideanGeometry3FrameChange <ValueType,ValueCount>* dom_ = new EuclideanGeometry3FrameChange <ValueType,ValueCount>(sp, from, to, {});
+                        EuclideanGeometry3Transform<ValueType,ValueCount>* mkEuclideanGeometry3Transform(EuclideanGeometry3* sp,EuclideanGeometry3Frame* from,EuclideanGeometry3Frame* to/*,   std::shared_ptr<ValueType> values[ValueCount]*/){
+    EuclideanGeometry3Transform <ValueType,ValueCount>* dom_ = new EuclideanGeometry3Transform <ValueType,ValueCount>(sp, from, to, {});
     //((ValueObject<ValueType,ValueCount>)(dom_))->setValues(values);
-    //this->EuclideanGeometry3FrameChange_vec.push_back(dom_);
+    //this->EuclideanGeometry3Transform_vec.push_back(dom_);
     /*for(int i = 0; i < ValueCount;i++){
         dom_->setValue(values[i],i);
     }*/
@@ -522,9 +522,9 @@ template <class ValueType, int ValueCount>
                 
 
 template <class ValueType, int ValueCount>
-EuclideanGeometry3FrameChange<ValueType,ValueCount>* mkEuclideanGeometry3FrameChange(){
-    EuclideanGeometry3FrameChange<ValueType,ValueCount>* dom_ = new EuclideanGeometry3FrameChange<ValueType,ValueCount>({});
-    //this->EuclideanGeometry3FrameChange_vec.push_back(dom_);
+EuclideanGeometry3Transform<ValueType,ValueCount>* mkEuclideanGeometry3Transform(){
+    EuclideanGeometry3Transform<ValueType,ValueCount>* dom_ = new EuclideanGeometry3Transform<ValueType,ValueCount>({});
+    //this->EuclideanGeometry3Transform_vec.push_back(dom_);
     /*int i = 0;
     for(auto val : values){
         dom_->setValue(values[i],i++);
@@ -1148,20 +1148,20 @@ private:
 
 
 template <class ValueType, int ValueCount>
-class EuclideanGeometryFrameChange : public ValueObject<ValueType,ValueCount> {
+class EuclideanGeometryTransform : public ValueObject<ValueType,ValueCount> {
 public:
-    EuclideanGeometryFrameChange(EuclideanGeometry* s,EuclideanGeometryFrame* from,EuclideanGeometryFrame* to, std::initializer_list<DomainObject*> args) : 
+    EuclideanGeometryTransform(EuclideanGeometry* s,EuclideanGeometryFrame* from,EuclideanGeometryFrame* to, std::initializer_list<DomainObject*> args) : 
 			ValueObject<ValueType,ValueCount>::ValueObject(args), space_(s),from_(from),to_(to)   {}
-    EuclideanGeometryFrameChange(std::initializer_list<DomainObject*> args ) :
+    EuclideanGeometryTransform(std::initializer_list<DomainObject*> args ) :
 	 		ValueObject<ValueType,ValueCount>::ValueObject(args) {}
-	virtual ~EuclideanGeometryFrameChange(){}
+	virtual ~EuclideanGeometryTransform(){}
     std::string toString() override {
-        return "@@EuclideanGeometryFrameChange(" + (space_?space_->getName():"Missing Space")+","+ValueObject<ValueType,ValueCount>::toString() + ")";
+        return "@@EuclideanGeometryTransform(" + (space_?space_->getName():"Missing Space")+","+ValueObject<ValueType,ValueCount>::toString() + ")";
     }
 
     EuclideanGeometry* getSpace() const {return this->space_;};
-    EuclideanGeometry* getFrom() const {return this->from_;};
-    EuclideanGeometry* getTo() const {return this->to_;};
+    EuclideanGeometryFrame* getFrom() const {return this->from_;};
+    EuclideanGeometryFrame* getTo() const {return this->to_;};
     
     
 private:
@@ -1344,20 +1344,20 @@ private:
 
 
 template <class ValueType, int ValueCount>
-class ClassicalTimeFrameChange : public ValueObject<ValueType,ValueCount> {
+class ClassicalTimeTransform : public ValueObject<ValueType,ValueCount> {
 public:
-    ClassicalTimeFrameChange(ClassicalTime* s,ClassicalTimeFrame* from,ClassicalTimeFrame* to, std::initializer_list<DomainObject*> args) : 
+    ClassicalTimeTransform(ClassicalTime* s,ClassicalTimeFrame* from,ClassicalTimeFrame* to, std::initializer_list<DomainObject*> args) : 
 			ValueObject<ValueType,ValueCount>::ValueObject(args), space_(s),from_(from),to_(to)   {}
-    ClassicalTimeFrameChange(std::initializer_list<DomainObject*> args ) :
+    ClassicalTimeTransform(std::initializer_list<DomainObject*> args ) :
 	 		ValueObject<ValueType,ValueCount>::ValueObject(args) {}
-	virtual ~ClassicalTimeFrameChange(){}
+	virtual ~ClassicalTimeTransform(){}
     std::string toString() override {
-        return "@@ClassicalTimeFrameChange(" + (space_?space_->getName():"Missing Space")+","+ValueObject<ValueType,ValueCount>::toString() + ")";
+        return "@@ClassicalTimeTransform(" + (space_?space_->getName():"Missing Space")+","+ValueObject<ValueType,ValueCount>::toString() + ")";
     }
 
     ClassicalTime* getSpace() const {return this->space_;};
-    ClassicalTime* getFrom() const {return this->from_;};
-    ClassicalTime* getTo() const {return this->to_;};
+    ClassicalTimeFrame* getFrom() const {return this->from_;};
+    ClassicalTimeFrame* getTo() const {return this->to_;};
     
     
 private:
@@ -1596,20 +1596,20 @@ private:
 
 
 template <class ValueType, int ValueCount>
-class EuclideanGeometry3FrameChange : public ValueObject<ValueType,ValueCount> {
+class EuclideanGeometry3Transform : public ValueObject<ValueType,ValueCount> {
 public:
-    EuclideanGeometry3FrameChange(EuclideanGeometry3* s,EuclideanGeometry3Frame* from,EuclideanGeometry3Frame* to, std::initializer_list<DomainObject*> args) : 
+    EuclideanGeometry3Transform(EuclideanGeometry3* s,EuclideanGeometry3Frame* from,EuclideanGeometry3Frame* to, std::initializer_list<DomainObject*> args) : 
 			ValueObject<ValueType,ValueCount>::ValueObject(args), space_(s),from_(from),to_(to)   {}
-    EuclideanGeometry3FrameChange(std::initializer_list<DomainObject*> args ) :
+    EuclideanGeometry3Transform(std::initializer_list<DomainObject*> args ) :
 	 		ValueObject<ValueType,ValueCount>::ValueObject(args) {}
-	virtual ~EuclideanGeometry3FrameChange(){}
+	virtual ~EuclideanGeometry3Transform(){}
     std::string toString() override {
-        return "@@EuclideanGeometry3FrameChange(" + (space_?space_->getName():"Missing Space")+","+ValueObject<ValueType,ValueCount>::toString() + ")";
+        return "@@EuclideanGeometry3Transform(" + (space_?space_->getName():"Missing Space")+","+ValueObject<ValueType,ValueCount>::toString() + ")";
     }
 
     EuclideanGeometry3* getSpace() const {return this->space_;};
-    EuclideanGeometry3* getFrom() const {return this->from_;};
-    EuclideanGeometry3* getTo() const {return this->to_;};
+    EuclideanGeometry3Frame* getFrom() const {return this->from_;};
+    EuclideanGeometry3Frame* getTo() const {return this->to_;};
     
     
 private:

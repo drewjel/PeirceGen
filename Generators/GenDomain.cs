@@ -1070,8 +1070,8 @@ public:
     }
 
     " + (!spObj.IsMap ? sp.Name + @"* getSpace() const {return this->space_;};" :"") + @"
-    " + (spObj.IsTransform ? sp.Name + @"* getFrom() const {return this->from_;};" : "") + @"
-    " + (spObj.IsTransform ? sp.Name + @"* getTo() const {return this->to_;};" : "") + @"
+    " + (spObj.IsTransform ? sp.Name + @"Frame* getFrom() const {return this->from_;};" : "") + @"
+    " + (spObj.IsTransform ? sp.Name + @"Frame* getTo() const {return this->to_;};" : "") + @"
     " + (spObj.HasFrame ? (sp.Name + @"Frame* getFrame() const { return this->frame_; };") : "") + @"
     " + (spObj.HasFrame ? (@"void setFrame(" + sp.Name + @"Frame* frame){
             this->frame_ = frame;

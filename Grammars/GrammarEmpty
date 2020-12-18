@@ -116,7 +116,7 @@ iREALMATRIX4_VAR INTERP:V :=
 --Define instantiable objects & operations contingent on space type 
 
 Vector={fCoordinateVector,Scalar}
-Affine={tFrameChange,fCoordinatePoint},Vector
+Affine={tTransform,fCoordinatePoint},Vector
 Euclidean={Rotation,Orientation},Affine
 
 ####
@@ -128,9 +128,9 @@ Euclidean={Rotation,Orientation},Affine
 	REAL3_EXPR={Vector.CoordinateVector,Affine.CoordinatePoint}
 	REAL3_VAR={Vector.CoordinateVector,Affine.CoordinatePoint}
 	REAL3_LITERAL={Vector.CoordinateVector,Affine.CoordinatePoint}
-	REALMATRIX4_EXPR={Affine.FrameChange}
-	REALMATRIX4_LITERAL={Affine.FrameChange}
-	REALMATRIX4_VAR={Affine.FrameChange}
+	REALMATRIX4_EXPR={Affine.Transform}
+	REALMATRIX4_LITERAL={Affine.Transform}
+	REALMATRIX4_VAR={Affine.Transform}
 }
 
 ####

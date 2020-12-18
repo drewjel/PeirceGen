@@ -29,9 +29,12 @@ namespace PeirceGen
 
         public Dictionary<string, string> config = new Dictionary<string, string>()
         {
-            { "GrammarPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\Grammars\" },
-            { "GenPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\"},
-            { "MatcherPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\ros_matchers\"}
+            { "GrammarPath", @"/peirce/gen/Grammars/" },
+            { "GenPath", @"/peirce/gen/symlinkme/"},
+            { "MatcherPath", @"/peirce/gen/symlinkme/ros_matchers/"}
+           // { "GrammarPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\Grammars\" },
+            //{ "GenPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\"},
+            //{ "MatcherPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\ros_matchers\"}
         };
 
         public string this[string key]

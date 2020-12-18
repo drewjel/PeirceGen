@@ -90,9 +90,9 @@ domain::DomainObject* Oracle_AskAll::getInterpretationForREALMATRIX4_EXPR(coords
     //return getInterpretation(coords);
 
                     
-    std::cout<<"(1)"<<"@@ClassicalTimeFrameChange()\n";
-    std::cout<<"(2)"<<"@@EuclideanGeometryFrameChange()\n";
-    std::cout<<"(3)"<<"@@EuclideanGeometry3FrameChange()\n";
+    std::cout<<"(1)"<<"@@ClassicalTimeTransform()\n";
+    std::cout<<"(2)"<<"@@EuclideanGeometryTransform()\n";
+    std::cout<<"(3)"<<"@@EuclideanGeometry3Transform()\n";
     std::cin>>choice;
     if(choice < 1 or choice > 3) {
         goto choose;
@@ -145,7 +145,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationForREALMATRIX4_EXPR(coords
                                 //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                 
 
-                                auto ret = this->domain_->mkClassicalTimeFrameChange<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
+                                auto ret = this->domain_->mkClassicalTimeTransform<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                // delete[] cp;
 
                                 return ret;
@@ -211,7 +211,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationForREALMATRIX4_EXPR(coords
                                 //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                 
 
-                                auto ret = this->domain_->mkEuclideanGeometryFrameChange<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
+                                auto ret = this->domain_->mkEuclideanGeometryTransform<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                // delete[] cp;
 
                                 return ret;
@@ -277,7 +277,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationForREALMATRIX4_EXPR(coords
                                 //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                 
 
-                                auto ret = this->domain_->mkEuclideanGeometry3FrameChange<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
+                                auto ret = this->domain_->mkEuclideanGeometry3Transform<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                // delete[] cp;
 
                                 return ret;
@@ -3527,9 +3527,9 @@ domain::DomainObject* Oracle_AskAll::getInterpretationForREALMATRIX4_VAR_IDENT(c
     //return getInterpretation(coords);
 
                     
-    std::cout<<"(1)"<<"@@ClassicalTimeFrameChange()\n";
-    std::cout<<"(2)"<<"@@EuclideanGeometryFrameChange()\n";
-    std::cout<<"(3)"<<"@@EuclideanGeometry3FrameChange()\n";
+    std::cout<<"(1)"<<"@@ClassicalTimeTransform()\n";
+    std::cout<<"(2)"<<"@@EuclideanGeometryTransform()\n";
+    std::cout<<"(3)"<<"@@EuclideanGeometry3Transform()\n";
     std::cin>>choice;
     if(choice < 1 or choice > 3) {
         goto choose;
@@ -3582,7 +3582,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationForREALMATRIX4_VAR_IDENT(c
                                 //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                 
 
-                                auto ret = this->domain_->mkClassicalTimeFrameChange<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
+                                auto ret = this->domain_->mkClassicalTimeTransform<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                // delete[] cp;
 
                                 return ret;
@@ -3648,7 +3648,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationForREALMATRIX4_VAR_IDENT(c
                                 //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                 
 
-                                auto ret = this->domain_->mkEuclideanGeometryFrameChange<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
+                                auto ret = this->domain_->mkEuclideanGeometryTransform<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                // delete[] cp;
 
                                 return ret;
@@ -3714,7 +3714,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationForREALMATRIX4_VAR_IDENT(c
                                 //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                 
 
-                                auto ret = this->domain_->mkEuclideanGeometry3FrameChange<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
+                                auto ret = this->domain_->mkEuclideanGeometry3Transform<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                // delete[] cp;
 
                                 return ret;
@@ -5350,9 +5350,9 @@ domain::DomainObject* Oracle_AskAll::getInterpretationForREALMATRIX4_LITERAL(coo
     //return getInterpretation(coords);
 
                     
-    std::cout<<"(1)"<<"@@ClassicalTimeFrameChange()\n";
-    std::cout<<"(2)"<<"@@EuclideanGeometryFrameChange()\n";
-    std::cout<<"(3)"<<"@@EuclideanGeometry3FrameChange()\n";
+    std::cout<<"(1)"<<"@@ClassicalTimeTransform()\n";
+    std::cout<<"(2)"<<"@@EuclideanGeometryTransform()\n";
+    std::cout<<"(3)"<<"@@EuclideanGeometry3Transform()\n";
     std::cin>>choice;
     if(choice < 1 or choice > 3) {
         goto choose;
@@ -5405,7 +5405,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationForREALMATRIX4_LITERAL(coo
                                 //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                 
 
-                                auto ret = this->domain_->mkClassicalTimeFrameChange<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
+                                auto ret = this->domain_->mkClassicalTimeTransform<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                // delete[] cp;
 
                                 return ret;
@@ -5471,7 +5471,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationForREALMATRIX4_LITERAL(coo
                                 //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                 
 
-                                auto ret = this->domain_->mkEuclideanGeometryFrameChange<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
+                                auto ret = this->domain_->mkEuclideanGeometryTransform<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                // delete[] cp;
 
                                 return ret;
@@ -5537,7 +5537,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationForREALMATRIX4_LITERAL(coo
                                 //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                 
 
-                                auto ret = this->domain_->mkEuclideanGeometry3FrameChange<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
+                                auto ret = this->domain_->mkEuclideanGeometry3Transform<float,1>(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
                                // delete[] cp;
 
                                 return ret;

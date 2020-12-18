@@ -467,10 +467,18 @@ std::string " + prod.Name + @"::toString() const {
                 " + (sppair.Item2.HasFrame ? "auto interpFr = i2d_->getFrame(dc->getFrame());\n" +
                 "int fid = GLOBAL_IDS.count(const_cast<Frame*>(interpFr)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr)] : GLOBAL_IDS[const_cast<Frame*>(interpFr)] = (GLOBAL_INDEX += 2);"
                 : "") + @"
+                " + (sppair.Item2.IsTransform ? "auto interpFr1 = i2d_->getFrame(dc->getFrom());\n" +
+                "int fid1 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr1)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr1)] : GLOBAL_IDS[const_cast<Frame*>(interpFr1)] = (GLOBAL_INDEX += 2);"
+                : "") + @"
+                " + (sppair.Item2.IsTransform ? "auto interpFr2 = i2d_->getFrame(dc->getTo());\n" +
+                "int fid2 = GLOBAL_IDS.count(const_cast<Frame*>(interpFr2)) ? GLOBAL_IDS[const_cast<Frame*>(interpFr2)] : GLOBAL_IDS[const_cast<Frame*>(interpFr2)] = (GLOBAL_INDEX += 2);"
+                : "") + @"
                 retval += "" (lang." + sppair.Item1.Prefix + @"." + sppair.Item2.Name + @"Expr.lit \n"";
                 retval += ""   (" + sppair.Item1.Prefix + sppair.Item2.Name + @".build "";
                 retval += std::string(""     (" + sppair.Item1.Prefix + @"Eval "") + ""(lang." + sppair.Item1.Prefix + @".spaceExpr.var ⟨⟨"" + std::to_string(sid) +""⟩⟩) ""+getLastEnv() + "")\n"";
                 " + (sppair.Item2.HasFrame ? @"retval += std::string(""     (" + sppair.Item1.Prefix + @"FrameEval "") + ""(lang." + sppair.Item1.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid) +""⟩⟩) ""+getLastEnv() + "")\n"";" : "") + @"
+                " + (sppair.Item2.IsTransform ? @"retval += std::string(""     (" + sppair.Item1.Prefix + @"FrameEval "") + ""(lang." + sppair.Item1.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid1) +""⟩⟩) ""+getLastEnv() + "")\n"";" : "") + @"
+                " + (sppair.Item2.IsTransform ? @"retval += std::string(""     (" + sppair.Item1.Prefix + @"FrameEval "") + ""(lang." + sppair.Item1.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid2) +""⟩⟩) ""+getLastEnv() + "")\n"";" : "") + @"
                 retval += ""   (⟨[]"";
                 for(auto i = 0; i < " + prod.GetPriorityValueContainer().ValueCount + @";i++)
                     retval += ""++["" + std::to_string(*dc->getValue(i)) + ""]"";
@@ -1139,6 +1147,8 @@ std::string " + pcase.Name + @"::toString() const {
         retval += ""(" + sppair.Item1.Prefix + sppair.Item2.Name + @".build "";
         retval += std::string(""(" + sppair.Item1.Prefix + @"Eval "") + ""(lang." + sppair.Item1.Prefix + @".spaceExpr.var ⟨⟨"" + std::to_string(sid) + ""⟩⟩) "" + getLastEnv() + "")\n"";
         " + (sppair.Item2.HasFrame ? @"retval += std::string(""(" + sppair.Item1.Prefix + @"FrameEval "") + ""(lang." + sppair.Item1.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid) + ""⟩⟩) "" + getLastEnv() + "")\n""; " : "") + @"
+            " + (sppair.Item2.IsTransform ? @"retval += std::string(""     (" + sppair.Item1.Prefix + @"FrameEval "") + ""(lang." + sppair.Item1.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid1) +""⟩⟩) ""+getLastEnv() + "")\n"";" : "") + @"
+            " + (sppair.Item2.IsTransform ? @"retval += std::string(""     (" + sppair.Item1.Prefix + @"FrameEval "") + ""(lang." + sppair.Item1.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid2) +""⟩⟩) ""+getLastEnv() + "")\n"";" : "") + @"
         
         " + (prod.HasValueContainer() ? @"   retval += ""(⟨[]"";
         for (auto i = 0; i < " + prod.GetPriorityValueContainer().ValueCount + @"; i++)
@@ -1148,8 +1158,6 @@ std::string " + pcase.Name + @"::toString() const {
         retval += ""(" + sppair.Item1.Prefix + sppair.Item2.Name + @".fromalgebra "";
         retval += std::string(""(" + sppair.Item1.Prefix + @"Eval "") + ""(lang." + sppair.Item1.Prefix + @".spaceExpr.var ⟨⟨"" + std::to_string(sid) + ""⟩⟩) "" + getLastEnv() + "")\n"";
         " + (sppair.Item2.HasFrame ? @"retval += std::string(""     (" + sppair.Item1.Prefix + @"FrameEval "") + ""(lang." + sppair.Item1.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid) +""⟩⟩) ""+getLastEnv() + "")\n"";" : "") + @"
-            " + (sppair.Item2.IsTransform ? @"retval += std::string(""     (" + sppair.Item1.Prefix + @"FrameEval "") + ""(lang." + sppair.Item1.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid1) +""⟩⟩) ""+getLastEnv() + "")\n"";" : "") + @"
-            " + (sppair.Item2.IsTransform ? @"retval += std::string(""     (" + sppair.Item1.Prefix + @"FrameEval "") + ""(lang." + sppair.Item1.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid2) +""⟩⟩) ""+getLastEnv() + "")\n"";" : "") + @"
         retval += std::string(""("") + this->operand_1->toAlgebraString() + """ + pcase.Interp_.Symbol + @""" + this->operand_2->toAlgebraString() + "")))"";
         ") + @"
     }");
@@ -1188,6 +1196,8 @@ std::string " + pcase.Name + @"::toString() const {
         retval += ""(" + sppair.Item1.Prefix + sppair.Item2.Name + @".build "";
         retval += std::string(""(" + sppair.Item1.Prefix + @"Eval "") + ""(lang." + sppair.Item1.Prefix + @".spaceExpr.var ⟨⟨"" + std::to_string(sid) + ""⟩⟩) "" + getLastEnv() + "")\n"";
         " + (sppair.Item2.HasFrame ? @"retval += std::string(""(" + sppair.Item1.Prefix + @"FrameEval "") + ""(lang." + sppair.Item1.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid) + ""⟩⟩) "" + getLastEnv() + "")\n""; " : "") + @"
+            " + (sppair.Item2.IsTransform ? @"retval += std::string(""     (" + sppair.Item1.Prefix + @"FrameEval "") + ""(lang." + sppair.Item1.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid1) +""⟩⟩) ""+getLastEnv() + "")\n"";" : "") + @"
+            " + (sppair.Item2.IsTransform ? @"retval += std::string(""     (" + sppair.Item1.Prefix + @"FrameEval "") + ""(lang." + sppair.Item1.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid2) +""⟩⟩) ""+getLastEnv() + "")\n"";" : "") + @"
          " + (prod.HasValueContainer() ? @"   retval += ""(⟨[]"";
         for (auto i = 0; i < " + prod.GetPriorityValueContainer().ValueCount + @"; i++)
             retval += ""++["" + std::to_string(*dc->getValue(i)) + ""]"";
