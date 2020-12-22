@@ -48,11 +48,13 @@ class REAL1_EXPR;
 class REALMATRIX4_EXPR;
 class REAL3_LEXPR;
 class REF_REALMATRIX4_VAR;
+class MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR;
 class REALMATRIX4_LITERAL;
 class REF_REAL3_VAR;
 class ADD_REAL3_EXPR_REAL3_EXPR;
 class LMUL_REAL1_EXPR_REAL3_EXPR;
 class RMUL_REAL3_EXPR_REAL1_EXPR;
+class TMUL_REALMATRIX4_EXPR_REAL3_EXPR;
 class REAL3_LITERAL;
 class LREF_REAL3_VAR;
 class REF_REAL1_VAR;
@@ -170,6 +172,11 @@ void eraseDECL_REALMATRIX4_VAR(interp::DECL_REALMATRIX4_VAR* key, domain::Domain
 	interp::REF_REALMATRIX4_VAR* getREF_REALMATRIX4_VAR(domain::DomainObject* d) const;
 void eraseREF_REALMATRIX4_VAR(interp::REF_REALMATRIX4_VAR* key, domain::DomainObject* val);
 
+	void putMUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(interp::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* key, domain::DomainObject* val);
+	domain::DomainObject* getMUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(interp::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* c) const;
+	interp::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* getMUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(domain::DomainObject* d) const;
+void eraseMUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(interp::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* key, domain::DomainObject* val);
+
 	domain::DomainObject* getREAL3_EXPR(interp::REAL3_EXPR* c) const;
 	interp::REAL3_EXPR* getREAL3_EXPR(domain::DomainObject* d) const;
 	
@@ -192,6 +199,11 @@ void eraseLMUL_REAL1_EXPR_REAL3_EXPR(interp::LMUL_REAL1_EXPR_REAL3_EXPR* key, do
 	domain::DomainObject* getRMUL_REAL3_EXPR_REAL1_EXPR(interp::RMUL_REAL3_EXPR_REAL1_EXPR* c) const;
 	interp::RMUL_REAL3_EXPR_REAL1_EXPR* getRMUL_REAL3_EXPR_REAL1_EXPR(domain::DomainObject* d) const;
 void eraseRMUL_REAL3_EXPR_REAL1_EXPR(interp::RMUL_REAL3_EXPR_REAL1_EXPR* key, domain::DomainObject* val);
+
+	void putTMUL_REALMATRIX4_EXPR_REAL3_EXPR(interp::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* key, domain::DomainObject* val);
+	domain::DomainObject* getTMUL_REALMATRIX4_EXPR_REAL3_EXPR(interp::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* c) const;
+	interp::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* getTMUL_REALMATRIX4_EXPR_REAL3_EXPR(domain::DomainObject* d) const;
+void eraseTMUL_REALMATRIX4_EXPR_REAL3_EXPR(interp::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* key, domain::DomainObject* val);
 
 	domain::DomainObject* getREAL3_LEXPR(interp::REAL3_LEXPR* c) const;
 	interp::REAL3_LEXPR* getREAL3_LEXPR(domain::DomainObject* d) const;

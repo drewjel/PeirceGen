@@ -207,7 +207,7 @@ virtual domain::Space* Oracle_AskAll::getSpaceInterpretation(){
         int choice = 0;
         std::cin>>choice;
         if(choice > 0 and choice <= sz){
-            return frames[choice-1];
+            return frames[choice];
         }
     }
     return nullptr;
@@ -267,6 +267,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                     if (!ParsePeirce.Instance.GrammarRuleToSpaceObjectMap.Keys.Contains(cur))
                     {
                         getters += getterbegin + @"
+    if(false){choice = 1; goto choose;}
     std::cout<<""None available!\n"";
     return this->domain_->mkDefaultDomainContainer();
 }
@@ -350,6 +351,15 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                     //delete vc;
                                 }
                             }
+                            else{
+                                for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
+                                {
+                                    //" + cur.GetPriorityValueContainer().ValueType + @"* vc = new float(0);
+                                    ret->setValue(0, i);
+                                    //delete vc;
+                                }
+
+                            }
                         }
                         catch(std::exception ex){
                             return ret;
@@ -370,11 +380,17 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                 }
                                 break;
                             }
-                            else if(vchoice == 0){
+                            else{
+                                for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
+                                {
+                                    //" + cur.GetPriorityValueContainer().ValueType + @"* vc = new float(0);
+                                    ret->setValue(0, i);
+                                    //delete vc;
+                                }
                                 break;
                             }
-                            else if(vchoice != 0)
-                                continue;
+                            //else if(vchoice != 0)
+                            //    continue;
                         }*/
                         ";
 
@@ -393,7 +409,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                 cod_choice = 0;
                             for(auto fr: frs){
                                 index_to_dom[++dom_index] = (domain::" + sppair.Item1.Name + @"Frame*)fr;
-                                std::cout<<""(""<<std::to_string(index)<<"") ""<<fr->toString()<<""\n"";
+                                std::cout<<""(""<<std::to_string(dom_index)<<"") ""<<fr->toString()<<""\n"";
                             }
                             std::cin>>dom_choice;
 
@@ -402,12 +418,12 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                             std::unordered_map<int, domain::" + sppair.Item1.Name + @"Frame*> index_to_cod;
                             for(auto fr: frs){
                                 index_to_cod[++cod_index] = (domain::" + sppair.Item1.Name + @"Frame*)fr;
-                                std::cout<<""(""<<std::to_string(index)<<"") ""<<fr->toString()<<""\n"";
+                                std::cout<<""(""<<std::to_string(cod_index)<<"") ""<<fr->toString()<<""\n"";
                             }
                             std::cin>>cod_choice;
 
                             if(dom_choice >0 and dom_choice <= dom_index and cod_choice >0 and cod_choice <= cod_index){
-                                //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_index]);
+                                //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_choice]);
                                 " + (cur.HasValueContainer() ? "std::shared_ptr<" + cur.GetPriorityValueContainer().ValueType + "> cp[" + cur.GetPriorityValueContainer().ValueCount + @"];
                                 auto vals = ((coords::ValueCoords<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + @">*)coords)->getValues();
                                 for(int idx = 0;idx < " + cur.GetPriorityValueContainer().ValueCount + @";idx++){
@@ -415,7 +431,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                 }" : "") + @"
 
                                 auto ret = this->domain_->mk" + sppair.Item1.Name + sppair.Item2.Name + (cur.HasValueContainer() ?
-                                "<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + ">" : "<float,1>") + @"(sp, index_to_dom[dom_choice], index_to_cod[cod_index]"
+                                "<" + cur.GetPriorityValueContainer().ValueType + "," + cur.GetPriorityValueContainer().ValueCount + ">" : "<float,1>") + @"(sp, index_to_dom[dom_choice], index_to_cod[cod_choice]"
                                     + (cur.HasValueContainer() ?
                                         ",cp" : "") + @");
                                // delete[] cp;
@@ -439,6 +455,15 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                     //delete vc;
                                 }
                             }
+                            else{
+                                for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
+                                {
+                                    //" + cur.GetPriorityValueContainer().ValueType + @"* vc = new float(0);
+                                    ret->setValue(0, i);
+                                    //delete vc;
+                                }
+
+                            }
                         }
                         catch(std::exception ex){
                             return ret;
@@ -459,11 +484,17 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                 }
                                 break;
                             }
-                            else if(vchoice == 0){
+                            else{
+                                for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
+                                {
+                                    //" + cur.GetPriorityValueContainer().ValueType + @"* vc = new float(0);
+                                    ret->setValue(0, i);
+                                    //delete vc;
+                                }
                                 break;
                             }
-                            else if(vchoice != 0)
-                                continue;
+                            //else if(vchoice != 0)
+                            //    continue;
                         }*/
                                 ";
 
@@ -509,6 +540,14 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                     //delete vc;
                                 }
                             }
+                            else{
+                                for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
+                                {
+                                    //" + cur.GetPriorityValueContainer().ValueType + @"* vc = new float(0);
+                                    ret->setValue(0, i);
+                                    //delete vc;
+                                }
+                            }
                         }
                         catch(std::exception ex){
                             return ret;
@@ -529,11 +568,17 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                 }
                                 break;
                             }
-                            else if(vchoice == 0){
+                            else{
+                                for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
+                                {
+                                    //" + cur.GetPriorityValueContainer().ValueType + @"* vc = new float(0);
+                                    ret->setValue(0, i);
+                                    //delete vc;
+                                }
                                 break;
                             }
-                            else if(vchoice != 0)
-                                continue;
+                            //else if(vchoice != 0)
+                            //    continue;
                         }*/
                         ";
 
@@ -568,7 +613,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
     }
   
 ";
-                    getters += getterbegin +choices +  ifclose + "\n}";
+                    getters += getterbegin +choices +  ifclose + "\n return nullptr;}";
                     file += ifcase + detected;
                    // file += detected;
                     //file += choices;

@@ -198,7 +198,7 @@ public:
     };
 
     std::shared_ptr<ValueType>* getValues() const {
-        return (std::shared_ptr<ValueType>*)this->values_;
+        return const_cast<std::shared_ptr<ValueType>*>(this->values_);
     }
 
 protected:

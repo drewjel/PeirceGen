@@ -166,7 +166,7 @@ public:
     };
 
     std::shared_ptr<ValueType>* getValues() const {
-        return (std::shared_ptr<ValueType>*)this->values_;
+        return const_cast<std::shared_ptr<ValueType>*>(this->values_);
     }
 
 protected:
@@ -197,11 +197,13 @@ class REXPR;
 class LEXPR;
 class REALMATRIX4_EXPR;
 class REF_REALMATRIX4_VAR;
+class MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR;
 class REAL3_EXPR;
 class REF_REAL3_VAR;
 class ADD_REAL3_EXPR_REAL3_EXPR;
 class LMUL_REAL1_EXPR_REAL3_EXPR;
 class RMUL_REAL3_EXPR_REAL1_EXPR;
+class TMUL_REALMATRIX4_EXPR_REAL3_EXPR;
 class REAL3_LEXPR;
 class LREF_REAL3_VAR;
 class REAL1_EXPR;
@@ -513,6 +515,22 @@ protected:
 
 
 
+class MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR : public REALMATRIX4_EXPR {
+public:
+    MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(coords::REALMATRIX4_EXPR * operand_1, coords::REALMATRIX4_EXPR * operand_2);
+    virtual std::string toString() const override;
+    bool operator==(const REALMATRIX4_EXPR &other) const {
+        return ((Coords*)this)->state_ == ((Coords)other).state_;
+    };
+	coords::REALMATRIX4_EXPR *getOperand1(); 
+	coords::REALMATRIX4_EXPR *getOperand2(); 
+protected:
+	coords::REALMATRIX4_EXPR *operand1;
+	coords::REALMATRIX4_EXPR *operand2;
+};
+
+
+
 class REAL3_EXPR : public REXPR, public ValueCoords<float,3> {
 public:
     REAL3_EXPR(std::shared_ptr<float> value0,std::shared_ptr<float> value1,std::shared_ptr<float> value2) : ValueCoords < float, 3 >::ValueCoords({value0,value1,value2}) {};
@@ -585,6 +603,22 @@ public:
 protected:
 	coords::REAL3_EXPR *operand1;
 	coords::REAL1_EXPR *operand2;
+};
+
+
+
+class TMUL_REALMATRIX4_EXPR_REAL3_EXPR : public REAL3_EXPR {
+public:
+    TMUL_REALMATRIX4_EXPR_REAL3_EXPR(coords::REALMATRIX4_EXPR * operand_1, coords::REAL3_EXPR * operand_2,std::shared_ptr<float> value0,std::shared_ptr<float> value1,std::shared_ptr<float> value2);
+    virtual std::string toString() const override;
+    bool operator==(const REAL3_EXPR &other) const {
+        return ((Coords*)this)->state_ == ((Coords)other).state_;
+    };
+	coords::REALMATRIX4_EXPR *getOperand1(); 
+	coords::REAL3_EXPR *getOperand2(); 
+protected:
+	coords::REALMATRIX4_EXPR *operand1;
+	coords::REAL3_EXPR *operand2;
 };
 
 

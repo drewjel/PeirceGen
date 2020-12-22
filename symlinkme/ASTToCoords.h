@@ -77,6 +77,8 @@ public:
 
 	coords::REF_REALMATRIX4_VAR* mkREF_REALMATRIX4_VAR(const ast::REF_REALMATRIX4_VAR* ast, clang::ASTContext* c,coords::REALMATRIX4_VAR_IDENT* operand1);
 
+	coords::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* mkMUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(const ast::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* ast, clang::ASTContext* c,coords::REALMATRIX4_EXPR* operand1,coords::REALMATRIX4_EXPR* operand2);
+
 	coords::REF_REAL3_VAR* mkREF_REAL3_VAR(const ast::REF_REAL3_VAR* ast, clang::ASTContext* c,coords::REAL3_VAR_IDENT* operand1,std::shared_ptr<float> value0,std::shared_ptr<float> value1,std::shared_ptr<float> value2);
 
 	coords::ADD_REAL3_EXPR_REAL3_EXPR* mkADD_REAL3_EXPR_REAL3_EXPR(const ast::ADD_REAL3_EXPR_REAL3_EXPR* ast, clang::ASTContext* c,coords::REAL3_EXPR* operand1,coords::REAL3_EXPR* operand2,std::shared_ptr<float> value0,std::shared_ptr<float> value1,std::shared_ptr<float> value2);
@@ -84,6 +86,8 @@ public:
 	coords::LMUL_REAL1_EXPR_REAL3_EXPR* mkLMUL_REAL1_EXPR_REAL3_EXPR(const ast::LMUL_REAL1_EXPR_REAL3_EXPR* ast, clang::ASTContext* c,coords::REAL1_EXPR* operand1,coords::REAL3_EXPR* operand2,std::shared_ptr<float> value0,std::shared_ptr<float> value1,std::shared_ptr<float> value2);
 
 	coords::RMUL_REAL3_EXPR_REAL1_EXPR* mkRMUL_REAL3_EXPR_REAL1_EXPR(const ast::RMUL_REAL3_EXPR_REAL1_EXPR* ast, clang::ASTContext* c,coords::REAL3_EXPR* operand1,coords::REAL1_EXPR* operand2,std::shared_ptr<float> value0,std::shared_ptr<float> value1,std::shared_ptr<float> value2);
+
+	coords::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* mkTMUL_REALMATRIX4_EXPR_REAL3_EXPR(const ast::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* ast, clang::ASTContext* c,coords::REALMATRIX4_EXPR* operand1,coords::REAL3_EXPR* operand2,std::shared_ptr<float> value0,std::shared_ptr<float> value1,std::shared_ptr<float> value2);
 
 	coords::LREF_REAL3_VAR* mkLREF_REAL3_VAR(const ast::LREF_REAL3_VAR* ast, clang::ASTContext* c,coords::REAL3_VAR_IDENT* operand1,std::shared_ptr<float> value0,std::shared_ptr<float> value1,std::shared_ptr<float> value2);
 

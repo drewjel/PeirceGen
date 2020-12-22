@@ -15,6 +15,7 @@
 #include "ROSTFTimeMatcher.h"
 #include "ROSTFDurationMatcher.h"
 #include "ROSTFTransformMatcher.h"
+#include "ROSGeometryMsgsPointStampedMatcher.h"
 
 #include <string>
 
@@ -133,6 +134,16 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
         auto typestr = ((clang::QualType)_expr->getType()).getAsString();
         if(false){}
         
+        else if (typestr.find("geometry_msgs::PointStamped") != string::npos){
+            ROSGeometryMsgsPointStampedMatcher m{ this->context_, this->interp_};
+            m.setup();
+            m.visit(*_expr);
+            if(m.getChildExprStore()){
+                this->childExprStore_ = (clang::Stmt*)_expr;
+            }
+            return;
+        }
+            
         else if (typestr.find("ros::Duration") != string::npos){
             ROSTFDurationMatcher m{ this->context_, this->interp_};
             m.setup();
@@ -252,6 +263,34 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                 auto typestr = ((clang::QualType)vd->getType()).getAsString();
                 if(false){}
 
+                else if (typestr.find("geometry_msgs::PointStamped") != string::npos){
+                    interp_->mkREAL3_VAR_IDENT(vd);
+                    if (vd->hasInit())
+                    {
+                        ROSGeometryMsgsPointStampedMatcher m{ this->context_, this->interp_};
+                        m.setup();
+                        m.visit((*vd->getInit()));
+                        if (m.getChildExprStore())
+                        {
+                            interp_->mkDECL_REAL3_VAR_REAL3_EXPR(declStmt, vd, m.getChildExprStore());
+                            this->childExprStore_ =  (clang::Stmt*)declStmt;
+                            return;
+                        }
+                        else
+                        {
+                            interp_->mkDECL_REAL3_VAR(declStmt, vd);
+                            this->childExprStore_ =  (clang::Stmt*)declStmt;
+                            return;
+                        }
+                    }
+                    else
+                    {
+                        interp_->mkDECL_REAL3_VAR(declStmt, vd);
+                        this->childExprStore_ = (clang::Stmt*)declStmt;
+                        return;
+                    }
+                }
+            
                 else if (typestr.find("ros::Duration") != string::npos){
                     interp_->mkREAL1_VAR_IDENT(vd);
                     if (vd->hasInit())
@@ -516,6 +555,28 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                     auto typestr = ((clang::QualType)vd->getType()).getAsString();
                     if(false){}
                 
+                    else if(typestr.find("geometry_msgs::PointStamped") != string::npos){
+                        interp_->mkREAL3_VAR_IDENT(vd);
+                        if (vd->hasInit())
+                        {
+                            ROSGeometryMsgsPointStampedMatcher m{ this->context_, this->interp_};
+                            m.setup();
+                            m.visit((*vd->getInit()));
+                            if (m.getChildExprStore())
+                            {
+                                interp_->mkDECL_REAL3_VAR_REAL3_EXPR(declStmt, vd, m.getChildExprStore());
+                            }
+                            else
+                            {
+                                interp_->mkDECL_REAL3_VAR(declStmt, vd);
+                            }
+                        }
+                        else
+                        {
+                            interp_->mkDECL_REAL3_VAR(declStmt, vd);
+                        }
+                        anyfound = true;
+                    }
                     else if(typestr.find("ros::Duration") != string::npos){
                         interp_->mkREAL1_VAR_IDENT(vd);
                         if (vd->hasInit())
@@ -731,6 +792,15 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
     {
         auto typestr = ((clang::QualType)exprStmt->getType()).getAsString();
         
+        if(typestr.find("geometry_msgs::PointStamped") != string::npos){
+            ROSGeometryMsgsPointStampedMatcher m{ this->context_, this->interp_};
+            m.setup();
+            m.visit(*exprStmt);
+            if (m.getChildExprStore())
+                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
+                return;
+                
+        }
         if(typestr.find("ros::Duration") != string::npos){
             ROSTFDurationMatcher m{ this->context_, this->interp_};
             m.setup();

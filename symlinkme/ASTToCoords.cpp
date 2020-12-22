@@ -291,6 +291,24 @@ coords::REF_REALMATRIX4_VAR* ASTToCoords::mkREF_REALMATRIX4_VAR(const ast::REF_R
     return coord;
 }
 
+coords::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* ASTToCoords::mkMUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(const ast::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* ast, clang::ASTContext* c,coords::REALMATRIX4_EXPR* operand1,coords::REALMATRIX4_EXPR* operand2){
+    coords::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* coord = new coords::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(operand1,operand2);
+    ast::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* unconst_ast = const_cast<ast::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR*>(ast);
+    /*if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
+        clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
+    }*/
+    if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
+        clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
+    }
+    return coord;
+}
+
 coords::REF_REAL3_VAR* ASTToCoords::mkREF_REAL3_VAR(const ast::REF_REAL3_VAR* ast, clang::ASTContext* c,coords::REAL3_VAR_IDENT* operand1,std::shared_ptr<float> value0,std::shared_ptr<float> value1,std::shared_ptr<float> value2){
     coords::REF_REAL3_VAR* coord = new coords::REF_REAL3_VAR(operand1, value0, value1, value2);
     ast::REF_REAL3_VAR* unconst_ast = const_cast<ast::REF_REAL3_VAR*>(ast);
@@ -357,6 +375,27 @@ coords::LMUL_REAL1_EXPR_REAL3_EXPR* ASTToCoords::mkLMUL_REAL1_EXPR_REAL3_EXPR(co
 coords::RMUL_REAL3_EXPR_REAL1_EXPR* ASTToCoords::mkRMUL_REAL3_EXPR_REAL1_EXPR(const ast::RMUL_REAL3_EXPR_REAL1_EXPR* ast, clang::ASTContext* c,coords::REAL3_EXPR* operand1,coords::REAL1_EXPR* operand2,std::shared_ptr<float> value0,std::shared_ptr<float> value1,std::shared_ptr<float> value2){
     coords::RMUL_REAL3_EXPR_REAL1_EXPR* coord = new coords::RMUL_REAL3_EXPR_REAL1_EXPR(operand1,operand2, value0, value1, value2);
     ast::RMUL_REAL3_EXPR_REAL1_EXPR* unconst_ast = const_cast<ast::RMUL_REAL3_EXPR_REAL1_EXPR*>(ast);
+	//coord->setValue(value0,0);
+	//coord->setValue(value1,1);
+	//coord->setValue(value2,2);
+    /*if (auto dc = clang::dyn_cast<clang::NamedDecl>(unconst_ast)){
+        clang::NamedDecl* unconst_dc = const_cast<clang::NamedDecl*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideDecl2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Decl(coord, dc);     // Use Clang canonical addresses?
+    }*/
+    if (auto dc = clang::dyn_cast<clang::Stmt>(unconst_ast)){
+        clang::Stmt* unconst_dc = const_cast<clang::Stmt*>(dc);
+        setASTState(coord, unconst_dc, c);
+        overrideStmt2Coords(dc, coord);     // Use Clang canonical addresses? 
+        overrideCoords2Stmt(coord, dc);     // Use Clang canonical addresses?  
+    }
+    return coord;
+}
+
+coords::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* ASTToCoords::mkTMUL_REALMATRIX4_EXPR_REAL3_EXPR(const ast::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* ast, clang::ASTContext* c,coords::REALMATRIX4_EXPR* operand1,coords::REAL3_EXPR* operand2,std::shared_ptr<float> value0,std::shared_ptr<float> value1,std::shared_ptr<float> value2){
+    coords::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* coord = new coords::TMUL_REALMATRIX4_EXPR_REAL3_EXPR(operand1,operand2, value0, value1, value2);
+    ast::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* unconst_ast = const_cast<ast::TMUL_REALMATRIX4_EXPR_REAL3_EXPR*>(ast);
 	//coord->setValue(value0,0);
 	//coord->setValue(value1,1);
 	//coord->setValue(value2,2);

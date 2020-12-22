@@ -231,6 +231,7 @@ body
         if(false){return false;}" +
         Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
         + @"
+        else {return false;}
     };"));
                             return prodexistpreds + @"
     if(cxxMemberCallExpr_){
@@ -249,14 +250,14 @@ body
                 auto arg" + l + @"=cxxMemberCallExpr_->getArg(" + l++ + @"-1);
                 auto arg" + ++q + "str = ((clang::QualType)arg" + q + "->getType()).getAsString();\n") +
                 Peirce.Join("", prodArgs, p_ => @"
-                clang::Stmt* arg" + i++ + "stmt;\n")
+                clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
     +
     @"            
                 if (" + Peirce.Join(@" and 
                     ", prodArgs, p_ => "arg_decay_exist_predicates[\"" + raw + p_.TypeName + @"""](arg" + x++ + "str)") + @"){" +
      Peirce.Join("", prodArgs, p_ => {
          var retstr = @"
-                    if(false){" + m + @";}
+                    if(false){}
                     "
 + Peirce.Join(@"
                     ", p_.InheritGroup, p__ => "else if(arg" + y + @"str.find(""" + p__.TypeName + @""")!=string::npos){
@@ -321,6 +322,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     if(false){return false;}" +
         Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
         + @"
+    else { return false; }
     };"));
 
                             return prodexistpreds + @"
@@ -427,6 +429,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         if(false){ return false;}" +
            Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
            + @"
+        else { return false; }
     };"));
                             return prodexistpreds + @"
     if(cxxOperatorCallExpr_){
@@ -440,13 +443,13 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                 auto arg" + l + "=cxxOperatorCallExpr_->getArg(" + l++ + @");
                 auto arg" + q + "str = ((clang::QualType)arg" + q++ + "->getType()).getAsString();\n") +
              Peirce.Join("", prodArgs, p_ => @"
-                clang::Stmt* arg" + i++ + "stmt;\n")
+                clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
  + @"              
                 if (" + Peirce.Join(@" and 
                     ", prodArgs, p_ => "arg_decay_exist_predicates[\"" + raw + p_.TypeName + @"""](arg" + x++ + "str)") + @"){" +
      Peirce.Join("", prodArgs, p_ => {
          var retstr = @"
-                    if(false){" + m + @";}
+                    if(false){}
                     "
                    + Peirce.Join(@"
                     ", p_.InheritGroup, p__ =>
@@ -526,6 +529,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     " +
          Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
          + @"
+        else { return false;}
     };"));
                              var prodmatchpreds = string.Join("",
                                  prodArgs.Select(a => "\n\targ_decay_match_predicates[\"" + raw + ++j + @"""] = [=](std::string typenm){
@@ -541,7 +545,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         return prodexistpreds + @"
     if(cxxConstructExpr_ and cxxConstructExpr_->getNumArgs() == " + args.Length + @"){" +
      Peirce.Join("", prodArgs, p_ => @"
-        clang::Stmt* arg" + i++ + "stmt;\n")
+        clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
      +
      Peirce.Join("", prodArgs, p_ => @"
         auto arg" + l + "=cxxConstructExpr_->getArg(" + l++ + @");
@@ -553,7 +557,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
          Peirce.Join("\n", prodArgs, p_ => {
              var retstr =
              @"
-            if(false){" + m + ";}" + Peirce.Join(@"
+            if(false){}" + Peirce.Join(@"
             ", p_.InheritGroup, p__ => @"
             else if(arg" + y + @"str.find(""" + p__.TypeName + @""") != string::npos){
             "
@@ -618,7 +622,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         return prodexistpreds + @"
     if(cxxTemporaryObjectExpr_ and cxxTemporaryObjectExpr_->getNumArgs() == " + args.Length + @"){" +
      Peirce.Join("", prodArgs, p_ => @"
-        clang::Stmt* arg" + i++ + "stmt;\n")
+        clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
      +
      Peirce.Join("", prodArgs, p_ => @"
         auto arg" + l + "=cxxTemporaryObjectExpr_->getArg(" + l++ + @");
@@ -693,6 +697,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         if(false){return false;}" +
            Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
            + @"
+        else { return false; }
     };");
                                // int y = 0, m = 0;
                                 return prodexistpreds + @"
@@ -724,6 +729,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         if(false){return false;}" +
            Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
            + @"
+        else { return false; }
     };");
                                 //int y = 0, m = 0;
                                 return prodexistpreds + @"
@@ -760,6 +766,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         if(false){return false;}" +
            Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
            + @"
+        else { return false; }
     };");
                                 //int y = 0, m = 0;
                                 return prodexistpreds + @"
@@ -853,6 +860,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     if(false){return false;}" +
     Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
     + @"
+    else { return false; }
     };");
                          //int y = 0, m = 0;
                          return prodexistpreds+@"
@@ -891,6 +899,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         if(false){return false; }" +
     Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
     + @"
+        else { return false; } 
     };");
                          //int y = 0, m = 0;
                          return prodexistpreds+@"
@@ -940,6 +949,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         if(false){ return false; }" +
     Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
     + @"
+        else { return false; }
     };");
                          //int y = 0, m = 0;
                          return prodexistpreds+@"
@@ -983,6 +993,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         if(false){return false;}" +
     Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
     + @"
+        else { return false; }
     };");
                          //int y = 0, m = 0;
                          return prodexistpreds+@"
@@ -1027,6 +1038,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         if(false){return false;}" +
     Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
     + @"
+        else { return false; } 
     };");
                          //int y = 0, m = 0;
                          return prodexistpreds+@"

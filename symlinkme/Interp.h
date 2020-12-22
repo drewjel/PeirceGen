@@ -47,11 +47,13 @@ class REXPR;
 class LEXPR;
 class REALMATRIX4_EXPR;
 class REF_REALMATRIX4_VAR;
+class MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR;
 class REAL3_EXPR;
 class REF_REAL3_VAR;
 class ADD_REAL3_EXPR_REAL3_EXPR;
 class LMUL_REAL1_EXPR_REAL3_EXPR;
 class RMUL_REAL3_EXPR_REAL1_EXPR;
+class TMUL_REALMATRIX4_EXPR_REAL3_EXPR;
 class REAL3_LEXPR;
 class LREF_REAL3_VAR;
 class REAL1_EXPR;
@@ -391,8 +393,8 @@ public:
     virtual std::string toString() const override;
 
     //friend class Interp;  
-    virtual std::string toEvalString() const { return "";}; 
-    virtual std::string toAlgebraString() const { return "";};             
+    virtual std::string toEvalString() const{ return "";}; 
+    virtual std::string toAlgebraString() const{ return "";};             
 };
 
 
@@ -411,14 +413,29 @@ protected:
 
 
 
+class MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR : public REALMATRIX4_EXPR {
+public:
+    MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(coords::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* coords, domain::DomainObject* dom ,interp::REALMATRIX4_EXPR *operand1,interp::REALMATRIX4_EXPR *operand2 );
+    virtual std::string toString() const override ;
+    virtual std::string toEvalString() const override; 
+    virtual std::string toAlgebraString() const override; 
+    
+    
+protected:
+	interp::REALMATRIX4_EXPR *operand_1;
+	interp::REALMATRIX4_EXPR *operand_2;
+};
+
+
+
 class REAL3_EXPR : public REXPR {
 public:
     REAL3_EXPR(coords::REAL3_EXPR* coords, domain::DomainObject* dom);
     virtual std::string toString() const override;
 
     //friend class Interp;  
-    virtual std::string toEvalString() const { return "";}; 
-    virtual std::string toAlgebraString() const { return "";};             
+    virtual std::string toEvalString() const{ return "";}; 
+    virtual std::string toAlgebraString() const{ return "";};             
 };
 
 
@@ -482,14 +499,29 @@ protected:
 
 
 
+class TMUL_REALMATRIX4_EXPR_REAL3_EXPR : public REAL3_EXPR {
+public:
+    TMUL_REALMATRIX4_EXPR_REAL3_EXPR(coords::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* coords, domain::DomainObject* dom ,interp::REALMATRIX4_EXPR *operand1,interp::REAL3_EXPR *operand2 );
+    virtual std::string toString() const override ;
+    virtual std::string toEvalString() const override; 
+    virtual std::string toAlgebraString() const override; 
+    
+    
+protected:
+	interp::REALMATRIX4_EXPR *operand_1;
+	interp::REAL3_EXPR *operand_2;
+};
+
+
+
 class REAL3_LEXPR : public LEXPR {
 public:
     REAL3_LEXPR(coords::REAL3_LEXPR* coords, domain::DomainObject* dom);
     virtual std::string toString() const override;
 
     //friend class Interp;  
-    virtual std::string toEvalString() const { return "";}; 
-    virtual std::string toAlgebraString() const { return "";};             
+    virtual std::string toEvalString() const{ return "";}; 
+    virtual std::string toAlgebraString() const{ return "";};             
 };
 
 
@@ -514,8 +546,8 @@ public:
     virtual std::string toString() const override;
 
     //friend class Interp;  
-    virtual std::string toEvalString() const { return "";}; 
-    virtual std::string toAlgebraString() const { return "";};             
+    virtual std::string toEvalString() const{ return "";}; 
+    virtual std::string toAlgebraString() const{ return "";};             
 };
 
 
@@ -612,8 +644,8 @@ public:
     virtual std::string toString() const override;
 
     //friend class Interp;  
-    virtual std::string toEvalString() const { return "";}; 
-    virtual std::string toAlgebraString() const { return "";};             
+    virtual std::string toEvalString() const override{ return "";}; 
+    virtual std::string toAlgebraString() const override{ return "";};             
 };
 
 
@@ -654,8 +686,8 @@ public:
     virtual std::string toString() const override;
 
     //friend class Interp;  
-    virtual std::string toEvalString() const { return "";}; 
-    virtual std::string toAlgebraString() const { return "";};             
+    virtual std::string toEvalString() const override{ return "";}; 
+    virtual std::string toAlgebraString() const override{ return "";};             
 };
 
 
@@ -680,8 +712,8 @@ public:
     virtual std::string toString() const override;
 
     //friend class Interp;  
-    virtual std::string toEvalString() const { return "";}; 
-    virtual std::string toAlgebraString() const { return "";};             
+    virtual std::string toEvalString() const override{ return "";}; 
+    virtual std::string toAlgebraString() const override{ return "";};             
 };
 
 

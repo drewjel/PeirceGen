@@ -111,6 +111,11 @@ void eraseDECL_REALMATRIX4_VAR(coords::DECL_REALMATRIX4_VAR* key, domain::Domain
 	coords::REF_REALMATRIX4_VAR* getREF_REALMATRIX4_VAR(domain::DomainObject* d) const;
 void eraseREF_REALMATRIX4_VAR(coords::REF_REALMATRIX4_VAR* key, domain::DomainObject* val);
 
+	void putMUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(coords::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* key, domain::DomainObject* val);
+	domain::DomainObject* getMUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(coords::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* c) const;
+	coords::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* getMUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(domain::DomainObject* d) const;
+void eraseMUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(coords::MUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR* key, domain::DomainObject* val);
+
 	domain::DomainObject* getREAL3_EXPR(coords::REAL3_EXPR* c) const;
 	coords::REAL3_EXPR* getREAL3_EXPR(domain::DomainObject* d) const;
 
@@ -133,6 +138,11 @@ void eraseLMUL_REAL1_EXPR_REAL3_EXPR(coords::LMUL_REAL1_EXPR_REAL3_EXPR* key, do
 	domain::DomainObject* getRMUL_REAL3_EXPR_REAL1_EXPR(coords::RMUL_REAL3_EXPR_REAL1_EXPR* c) const;
 	coords::RMUL_REAL3_EXPR_REAL1_EXPR* getRMUL_REAL3_EXPR_REAL1_EXPR(domain::DomainObject* d) const;
 void eraseRMUL_REAL3_EXPR_REAL1_EXPR(coords::RMUL_REAL3_EXPR_REAL1_EXPR* key, domain::DomainObject* val);
+
+	void putTMUL_REALMATRIX4_EXPR_REAL3_EXPR(coords::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* key, domain::DomainObject* val);
+	domain::DomainObject* getTMUL_REALMATRIX4_EXPR_REAL3_EXPR(coords::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* c) const;
+	coords::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* getTMUL_REALMATRIX4_EXPR_REAL3_EXPR(domain::DomainObject* d) const;
+void eraseTMUL_REALMATRIX4_EXPR_REAL3_EXPR(coords::TMUL_REALMATRIX4_EXPR_REAL3_EXPR* key, domain::DomainObject* val);
 
 	domain::DomainObject* getREAL3_LEXPR(coords::REAL3_LEXPR* c) const;
 	coords::REAL3_LEXPR* getREAL3_LEXPR(domain::DomainObject* d) const;

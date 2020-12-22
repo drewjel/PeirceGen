@@ -671,7 +671,7 @@ void Interpretation::buildFrame(){
                         std::cout<<""Enter Name:\n"";
                         std::string name;
                         std::cin>>name;
-                        domain::MeasurementSystem* ms;
+                        //domain::MeasurementSystem* ms;
                         auto mss = this->domain_->getMeasurementSystems();
                         choice = 0;
                         std::unordered_map<int, domain::MeasurementSystem*> index_to_ms;
@@ -794,7 +794,7 @@ void Interpretation::printVarTable(){ " +
 
   for(int i = 1; i<=sz;i++)
   {
-    coords::Coords* coords = this->index2coords_[i];
+    //coords::Coords* coords = this->index2coords_[i];
     if(false){}
 " +
         string.Join("\n", ParsePeirce.Instance.Grammar.Productions.Where(p_ => p_.ProductionType == Grammar.ProductionType.Capture || p_.ProductionType == Grammar.ProductionType.CaptureSingle).SelectMany(p_ => (p_.Cases.Where(c_ => c_.CaseType != Grammar.CaseType.Passthrough).Select(c_ => @"
@@ -877,7 +877,7 @@ void Interpretation::updateVarTable(){
         string.Join("\n", ParsePeirce.Instance.Grammar.Productions.Where(p_ => p_.ProductionType == Grammar.ProductionType.Capture || p_.ProductionType == Grammar.ProductionType.CaptureSingle).SelectMany(p_ => (p_.Cases.Where(c_ => c_.CaseType != Grammar.CaseType.Passthrough).Select(c_ => @"
                 else if(auto dc = dynamic_cast<coords::" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"*>(this->index2coords_[choice])){
                     auto dom = this->coords2dom_->get" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc);
-                    auto interp = this->coords2interp_->get" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc);
+                    //auto interp = this->coords2interp_->get" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc);
                     //this->coords2dom_->erase" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc, dom);
                     //this->interp2domain_->erase" + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(interp, dom);
                     auto upd_dom = this->oracle_->getInterpretationFor" + p_.Name + @"(dc, dom);

@@ -320,7 +320,7 @@ namespace PeirceGen
                     Location = spl[0] == "P" ? Interp.Fix.Pre:
                                 spl[0] == "I" ? Interp.Fix.In :
                                  Interp.Fix.Post,
-                     Symbol = spl[1]
+                     Symbol = spl[1] == "S" ? " " : spl[1]
                               ,
                       PrintType_ = spl[2] == "C" ? Interp.PrintType.Child : 
                       spl[2] == "T" ? Interp.PrintType.FrameChange : 

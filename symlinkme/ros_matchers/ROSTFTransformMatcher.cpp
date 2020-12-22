@@ -37,6 +37,9 @@ void ROSTFTransformMatcher::setup(){
 	
 		StatementMatcher cxxFunctionalCastExpr_=cxxFunctionalCastExpr().bind("CXXFunctionalCastExpr");
 		localFinder_.addMatcher(cxxFunctionalCastExpr_,this);
+	
+		StatementMatcher cxxOperatorCallExpr_=cxxOperatorCallExpr().bind("CXXOperatorCallExpr");
+		localFinder_.addMatcher(cxxOperatorCallExpr_,this);
 };
 
 void ROSTFTransformMatcher::run(const MatchFinder::MatchResult &Result){
@@ -57,6 +60,8 @@ void ROSTFTransformMatcher::run(const MatchFinder::MatchResult &Result){
 	auto declRefExpr_ = Result.Nodes.getNodeAs<clang::DeclRefExpr>("DeclRefExpr");
 	
 	auto cxxFunctionalCastExpr_ = Result.Nodes.getNodeAs<clang::CXXFunctionalCastExpr>("CXXFunctionalCastExpr");
+	
+	auto cxxOperatorCallExpr_ = Result.Nodes.getNodeAs<clang::CXXOperatorCallExpr>("CXXOperatorCallExpr");
     std::unordered_map<std::string,std::function<bool(std::string)>> arg_decay_exist_predicates;
     std::unordered_map<std::string,std::function<std::string(std::string)>> arg_decay_match_predicates;
     this->childExprStore_ = nullptr;
@@ -83,6 +88,7 @@ void ROSTFTransformMatcher::run(const MatchFinder::MatchResult &Result){
 	arg_decay_exist_predicates["memberExpr_tf::Transform"] = [=](std::string typenm){
     if(false){return false;}
 		else if(typenm.find("tf::Transform") != string::npos){ return true; }
+    else { return false; }
     };
     if(memberExpr_){
         auto inner = memberExpr_->getBase();
@@ -102,6 +108,7 @@ void ROSTFTransformMatcher::run(const MatchFinder::MatchResult &Result){
 	arg_decay_exist_predicates["implicitCastExpr_tf::Transform"] = [=](std::string typenm){
         if(false){return false; }
 		else if(typenm.find("tf::Transform") != string::npos){ return true; }
+        else { return false; } 
     };
 
     if (implicitCastExpr_)
@@ -128,6 +135,7 @@ void ROSTFTransformMatcher::run(const MatchFinder::MatchResult &Result){
 	arg_decay_exist_predicates["cxxBindTemporaryExpr_tf::Transform"] = [=](std::string typenm){
         if(false){ return false; }
 		else if(typenm.find("tf::Transform") != string::npos){ return true; }
+        else { return false; }
     };
     if (cxxBindTemporaryExpr_)
     {
@@ -148,6 +156,7 @@ void ROSTFTransformMatcher::run(const MatchFinder::MatchResult &Result){
 	arg_decay_exist_predicates["materializeTemporaryExpr_tf::Transform"] = [=](std::string typenm){
         if(false){return false;}
 		else if(typenm.find("tf::Transform") != string::npos){ return true; }
+        else { return false; }
     };
     if (materializeTemporaryExpr_)
         {
@@ -169,6 +178,7 @@ void ROSTFTransformMatcher::run(const MatchFinder::MatchResult &Result){
 	arg_decay_exist_predicates["parenExpr_tf::Transform"] = [=](std::string typenm){
         if(false){return false;}
 		else if(typenm.find("tf::Transform") != string::npos){ return true; }
+        else { return false; } 
     };
     if (parenExpr_)
     {
@@ -225,6 +235,63 @@ void ROSTFTransformMatcher::run(const MatchFinder::MatchResult &Result){
             }
 
     }
+	
+	arg_decay_exist_predicates["CXXOperatorCallExpr(tf::Transform,tf::Transform).*@$.MULtf::Transform"] = [=](std::string typenm){
+        if(false){ return false;}
+		else if(typenm.find("tf::Transform") != string::npos){ return true; }
+        else { return false; }
+    };
+	arg_decay_exist_predicates["CXXOperatorCallExpr(tf::Transform,tf::Transform).*@$.MULtf::Transform"] = [=](std::string typenm){
+        if(false){ return false;}
+		else if(typenm.find("tf::Transform") != string::npos){ return true; }
+        else { return false; }
+    };
+    if(cxxOperatorCallExpr_){
+        auto decl_ = cxxOperatorCallExpr_->getCalleeDecl();
+        if(auto dc = clang::dyn_cast<clang::NamedDecl>(decl_)){
+            auto name = dc->getNameAsString();
+
+            if(name.find("*") != string::npos){
+                auto arg0=cxxOperatorCallExpr_->getArg(0);
+                auto arg0str = ((clang::QualType)arg0->getType()).getAsString();
+
+                auto arg1=cxxOperatorCallExpr_->getArg(1);
+                auto arg1str = ((clang::QualType)arg1->getType()).getAsString();
+
+                clang::Stmt* arg0stmt = nullptr;
+
+                clang::Stmt* arg1stmt = nullptr;
+              
+                if (arg_decay_exist_predicates["CXXOperatorCallExpr(tf::Transform,tf::Transform).*@$.MULtf::Transform"](arg0str) and 
+                    arg_decay_exist_predicates["CXXOperatorCallExpr(tf::Transform,tf::Transform).*@$.MULtf::Transform"](arg1str)){
+                    if(false){}
+                    else if(arg0str.find("tf::Transform") != string::npos){
+            
+                        ROSTFTransformMatcher arg0m{this->context_,this->interp_};
+                        arg0m.setup();
+                        arg0m.visit(*arg0);
+                        arg0stmt = arg0m.getChildExprStore();
+                    }
+                    if(false){}
+                    else if(arg1str.find("tf::Transform") != string::npos){
+            
+                        ROSTFTransformMatcher arg1m{this->context_,this->interp_};
+                        arg1m.setup();
+                        arg1m.visit(*arg1);
+                        arg1stmt = arg1m.getChildExprStore();
+                    }
+                    if(arg0stmt and arg1stmt){
+                        interp_->mkMUL_REALMATRIX4_EXPR_REALMATRIX4_EXPR(cxxOperatorCallExpr_,arg0stmt,arg1stmt);
+                        
+                        this->childExprStore_ = (clang::Stmt*)cxxOperatorCallExpr_;
+                        return;
+                    }
+            
+                }
+            }
+        }
+    }
+
 	
     if(cxxConstructExpr_ and cxxConstructExpr_->getNumArgs() == 0){
         if(true ){

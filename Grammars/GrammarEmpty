@@ -37,6 +37,12 @@ _DECLARE INTERP:D :=
 	DECL +REAL3_VAR <$NAME$LOC> <B,⊢=⊢,Command> | ~ Declaration : Declare R3 Var;
 	DECL +REALMATRIX4_VAR <$NAME$LOC> <B,⊢=⊢,Command> ~ Declaration : Declare Matrix 4x4 Var;
 
+--_ASSIGN INTERP:D :=
+--	ASNR1 +REAL1_VAR +REAL1_EXPR <$NAME$LOC> <B,⊢=⊢,D> | ~ Declaration : Declare R1 Var = R1 Expression;
+--	ASNR3 +REAL3_VAR +REAL3_EXPR <$NAME$LOC> <B,⊢=⊢,D> | ~ Declaration : Declare R3 Var = R3 Expression;
+--	ASNM4 +REALMATRIX4_VAR +REALMATRIX4_EXPR <$NAME$LOC> <B,⊢=⊢,D> ~ Declaration : Declare Matrix 4x4 Var = Matrix 4x4 Expression;
+	
+
 	
 _REXPR :=
 	=REAL3_EXPR | ~An R-Value Expression in R3
@@ -48,6 +54,7 @@ _LEXPR :=
 
 +REALMATRIX4_EXPR INTERP:E :=
 	REF .REALMATRIX4_VAR <$OP$NAME$LOC> <P,%,C> | ~Var Expression : Matrix 4 Variable As R-Value
+	MUL +REALMATRIX4_EXPR +REALMATRIX4_EXPR <$OP$LOC> <P,⬝,B> | ~Multiplication Expression : R4 Expression * R4 Expression
 	=REALMATRIX4_LITERAL 
 
 +REAL3_EXPR VALUE(float,3) INTERP:E := 
@@ -55,6 +62,7 @@ _LEXPR :=
 	ADD +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,+ᵥ,B> | ~Addition Expression : R3 Expression + R3 Expression
 	LMUL +REAL1_EXPR +REAL3_EXPR <$OP$LOC> <P,•,B> | ~Multiplication Expression : R1 Expression * R3 Expression
 	RMUL +REAL3_EXPR +REAL1_EXPR <$OP$LOC> <P,•,B> | ~Multiplication Expression : R1 Expression * R3 Expression
+	TMUL +REALMATRIX4_EXPR +REAL3_EXPR <$OP$LOC> <P,⬝,B> | ~Multiplication Expression : R4 Matrix Expression * R3 Expression
 	=REAL3_LITERAL
 
 +REAL3_LEXPR VALUE(float,3) :=
@@ -197,6 +205,7 @@ tf::Vector3 ROSTFVector3Matcher REAL3_EXPR
 		CXXOperatorCallExpr(tf::Vector3,tf::Vector3).+@$.ADD
 		CXXOperatorCallExpr(tf::Vector3,double).*@$.RMUL
 		CXXOperatorCallExpr(double,tf::Vector3).*@$.LMUL
+		CXXOperatorCallExpr(tf::Transform,tf::Vector3).*@$.TMUL
     }
 }
 
@@ -237,6 +246,28 @@ tf::Transform ROSTFTransformMatcher REALMATRIX4_EXPR
 		CXXConstructExpr()@REALMATRIX4_LITERAL.?
 		--CXXConstructExpr(tf::Quaternion,tf::Vector3)@REALMATRIX4_LITERAL.?
 		--CXXConstructExpr(tf::Matrix3x3,tf::Vector3)@REALMATRIX4_LITERAL.?
-		--CXXOperatorCallExpr(tf::Transform,tf::Transform).*@$.MUL
+		CXXOperatorCallExpr(tf::Transform,tf::Transform).*@$.MUL
 	}
 }
+
+geometry_msgs::PointStamped ROSGeometryMsgsPointStampedMatcher REAL3_EXPR
+{
+	Capture: 
+	{
+		CXXConstructExpr()@REAL3_LITERAL.?
+	}
+}
+
+--void tf::TransformListener ROSTransformListenerMatcher DECLARE
+--{
+
+--}
+
+
+--void ROSVoidMatcher ASSIGN
+--{
+--	Capture:
+--	{
+--		CXXMemberCallExpr(Itf::TransformListener,).transformPoint@$.FROMR3
+--	}
+--}

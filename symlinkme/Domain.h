@@ -931,9 +931,9 @@ public:
     }
 
     ~ValueObject() {
-        for(auto v : this->values_){
+        //for(auto v : this->values_){
            // delete v;
-        }
+        //}
     }
 
     ValueObject(ValueType* values...) : DomainObject() {
