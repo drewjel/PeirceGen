@@ -824,7 +824,7 @@ void Interpretation::printVarTable(){ " +
         p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"*>(this->index2coords_[i])){
         auto dom = (domain::DomainContainer*)this->coords2dom_->get" 
 + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc);
-        std::cout<<""Index: ""<<i<<"",""<<" + (string.IsNullOrEmpty(c_.Description) ? "" : @"""" + c_.Description + @",""<<") + @"dc->state_->code_<<"", SourceLocation:""<<dc->getSourceLoc()<<""\nExisting Interpretation: ""<<dom->toString()<<std::endl;
+        std::cout<<""Index: ""<<i<<"",""<<" + (string.IsNullOrEmpty(c_.Description) ? "" : @"""" + c_.Description + @",""<<") + @"dc->state_->code_<<"", \n\t""<<dc->getSourceLoc()<<""\nExisting Interpretation: ""<<dom->toString()<<std::endl;
 
     }"))))  : "{");
 

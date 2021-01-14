@@ -59,11 +59,11 @@ std::string Coords::getSourceLoc() const {
       FullLocation = context_->getFullLoc(clang_decl_->getLocation());
     }*/
     //std::cout<<this->toString()<<std::endl;
-    std::string retval = "\nBegin: line ";
+    std::string retval = "Begin: line ";
     retval += std::to_string(this->state_->begin_line_no_);
     retval +=  ", column ";
     retval +=  std::to_string(this->state_->begin_col_no_);
-    retval += "\nEnd: line ";
+    retval += "\tEnd: line ";
     retval += std::to_string(this->state_->end_line_no_);
     retval += ", column ";
     retval += std::to_string(this->state_->end_col_no_);
