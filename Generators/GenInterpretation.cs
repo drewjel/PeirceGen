@@ -49,11 +49,17 @@ Establish interpretations for AST nodes:
 //#include <g3log/g3log.hpp>
 #include <unordered_map>
 #include <memory>
+#include <vector>
 using namespace interp;
+
+
+std::vector<string> *choice_buffer;
 
 Interpretation::Interpretation() { 
     domain_ = new domain::Domain();
     oracle_ = new oracle::Oracle_AskAll(domain_); 
+    choice_buffer = new std::vector<string>();
+    oracle_->choice_buffer = choice_buffer;
     /* 
     context_ can only be set later, once Clang starts parse
     */
@@ -497,8 +503,9 @@ void Interpretation::buildSpace(){
         std::cout<<""Available types of Spaces to build:\n"";
         " +
         string.Join("\n\t\t", (ParsePeirce.Instance.Spaces.Select(sp_=> "std::cout <<\"(\"<<std::to_string(++index)<<\")\"<<\"" +sp_.Name + "\\n\";")))
-        +   @"
+        + @"
         std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
     }
     index = 0;
     " + 
@@ -514,6 +521,7 @@ void Interpretation::buildSpace(){
             domain::Space *base1,*base2;
             std::cout<<""Enter Name (string):\n"";
             std::cin>>name;
+        choice_buffer->push_back(name);
             int index = 0;
             std::unordered_map<int, domain::Space*> index_to_sp;
         " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp__ => "\n\tauto " + sp__.Name + @"s = domain_->get" + sp__.Name + @"Spaces();
@@ -531,6 +539,7 @@ void Interpretation::buildSpace(){
             " + sp_.Name + @"label1st:
             std::cout<<""Select First Base Space : ""<<""\n"";
             std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
             if(choice >0 and choice <=index){
                 base1 = index_to_sp[choice];
             }
@@ -540,6 +549,7 @@ void Interpretation::buildSpace(){
             " + sp_.Name + @"label2nd:
             std::cout<<""Select Second Base Space : ""<<""\n"";
             std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
             if(choice >0 and choice <=index){
                 base2 = index_to_sp[choice];
             }
@@ -564,12 +574,14 @@ void Interpretation::buildSpace(){
             std::string name;
             std::cout<<""Enter Name (string):\n"";
             std::cin>>name;
+        choice_buffer->push_back(name);
             "
             +
             (sp_.DimensionType == Space.DimensionType_.ANY ? @"
             int dimension;
             std::cout<<""Enter Dimension (integer):\n"";
             std::cin>>dimension;
+        choice_buffer->push_back(std::to_string(dimension));
             auto sp = this->domain_->mk" + sp_.Name + @"(name, name, dimension);
     " : @"
             auto sp = this->domain_->mk" + sp_.Name + @"(name, name);")
@@ -597,10 +609,12 @@ void Interpretation::buildMeasurementSystem(){
         std::cout<<""(2) Imperial Measurement System\n"";
         int choice = 0;
         std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
         if(choice == 1){
             std::cout<<""Enter reference name:"";
             std::string nm;
             std::cin>>nm;
+        choice_buffer->push_back(nm);
             auto ms = this->domain_->mkSIMeasurementSystem(nm);
             auto ims = new interp::MeasurementSystem(ms);
             interp2domain_->putMeasurementSystem(ims, ms);
@@ -610,6 +624,7 @@ void Interpretation::buildMeasurementSystem(){
             std::cout<<""Enter reference name:"";
             std::string nm;
             std::cin>>nm;
+        choice_buffer->push_back(nm);
             auto ms = this->domain_->mkImperialMeasurementSystem(nm);
             auto ims = new interp::MeasurementSystem(ms);
             interp2domain_->putMeasurementSystem(ims, ms);
@@ -641,6 +656,7 @@ void Interpretation::buildFrame(){
         }")) + @"
         int choice;
         std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
         if(choice >0 and choice <=index){
             auto chosen = index_to_sp[choice];
             std::cout<<""Building Frame For : ""<<chosen->toString()<<""\n"";
@@ -651,6 +667,7 @@ void Interpretation::buildFrame(){
                 std::cout<<"" (1) Alias For Existing Frame \n"";
                 std::cout<<"" (2) Derived Frame From Existing Frame \n"";
                 std::cin>>frameType;
+        choice_buffer->push_back(std::to_string(frameType));
 
                 if(frameType == 1){
                     auto frames = chosen->getFrames();
@@ -665,12 +682,14 @@ void Interpretation::buildFrame(){
                     }
                     choice = 0;
                     std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
 
                     if(choice > 0 and choice<= index){
                         auto aliased = index_to_fr[choice];
                         std::cout<<""Enter Name:\n"";
                         std::string name;
                         std::cin>>name;
+        choice_buffer->push_back(name);
                         //domain::MeasurementSystem* ms;
                         auto mss = this->domain_->getMeasurementSystems();
                         choice = 0;
@@ -682,6 +701,7 @@ void Interpretation::buildFrame(){
                             index_to_ms[index] = m;
                         }
                         std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
                         if(choice>0 and choice<=index){
                         auto cms = index_to_ms[choice];
 
@@ -718,11 +738,13 @@ void Interpretation::buildFrame(){
                     }
                     choice = 0;
                     std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
                     if(choice > 0 and choice<= index){
                         auto parent = index_to_fr[index];
                         std::cout<<""Enter Name of Frame:\n"";
                         std::string name;
                         std::cin>>name;
+        choice_buffer->push_back(name);
 " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ =>
     {
 
@@ -802,7 +824,7 @@ void Interpretation::printVarTable(){ " +
         p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"*>(this->index2coords_[i])){
         auto dom = (domain::DomainContainer*)this->coords2dom_->get" 
 + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc);
-        std::cout<<""Index: ""<<i<<"",""<<" + (string.IsNullOrEmpty(c_.Description) ? "" : @"""" + c_.Description + @",""<<") + @"dc->toString()<<"", SourceLocation:""<<dc->getSourceLoc()<<""\nExisting Interpretation: ""<<dom->toString()<<std::endl;
+        std::cout<<""Index: ""<<i<<"",""<<" + (string.IsNullOrEmpty(c_.Description) ? "" : @"""" + c_.Description + @",""<<") + @"dc->state_->code_<<"", SourceLocation:""<<dc->getSourceLoc()<<""\nExisting Interpretation: ""<<dom->toString()<<std::endl;
 
     }"))))  : "{");
 
@@ -811,6 +833,24 @@ void Interpretation::printVarTable(){ " +
   }
 
 }//make a printable, indexed table of variables that can have their types assigned by a user or oracle
+
+
+void Interpretation::printChoices(){
+    aFile* f = new aFile;
+    std::string name = ""/peirce/annotations.txt"";
+    char * name_cstr = new char [name.length()+1];
+    strcpy (name_cstr, name.c_str());
+    f->name = name_cstr;
+    std::cout<<""Generating annotations file ... "" << name_cstr << ""\n"";
+    f->file = fopen(f->name, ""w"");
+    for(auto choice: *choice_buffer){
+        fputs((choice + ""\n"").c_str(), f->file);
+    }
+
+    fclose(f->file);
+    delete f->name;
+    delete f;
+};
 
 //void Interpretation::printVarTable(){}//print the indexed variable table for the user
 //while loop where user can select a variable by index and provide a physical type for that variable
@@ -835,8 +875,8 @@ void Interpretation::updateVarTable(){
         std::cout<<""Enter 0 to print the Variable Table again.\n"";
         std::cout << ""Enter the index of a Variable to update its physical type. Enter "" << sz << "" to exit and check."" << std::endl;
         std::cin >> choice;
+        choice_buffer->push_back(std::to_string(choice));
         std::cout << std::to_string(choice) << ""\n"";
-
 
         while (((choice >= -6 and choice <= 0) || this->index2coords_.find(choice) != this->index2coords_.end()) && choice != sz)
         {
@@ -892,6 +932,7 @@ void Interpretation::updateVarTable(){
                     }
                 }")))) + @"
             }
+            printChoices();
             checker_->CheckPoll();
             std::cout << ""********************************************\n"";
             std::cout << ""********************************************\n"";
@@ -910,12 +951,14 @@ void Interpretation::updateVarTable(){
             std::cout<<""Enter 0 to print the Variable Table again.\n"";
             std::cout << ""Enter the index of a Variable to update its physical type. Enter "" << sz << "" to exit and check."" << std::endl;
             std::cin >> choice;
+        choice_buffer->push_back(std::to_string(choice));
             std::cout << std::to_string(choice) << ""\n"";
         }
     }
     catch(std::exception ex){
         std::cout<<ex.what()<<""\n"";
     }
+    printChoices();
 };
 
 void remap(coords::Coords c, domain::DomainObject newinterp){
@@ -1086,6 +1129,7 @@ public:
     void mkVarTable();//make a printable, indexed table of variables that can have their types assigned by a user or oracle
     void printVarTable();//print the indexed variable table for the user
     void updateVarTable();//while loop where user can select a variable by index and provide a physical type for that variable
+    void printChoices();//to replay annotation sessions
     void remap(coords::Coords c, domain::DomainObject newinterp);
 
     /*

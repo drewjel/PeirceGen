@@ -55,6 +55,7 @@ virtual domain::Frame* Oracle_AskAll::getFrameInterpretation(){
         }")) + @"
         int choice;
         std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
         if(choice >0 and choice <=index){
             auto chosen = index_to_sp[choice];
             std::cout<<""Building Frame For : ""<<chosen->toString()<<""\n"";
@@ -70,11 +71,13 @@ virtual domain::Frame* Oracle_AskAll::getFrameInterpretation(){
             }
             choice = 0;
             std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
             if(choice > 0 and choice<= index){
                 auto parent = index_to_fr[index];
                 std::cout<<""Enter Name of Frame:\n"";
                 std::string name;
                 std::cin>>name;
+        choice_buffer->push_back(name);
                 auto child = domain_->mkFrame(name, chosen, parent);
                 interp::Frame* interp = new interp::Frame(child);
                 interp2domain_->putFrame(interp, child);
@@ -99,6 +102,7 @@ virtual domain::Space* Oracle_AskAll::getSpaceInterpretation(){
         string.Join("\n\t\t", (ParsePeirce.Instance.Spaces.Select(sp_ => "std::cout <<\"(\"<<std::to_string(++index)<<\")\"<<\"" + sp_.Name + "\\n\";")))
         + @"
         std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
     }
     index = 0;
     " +
@@ -114,6 +118,7 @@ virtual domain::Space* Oracle_AskAll::getSpaceInterpretation(){
             domain::Space *base1,*base2;
             std::cout<<""Enter Name (string):\n"";
             std::cin>>name;
+        choice_buffer->push_back(name);
             int index = 0;
             std::unordered_map<int, domain::Space*> index_to_sp;
         " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp__ => "\n\tauto " + sp__.Name + @"s = domain_->get" + sp__.Name + @"Spaces();
@@ -131,6 +136,7 @@ virtual domain::Space* Oracle_AskAll::getSpaceInterpretation(){
             " + sp_.Name + @"label1st:
             std::cout<<""Select First Base Space : ""<<""\n"";
             std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
             if(choice >0 and choice <=index){
                 base1 = index_to_sp[choice];
             }
@@ -140,6 +146,7 @@ virtual domain::Space* Oracle_AskAll::getSpaceInterpretation(){
             " + sp_.Name + @"label2nd:
             std::cout<<""Select Second Base Space : ""<<""\n"";
             std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
             if(choice >0 and choice <=index){
                 base2 = index_to_sp[choice];
             }
@@ -165,12 +172,14 @@ virtual domain::Space* Oracle_AskAll::getSpaceInterpretation(){
             std::string name;
             std::cout<<""Enter Name (string):\n"";
             std::cin>>name;
+        choice_buffer->push_back(name);
             "
             +
             (sp_.DimensionType == Space.DimensionType_.ANY ? @"
             int dimension;
             std::cout<<""Enter Dimension (integer):\n"";
             std::cin>>dimension;
+        choice_buffer->push_back(std::to_string(dimension));
             auto sp = this->domain_->mk" + sp_.Name + @"(name, name, dimension);
     " : @"
             auto sp = this->domain_->mk" + sp_.Name + @"(name, name);")
@@ -206,6 +215,7 @@ virtual domain::Space* Oracle_AskAll::getSpaceInterpretation(){
         }
         int choice = 0;
         std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
         if(choice > 0 and choice <= sz){
             return frames[choice];
         }
@@ -315,6 +325,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                 
                     }
                     std::cin>>sp_choice;
+        choice_buffer->push_back(std::to_string(sp_choice));
                     if(sp_choice >0 and sp_choice <= index){
                         auto sp = index_to_sp[sp_choice];" +
                             (sppair.Item2.HasFrame ? @"
@@ -339,6 +350,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                         try{
                             int vchoice = 0;
                             std::cin >> vchoice;
+        choice_buffer->push_back(std::to_string(vchoice));
                             if (vchoice == 1)
                             {
                                 for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
@@ -346,6 +358,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                     std::cout << ""Enter Value "" << i << "":\n"";
                                     " + cur.GetPriorityValueContainer().ValueType + @" val = 4;
                                     std::cin >> val;
+        choice_buffer->push_back(std::to_string(val));
                                     //" + cur.GetPriorityValueContainer().ValueType + @"* vc = new float(valvc);
                                     ret->setValue(val, i);
                                     //delete vc;
@@ -369,11 +382,13 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                             std::cout<<""Provide Values For Interpretation? (1) Yes (2) No\n"";
                             int vchoice = 0;
                             std::cin>>vchoice;
+        choice_buffer->push_back(std::to_string(vchoice));
                             if(vchoice == 1){
                                 for(int i = 0; i<" + cur.GetPriorityValueContainer().ValueCount + @";i++){
                                     std::cout<<""Enter Value ""<<i<<"":\n"";
                                     " + cur.GetPriorityValueContainer().ValueType + @" valvc;
                                     std::cin>>valvc;
+        choice_buffer->push_back(std::to_string(valvc));
                                     " + cur.GetPriorityValueContainer().ValueType + @"* vc;
                                     ret->setValue(vc, i);
                                     delete vc;
@@ -412,6 +427,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                 std::cout<<""(""<<std::to_string(dom_index)<<"") ""<<fr->toString()<<""\n"";
                             }
                             std::cin>>dom_choice;
+        choice_buffer->push_back(std::to_string(dom_choice));
 
                         
                             std::cout<<""Enter Frame of Transform Co-Domain : \n"";
@@ -421,6 +437,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                 std::cout<<""(""<<std::to_string(cod_index)<<"") ""<<fr->toString()<<""\n"";
                             }
                             std::cin>>cod_choice;
+        choice_buffer->push_back(std::to_string(cod_choice));
 
                             if(dom_choice >0 and dom_choice <= dom_index and cod_choice >0 and cod_choice <= cod_index){
                                 //auto mapsp = this->domain_->mkMapSpace(sp, index_to_dom[dom_choice], index_to_cod[cod_choice]);
@@ -443,6 +460,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                         try{
                             int vchoice = 0;
                             std::cin >> vchoice;
+        choice_buffer->push_back(std::to_string(vchoice));
                             if (vchoice > 1)
                             {
                                 for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
@@ -450,6 +468,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                     std::cout << ""Enter Value "" << i << "":\n"";
                                     " + cur.GetPriorityValueContainer().ValueType + @" val = 4;
                                     std::cin >> val;
+        choice_buffer->push_back(std::to_string(val));
                                     //" + cur.GetPriorityValueContainer().ValueType + @"* vc = new float(valvc);
                                     ret->setValue(val, i);
                                     //delete vc;
@@ -473,11 +492,13 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                             std::cout<<""Provide Values For Interpretation? (1) Yes (2) No\n"";
                             int vchoice = 0;
                             std::cin>>vchoice;
+        choice_buffer->push_back(std::to_string(vchoice));
                             if(vchoice == 1){
                                 for(int i = 0; i<" + cur.GetPriorityValueContainer().ValueCount + @";i++){
                                     std::cout<<""Enter Value ""<<i<<"":\n"";
                                     " + cur.GetPriorityValueContainer().ValueType + @" valvc;
                                     std::cin>>valvc;
+        choice_buffer->push_back(std::to_string(valvc));
                                     " + cur.GetPriorityValueContainer().ValueType + @"* vc;
                                     ret->setValue(vc, i);
                                     delete vc;
@@ -528,6 +549,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                         try{
                             int vchoice = 0;
                             std::cin >> vchoice;
+        choice_buffer->push_back(std::to_string(vchoice));
                             if (vchoice == 1)
                             {
                                 for (int i = 0; i < " + cur.GetPriorityValueContainer().ValueCount + @"; i++)
@@ -535,6 +557,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                     std::cout << ""Enter Value "" << i << "":\n"";
                                     " + cur.GetPriorityValueContainer().ValueType + @" val = 4;
                                     std::cin >> val;
+        choice_buffer->push_back(std::to_string(val));
                                     //" + cur.GetPriorityValueContainer().ValueType + @"* vc = new float(valvc);
                                     ret->setValue(val, i);
                                     //delete vc;
@@ -557,11 +580,13 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                             std::cout<<""Provide Values For Interpretation? (1) Yes (2) No\n"";
                             int vchoice = 0;
                             std::cin>>vchoice;
+        choice_buffer->push_back(std::to_string(vchoice));
                             if(vchoice == 1){
                                 for(int i = 0; i<" + cur.GetPriorityValueContainer().ValueCount + @";i++){
                                     std::cout<<""Enter Value ""<<i<<"":\n"";
                                     " + cur.GetPriorityValueContainer().ValueType + @" valvc;
                                     std::cin>>valvc;
+        choice_buffer->push_back(std::to_string(valvc));
                                     " + cur.GetPriorityValueContainer().ValueType + @"* vc;
                                     ret->setValue(vc, i);
                                     delete vc;
@@ -604,6 +629,7 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
 
                     var ifclose = @"
     std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
     if(choice < 1 or choice > " + j + @") {
         goto choose;
     } else {
@@ -665,6 +691,7 @@ var p = @"
 
 #include ""Oracle.h""
 #include ""Domain.h""
+#include <vector>
 
 namespace oracle{
 
@@ -774,6 +801,7 @@ class Oracle {
 public:
    // virtual domain::Frame* getFrameInterpretation();
    // virtual domain::Space* getSpaceInterpretation();
+    std::vector<string> *choice_buffer;
 
     ";
             var file = header;

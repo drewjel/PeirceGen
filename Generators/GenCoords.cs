@@ -83,6 +83,7 @@ namespace coords
         std::string file_name,
         std::string file_path,
         std::string name,
+        std::string code,
         int begin_line_no,
         int begin_col_no,
         int end_line_no,
@@ -94,6 +95,7 @@ namespace coords
         std::string file_path_;
 
         std::string name_; //only used for Decl. possibly subclass this, or else this property is unused elsewhere
+        std::string code_;
 
         int begin_line_no_;
         int begin_col_no_;
@@ -474,11 +476,12 @@ ASTState::ASTState(
     std::string file_name,
     std::string file_path,
     std::string name,
+    std::string code,
     int begin_line_no,
     int begin_col_no,
     int end_line_no,
     int end_col_no) 
-    : file_id_{file_id}, file_name_{file_name}, file_path_{file_path}, name_{name}, begin_line_no_{begin_line_no}, begin_col_no_{begin_col_no}, end_line_no_{end_line_no}, end_col_no_{end_col_no} {}
+    : file_id_{file_id}, file_name_{file_name}, file_path_{file_path}, name_{name}, code_{code}, begin_line_no_{begin_line_no}, begin_col_no_{begin_col_no}, end_line_no_{end_line_no}, end_col_no_{end_col_no} {}
 
 //Coords::Coords(){
 //}
@@ -505,11 +508,11 @@ std::string Coords::getSourceLoc() const {
       FullLocation = context_->getFullLoc(clang_decl_->getLocation());
     }*/
     //std::cout<<this->toString()<<std::endl;
-    std::string retval = ""Begin: line "";
+    std::string retval = ""\nBegin: line "";
     retval += std::to_string(this->state_->begin_line_no_);
     retval +=  "", column "";
     retval +=  std::to_string(this->state_->begin_col_no_);
-    retval += "" End: line "";
+    retval += ""\nEnd: line "";
     retval += std::to_string(this->state_->end_line_no_);
     retval += "", column "";
     retval += std::to_string(this->state_->end_col_no_);

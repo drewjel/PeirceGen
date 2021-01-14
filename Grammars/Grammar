@@ -440,10 +440,11 @@ tf::Vector3 ROSTFVector3Matcher REAL3_EXPR
 	Capture:
     {	
 		CXXMemberCallExpr(tf::Vector3).absolute@$.UNOP
-        CXXMemberCallExpr(tf::Vector3,tf::Vector3).cross@$.BINOP
+        CXXMemberCallExpr(tf::Vector3,tf::Vector3).cross@$.CROSS
 		CXXMemberCallExpr(tf::Vector3).normalized@$.UNOP
+		CXXMemberCallExpr(tfScalar)
 		--CXXMemberCallExpr(tf::Vector3).lerp@+. !!NOT SUPPORTED YET
-		CXXOperatorCallExpr(tf::Vector3,tf::Vector3).*@$.CROSS
+		--CXXOperatorCallExpr(tf::Vector3,tf::Vector3).*@$.CROSS
 		CXXOperatorCallExpr(tf::Vector3,tfScalar).*@$.MUL
 		CXXOperatorCallExpr(tf::Vector3,tfScalar)./@$.DIV
 		CXXOperatorCallExpr(tf::Vector3,tf::Vector3).-@$.SUB

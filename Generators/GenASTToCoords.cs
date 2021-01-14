@@ -49,12 +49,20 @@ void ASTToCoords::setASTState(coords::Coords* coords, clang::Stmt* stmt, clang::
     auto range = stmt->getSourceRange();
     auto begin = c->getFullLoc(range.getBegin());
     auto end = c->getFullLoc(range.getEnd());
-
+    clang::LangOptions lopt;
+    clang::SourceLocation b = c->getSourceManager().getSpellingLoc(range.getBegin());//(d->getLocStart()), _e(d->getLocEnd());
+    clang::SourceLocation e = c->getSourceManager().getSpellingLoc(range.getEnd());
+    //auto sm = c->getSourceManager();
+    auto code = std::string(c->getSourceManager().getCharacterData(b),
+        c->getSourceManager().getCharacterData(e)-c->getSourceManager().getCharacterData(b));
+    //std::cout<<code<<""\n"";
+    code = code == """" ? ""No Source Snip Available"" : code;
     coords->state_ = new coords::ASTState(
         """",
         """",
         """",
         (clang::dyn_cast<clang::DeclRefExpr>(stmt)) ? (clang::dyn_cast<clang::DeclRefExpr>(stmt))->getDecl()->getNameAsString() : """",
+        code,
         begin.getSpellingLineNumber(),
         begin.getSpellingColumnNumber(),
         end.getSpellingLineNumber(),
@@ -81,12 +89,20 @@ void ASTToCoords::setASTState(coords::Coords* coords, clang::Decl* decl, clang::
     auto range = decl->getSourceRange();
     auto begin = c->getFullLoc(range.getBegin());
     auto end = c->getFullLoc(range.getEnd());
-
+    clang::LangOptions lopt;
+    clang::SourceLocation b = c->getSourceManager().getSpellingLoc(range.getBegin());//(d->getLocStart()), _e(d->getLocEnd());
+    clang::SourceLocation e = c->getSourceManager().getSpellingLoc(range.getEnd());//(clang::Lexer::getLocForEndOfToken(_e, 0, c->getSourceManager(), lopt));
+    //auto sm = c->getSourceManager();
+    auto code = std::string(c->getSourceManager().getCharacterData(b),
+        c->getSourceManager().getCharacterData(e)-c->getSourceManager().getCharacterData(b));
+    //std::cout<<code<<""\n"";
+    code = code == """" ? ""No Source Snip Available"" : code;
     coords->state_ = new coords::ASTState(
         """",
         """",
         """",
         (clang::dyn_cast<clang::NamedDecl>(decl)) ? (clang::dyn_cast<clang::NamedDecl>(decl))->getNameAsString() : """",
+        code,
         begin.getSpellingLineNumber(),
         begin.getSpellingColumnNumber(),
         end.getSpellingLineNumber(),
@@ -330,6 +346,7 @@ coords::" + pcase.Name + @"* ASTToCoords::mk" + pcase.Name + "(const ast::" + pc
     //ast::" + pcase.Name + "* unconst_ast = const_cast<ast::" + pcase.Name + @"*>(ast);
 
     coord->state_ = new coords::ASTState(
+        """",
         """",
         """",
         """",
