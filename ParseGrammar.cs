@@ -381,6 +381,17 @@ namespace PeirceGen
 
             var matcherconfig = remaining_config.ToList();
 
+
+            Console.WriteLine("PRODUCTIONS:");
+            foreach (var prod in Instance.Grammar.Productions)
+            {
+                Console.WriteLine("\t" + prod.Name);
+                foreach (var pcase in prod.Cases)
+                {
+                    Console.WriteLine("\t\t--" + pcase.Name);
+                }
+            }
+
             ParseMatchers.ParseRaw(matcherconfig);
         }
     
@@ -413,7 +424,7 @@ namespace PeirceGen
                         continue;
                     else if (curCase == null && curProd != null)
                     {
-                        var captionmatch = Regex.Match(fixedline, @"([^~]*)((?:~)((\w|\s)*))?");
+                        var captionmatch = Regex.Match(fixedline, @"([^~]*)((?:~)((.)*))?");
 
 
                         var toks = captionmatch.Groups[1].Value.Split(new string[] { " " }, StringSplitOptions.RemoveEmptyEntries).ToList().Select(tok_ => tok_.Trim()).ToList();
@@ -572,6 +583,9 @@ namespace PeirceGen
                                 interpType = interpTypeStr == "D" ? Grammar.Production.InterpType.Decl
                                         : interpTypeStr == "E" ? Grammar.Production.InterpType.Expr :
                                         interpTypeStr == "V" ? Grammar.Production.InterpType.Var :
+                                        interpTypeStr == "W" ? Grammar.Production.InterpType.While :
+                                        interpTypeStr == "T" ? Grammar.Production.InterpType.TryCatch :
+                                        interpTypeStr == "F" ? Grammar.Production.InterpType.Func : 
                                         Grammar.Production.InterpType.Unk;
                             }
                         }
@@ -647,8 +661,10 @@ namespace PeirceGen
                         {
                             t = Instance.Grammar.Productions.Where(p_ => p_.Name == Grammar.TrimProductionType(pref)).ToList();
                             Console.WriteLine(pcase.Name + " " + pref);
+                            var trimmed = Grammar.TrimProductionType(pref);
                             try
                             {
+                                //var trimmed = Grammar.TrimProductionType(pref);
                                 pcase.Productions.Add(Instance.Grammar.Productions.Single(p_ => p_.Name == Grammar.TrimProductionType(pref)));
                             }
                             catch(Exception ex)

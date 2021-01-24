@@ -46,6 +46,40 @@ using namespace ast2coords;
 
 void ASTToCoords::setASTState(coords::Coords* coords, clang::Stmt* stmt, clang::ASTContext* c)
 {
+    
+    if(auto dc = clang::dyn_cast<clang::CXXUnresolvedConstructExpr>(stmt)){
+
+        auto begin = c->getFullLoc(dc->getLParenLoc());
+        auto end = c->getFullLoc(dc->getRParenLoc());
+        clang::LangOptions lopt;
+        clang::SourceLocation b = c->getSourceManager().getSpellingLoc(dc->getLParenLoc());//(d->getLocStart()), _e(d->getLocEnd());
+        clang::SourceLocation e = c->getSourceManager().getSpellingLoc(dc->getRParenLoc());
+        //auto sm = c->getSourceManager();
+        auto code = std::string(c->getSourceManager().getCharacterData(b),
+        c->getSourceManager().getCharacterData(e)-c->getSourceManager().getCharacterData(b));
+        //std::cout<<code<<""\n"";
+        code = code == """" ? ""No Source Snip Available"" : code;
+
+        if (auto dc = clang::dyn_cast<clang::DeclRefExpr>(stmt))
+        {
+            code = dc->getFoundDecl()->getNameAsString();
+        }
+        
+        code = ""INJECTED : "" + code;
+
+        coords->state_ = new coords::ASTState(
+            """",
+            """",
+            """",
+            (clang::dyn_cast<clang::DeclRefExpr>(stmt)) ? (clang::dyn_cast<clang::DeclRefExpr>(stmt))->getDecl()->getNameAsString() : """",
+            code,
+            begin.getSpellingLineNumber(),
+            begin.getSpellingColumnNumber(),
+            end.getSpellingLineNumber(),
+            end.getSpellingColumnNumber()
+        );
+        return;
+    }
     auto range = stmt->getSourceRange();
     auto begin = c->getFullLoc(range.getBegin());
     auto end = c->getFullLoc(range.getEnd());
@@ -57,6 +91,12 @@ void ASTToCoords::setASTState(coords::Coords* coords, clang::Stmt* stmt, clang::
         c->getSourceManager().getCharacterData(e)-c->getSourceManager().getCharacterData(b));
     //std::cout<<code<<""\n"";
     code = code == """" ? ""No Source Snip Available"" : code;
+
+    if(auto dc = clang::dyn_cast<clang::DeclRefExpr>(stmt))
+    {
+        code = dc->getFoundDecl()->getNameAsString();
+    }
+
     coords->state_ = new coords::ASTState(
         """",
         """",
@@ -85,8 +125,11 @@ void ASTToCoords::setASTState(coords::Coords* coords, clang::Stmt* stmt, clang::
 }
 
 void ASTToCoords::setASTState(coords::Coords* coords, clang::Decl* decl, clang::ASTContext* c)
-{
-    auto range = decl->getSourceRange();
+{ 
+    auto parent = c->getParents(*decl)[0].get<clang::Stmt>();
+    clang::SourceRange range;
+    if(parent) range = parent->getSourceRange();
+    else range = decl->getSourceRange();
     auto begin = c->getFullLoc(range.getBegin());
     auto end = c->getFullLoc(range.getEnd());
     clang::LangOptions lopt;

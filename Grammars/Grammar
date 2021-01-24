@@ -239,7 +239,7 @@ iREALMATRIX4_VAR VALUE(float,16) :=
 	vIDENT <$NAME> <P,!I,Var> ~Integer Variable Identifier
 
 _BOOL_LITERAL VALUE(bool,1,true) :=
-	BOOL_LIT
+	BOOL_LIT ~ Boolean Literal
 
 _INT_LITERAL VALUE(int,1,0) :=
 	INT_LIT

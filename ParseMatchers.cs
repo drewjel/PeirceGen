@@ -24,6 +24,9 @@ namespace PeirceGen
         public Grammar.Production DefaultProduction { get; set; }
         public Grammar.Case DefaultCase { get; set; }
 
+        public bool HasDefaultMatchers { get; set; }
+        public bool SuppressCaptureEscape { get; set; }
+
         public string GetIncludes()
         {
             var allprods = new List<MatcherProduction>(this.InheritGroup);
@@ -47,9 +50,13 @@ namespace PeirceGen
 
         public Grammar.Case SearchForDecl(bool withInit)
         {
-            var declareProd = ParsePeirce.Instance.Grammar.Productions.Single(p_=>p_.Name.ToLower().Contains("declare"));
+            var declareProd = ParsePeirce.Instance.Grammar.Productions.SingleOrDefault(p_=>p_.Name.ToLower().Contains("declare"));
 
-            var withInitProd = declareProd.Cases.Single(c_ => c_.Productions.Exists(p__ => p__ == this.GrammarType));
+            if (declareProd == null) return default(Grammar.Case);
+
+            var withInitProd = declareProd.Cases.SingleOrDefault(c_ => c_.Productions.Exists(p__ => p__ == this.GrammarType));
+
+            if (withInitProd == null) return default(Grammar.Case);
 
             if (withInit)
             {
@@ -98,8 +105,13 @@ namespace PeirceGen
         {
             var toks = query.Split('.');
 
+            if (toks[0] == "DEFAULT")
+                return production.DefaultCase;
+
             var gramprod = toks[0] == "$" ?
-                production.GrammarType : ParsePeirce.Instance.Grammar.Productions.Single(p_ => p_.Name == toks[0]);
+                production.GrammarType :
+                toks[0] == "DEFAULT" ? production.DefaultProduction 
+                : ParsePeirce.Instance.Grammar.Productions.Single(p_ => p_.Name == toks[0]);
             int result;
             int i = 0;
             var test = default(Grammar.Case);
@@ -123,10 +135,10 @@ namespace PeirceGen
             {
                 try
                 {
-                    test = gramprod.Cases.First(pcase => pcase.Name.StartsWith(toks[1] + "_"));
+                    test = gramprod.Cases.First(pcase => pcase.Name.StartsWith(toks[1]));
 
-                    return gramprod.Cases.Single(pcase => pcase.Name.StartsWith(toks[1] + "_") &&args.Count == pcase.Productions.Count &&(i=0)==0 
-                        && args.TrueForAll(arg => arg.GrammarType == pcase.Productions[i++]));
+                    return gramprod.Cases.Single(pcase => pcase.Name.StartsWith(toks[1]) &&args.Count == pcase.Productions.Count &&(i=0)==0 
+                        /*&& args.TrueForAll(arg => arg.GrammarType == pcase.Productions[i++])*/);
                 }
                 catch(Exception ex)
                 {
@@ -152,6 +164,8 @@ namespace PeirceGen
 
             public List<MatcherProduction> Args;
             // public Func<MatcherProduction, string> 
+
+            public int CustomMatcher { get; set; }
 
             public override bool Equals(object obj)
             {
@@ -189,6 +203,15 @@ body
             var retval = new List<MatcherCase>();
             try
             {
+                var overridesplit = raw.Split(' ');
+                var custommatcher = -1;
+                if(overridesplit.Length > 1)
+                {
+                    custommatcher = int.Parse(overridesplit[1]); 
+                }
+
+                raw = overridesplit[0];
+
 
                 var asttype = raw.Split('@')[0];
                 var grammartype = raw.Split('@')[1];
@@ -203,10 +226,11 @@ body
                 if (asttoks[0].Contains("CXXMemberCallExpr"))
                 {
                     var args = asttoks[0].Substring(asttoks[0].IndexOf('(') + 1, asttoks[0].Length - asttoks[0].IndexOf('(') - 2).Split(',');
-
+                    //var method = asttoks[0].Substring(0, asttoks[0].IndexOf('('));
                     var numargs = args.Length;
 
-                    var prodArgs = args.Select(a => allProductions.Single(p_ => p_.TypeName == a)).ToList();
+                    //var prodArgs = args.Select(a => allProductions.Single(p_ => p_.TypeName == a)).ToList();
+                    var prodArgs = args.Where(a => a != "IGNORE").Select(a => allProductions.Single(p_ => p_.TypeName == a)).ToList();
                     var targetCase = MatcherProduction.FindCase(production, grammartype, prodArgs);
 
                     retval.Add(new MatcherCase()
@@ -225,42 +249,38 @@ body
                         {
 
                             int i = 0, //j = 0, k = 0,
-                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0,  q = 0;
+                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0, q = 0;
                             var prodexistpreds = string.Join("",
                                 prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-        Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
+        Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm == \"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
         + @"
         else {return false;}
     };"));
-                            return prodexistpreds + @"
+                            if(custommatcher == 2)
+                            {
+                                return prodexistpreds + @"
     if(cxxMemberCallExpr_){
         auto decl_ = cxxMemberCallExpr_->getMethodDecl();
         if(auto dc = clang::dyn_cast<clang::NamedDecl>(decl_)){
             auto name = dc->getNameAsString();
             
 
-            if(name.find(""" + asttoks[1] + @""") != string::npos){"
-    +
-    Peirce.Join("", prodArgs, p_ => l == 0 ? @"
-                auto arg" + l++ + @" = cxxMemberCallExpr_->getImplicitObjectArgument();
-                auto arg0str = ((clang::QualType)arg0->getType()).getAsString();
-                " :
-        @"
-                auto arg" + l + @"=cxxMemberCallExpr_->getArg(" + l++ + @"-1);
-                auto arg" + ++q + "str = ((clang::QualType)arg" + q + "->getType()).getAsString();\n") +
-                Peirce.Join("", prodArgs, p_ => @"
-                clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
-    +
-    @"            
-                if (" + Peirce.Join(@" and 
-                    ", prodArgs, p_ => "arg_decay_exist_predicates[\"" + raw + p_.TypeName + @"""](arg" + x++ + "str)") + @"){" +
-     Peirce.Join("", prodArgs, p_ => {
+            if((name==""transformPoint"" or name == ""const transformPoint"" or name == ""class transformPoint"")/*name.find(""transformPoint"") != string::npos*/){
+                auto arg0 = cxxMemberCallExpr_->getArg(0 + 1);
+        auto arg0str = ((clang::QualType)arg0->getType()).getAsString();
+
+        auto arg1 = clang::dyn_cast<clang::VarDecl>(clang::dyn_cast<clang::DeclRefExpr>(cxxMemberCallExpr_->getArg(1 + 1))->getFoundDecl());
+
+        clang::Stmt* arg0stmt = nullptr;
+                if (true" + (prodArgs.Count > 0 ? " and " : " ") + Peirce.Join(@" and 
+                    ", prodArgs.Take(1), p_ => "arg_decay_exist_predicates[\"" + raw + p_.TypeName + @"""](arg" + x++ + "str)") + @"){" +
+     Peirce.Join("", prodArgs.Take(1), p_ => {
          var retstr = @"
                     if(false){}
                     "
 + Peirce.Join(@"
-                    ", p_.InheritGroup, p__ => "else if(arg" + y + @"str.find(""" + p__.TypeName + @""")!=string::npos){
+                    ", p_.InheritGroup, p__ => "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + "\"/*arg" + y + @"str.find(""" + p__.TypeName + @""")!=string::npos*/){
                         "
 +
 p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
@@ -274,12 +294,226 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
          return retstr;
      })
      + @"
-                    if(" +
+                    if(true" + (prodArgs.Count > 0 ? " and " : " ") +
+     Peirce.Join(@" and 
+                        ", prodArgs.Take(1), p_ => "arg" + n++ + "stmt")
+     + @"){
+                        clang::CXXUnresolvedConstructExpr 
+                            *inject_trans = clang::CXXUnresolvedConstructExpr::CreateEmpty(*this->context_, 0),
+                            *inject_mul = clang::CXXUnresolvedConstructExpr::CreateEmpty(*this->context_,2);
+                        clang::SourceRange sr = cxxMemberCallExpr_->getSourceRange();
+                        inject_trans->setLParenLoc(sr.getBegin());
+                        inject_mul->setLParenLoc(sr.getBegin());
+                        inject_trans->setRParenLoc(sr.getEnd());
+                        inject_mul->setRParenLoc(sr.getEnd());
+
+                        interp_->mkREALMATRIX4_EMPTY(inject_trans);
+                        interp_->mkTMUL_REALMATRIX4_EXPR_REAL3_EXPR(inject_mul, inject_trans, arg0stmt);
+
+                        interp_->mkASNR3_REAL3_VAR_REAL3_EXPR(cxxMemberCallExpr_,arg1,inject_mul);
+                        this->childExprStore_ = (clang::Stmt*)cxxMemberCallExpr_;
+                        return;
+                    }
+            
+                }
+            }
+        }
+    }
+";
+                }
+
+
+                            return prodexistpreds + @"
+    if(cxxMemberCallExpr_){
+        auto decl_ = cxxMemberCallExpr_->getMethodDecl();
+        if(auto dc = clang::dyn_cast<clang::NamedDecl>(decl_)){
+            auto name = dc->getNameAsString();
+            
+
+            if(" + (asttoks[1] == "IGNORE" ? "true" : @"(name==""" + asttoks[1] + @""" or name == ""const " + asttoks[1] + @""" or name == ""class " + asttoks[1] + @""")") + @"/*name.find(""" + asttoks[1] + @""") != string::npos*/){"
+    +
+    Peirce.Join("", prodArgs, p_ => l == 0 ? @"
+                auto arg" + l++ + @" = cxxMemberCallExpr_->getImplicitObjectArgument();
+                auto arg0str = ((clang::QualType)arg0->getType()).getAsString();
+                " :
+        @"
+                auto arg" + l + @"=cxxMemberCallExpr_->getArg(" + l++ + @"-1);
+                auto arg" + ++q + "str = ((clang::QualType)arg" + q + "->getType()).getAsString();\n") +
+                Peirce.Join("", prodArgs, p_ => @"
+                clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
+    +
+    @"            
+                if (true" + (prodArgs.Count > 0 ? " and " : " ") + Peirce.Join(@" and 
+                    ", prodArgs, p_ => "arg_decay_exist_predicates[\"" + raw + p_.TypeName + @"""](arg" + x++ + "str)") + @"){" +
+     Peirce.Join("", prodArgs, p_ => {
+         var retstr = @"
+                    if(false){}
+                    "
++ Peirce.Join(@"
+                    ", p_.InheritGroup, p__ => "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + "\"/*arg" + y + @"str.find(""" + p__.TypeName + @""")!=string::npos*/){
+                        "
++
+p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
+                        arg" + m + @"m.setup();
+                        arg" + m + @"m.visit(*arg" + m + @");
+                        arg" + m + @"stmt = arg" + m + @"m.getChildExprStore();
+                    }");
+
+         m++;
+         y++;
+         return retstr;
+     })
+     + @"
+                    if(true" + (prodArgs.Count > 0 ? " and " : " ") +
      Peirce.Join(@" and 
                         ", prodArgs, p_ => "arg" + n++ + "stmt")
      + @"){
-                        interp_->mk" + targetCase.Name + "(cxxMemberCallExpr_," + Peirce.Join(",", prodArgs, p_ => "arg" + o++ + "stmt") + @");
+                        interp_->mk" + targetCase.Name + "(cxxMemberCallExpr_" + (prodArgs.Count > 0 ? "," : "") + Peirce.Join(",", prodArgs, p_ => "arg" + o++ + "stmt") + @");
                         this->childExprStore_ = (clang::Stmt*)cxxMemberCallExpr_;
+                        return;
+                    }
+            
+                }
+            }
+        }
+    }
+";
+                        }
+                    });
+                }
+                else if (asttoks[0].StartsWith("CallExpr"))
+                {
+                    var args = asttoks[0].Substring(asttoks[0].IndexOf('(') + 1, asttoks[0].Length - asttoks[0].IndexOf('(') - 2).Split(',');
+                    //var method = asttoks[0].Substring(0, asttoks[0].IndexOf('('));
+                    var numargs = args.Length;
+
+                    //var prodArgs = args.Select(a => allProductions.Single(p_ => p_.TypeName == a)).ToList();
+                    var prodArgs = args.Where(a => a != "IGNORE").Select(a => allProductions.Single(p_ => p_.TypeName == a)).ToList();
+                    var targetCase = MatcherProduction.FindCase(production, grammartype, prodArgs);
+
+
+                    retval.Add(new MatcherCase()
+                    {
+                        ClangName = "CallExpr",
+                        LocalName = "callExpr_",
+                        Args = prodArgs,
+                        BuildMatcher = (prod) => "callExpr().bind(\"CallExpr\")",
+                        BuildCallbackHandler = (prod) =>
+                        {
+
+                            int i = 0, //j = 0, k = 0,
+                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0, q = 0;
+                            var prodexistpreds = string.Join("",
+                                prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.TypeName + @"""] = [=](std::string typenm){
+        if(false){return false;}" +
+        Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm == \"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
+        + @"
+        else {return false;}
+    };"));
+                            //sorry future self or replacement
+                            if(custommatcher == 1)
+                            {
+                                return prodexistpreds + @"
+    if(callExpr_){
+        auto decl_ = callExpr_->getDirectCallee();
+        if(auto dc = clang::dyn_cast<clang::NamedDecl>(decl_)){
+            auto name = dc->getNameAsString();
+            
+
+            if(" + (asttoks[1] == "IGNORE" ? "true" : @"(name.find(""" + asttoks[1] + @""") != string::npos)") + @"/*name.find(""" + asttoks[1] + @""") != string::npos*/){"
+    +
+    Peirce.Join("", prodArgs, p_ => true ? @"
+                auto arg" + l + @"=callExpr_->getArg(" + l++ + @");
+                auto arg" + q + "str = ((clang::QualType)arg" + q++ + "->getType()).getAsString();\n" : "") +
+                Peirce.Join("", prodArgs, p_ => @"
+                clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
+    +
+    @"            
+                if (true" + (prodArgs.Count > 0 ? " and " : " ") + Peirce.Join(@" and 
+                    ", prodArgs, p_ => "arg_decay_exist_predicates[\"" + raw + p_.TypeName + @"""](arg" + x++ + "str)") + @"){" +
+     Peirce.Join("", prodArgs, p_ =>
+     {
+         var retstr = @"
+                    if(false){}
+                    "
++ Peirce.Join(@"
+                    ", p_.InheritGroup, p__ => "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + "\"/*arg" + y + @"str.find(""" + p__.TypeName + @""")!=string::npos*/){
+                        "
++
+p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
+                        arg" + m + @"m.setup();
+                        arg" + m + @"m.visit(*arg" + m + @");
+                        arg" + m + @"stmt = arg" + m + @"m.getChildExprStore();
+                    }");
+
+         m++;
+         y++;
+         return retstr;
+     })
+     + @"
+                    if(true" + (prodArgs.Count > 0 ? " and " : " ") +
+     Peirce.Join(@" and 
+                        ", prodArgs, p_ => "arg" + n++ + "stmt")
+     + @"){
+                        auto arg1decl = clang::dyn_cast<clang::VarDecl>(clang::dyn_cast<clang::DeclRefExpr>(arg1stmt)->getFoundDecl());    
+                        interp_->mk" + targetCase.Name + @"(callExpr_, arg1decl,arg0stmt);
+                        //interp_->mk" + targetCase.Name + "(callExpr_" + (prodArgs.Count > 0 ? "," : "") + Peirce.Join(",", prodArgs, p_ => "arg" + o++ + "stmt") + @");
+                        this->childExprStore_ = (clang::Stmt*)callExpr_;
+                        return;
+                    }
+            
+                }
+            }
+        }
+    }
+";
+                            }
+
+
+                            return prodexistpreds + @"
+    if(callExpr_){
+        auto decl_ = callExpr_->getDirectCallee();
+        if(auto dc = clang::dyn_cast<clang::NamedDecl>(decl_)){
+            auto name = dc->getNameAsString();
+            
+
+            if(" + (asttoks[1] == "IGNORE" ? "true" : @"(name==""" + asttoks[1] + @""" or name == ""const " + asttoks[1] + @""" or name == ""class " + asttoks[1] + @""")") + @"/*name.find(""" + asttoks[1] + @""") != string::npos*/){"
+    +
+    Peirce.Join("", prodArgs, p_ => true ? @"
+                auto arg" + l + @"=callExpr_->getArg(" + l++ + @"-1);
+                auto arg" + q + "str = ((clang::QualType)arg" + q++ + "->getType()).getAsString();\n" : "") +
+                Peirce.Join("", prodArgs, p_ => @"
+                clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
+    +
+    @"            
+                if (true" + (prodArgs.Count > 0 ? " and " : " ") + Peirce.Join(@" and 
+                    ", prodArgs, p_ => "arg_decay_exist_predicates[\"" + raw + p_.TypeName + @"""](arg" + x++ + "str)") + @"){" +
+     Peirce.Join("", prodArgs, p_ =>
+     {
+         var retstr = @"
+                    if(false){}
+                    "
++ Peirce.Join(@"
+                    ", p_.InheritGroup, p__ => "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + "\"/*arg" + y + @"str.find(""" + p__.TypeName + @""")!=string::npos*/){
+                        "
++
+p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
+                        arg" + m + @"m.setup();
+                        arg" + m + @"m.visit(*arg" + m + @");
+                        arg" + m + @"stmt = arg" + m + @"m.getChildExprStore();
+                    }");
+
+         m++;
+         y++;
+         return retstr;
+     })
+     + @"
+                    if(true" + (prodArgs.Count > 0 ? " and " : " ") +
+     Peirce.Join(@" and 
+                        ", prodArgs, p_ => "arg" + n++ + "stmt")
+     + @"){
+                        interp_->mk" + targetCase.Name + "(callExpr_" + (prodArgs.Count > 0 ? "," : "") + Peirce.Join(",", prodArgs, p_ => "arg" + o++ + "stmt") + @");
+                        this->childExprStore_ = (clang::Stmt*)callExpr_;
                         return;
                     }
             
@@ -293,7 +527,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                 }
                 else if (asttoks[0].Contains("BinaryOperator"))
                 {
-                    var args = asttoks[0].Substring(asttoks[0].IndexOf('(') + 1, asttoks[0].Length - asttoks[0].IndexOf('(') -2).Split(',');
+                    var args = asttoks[0].Substring(asttoks[0].IndexOf('(') + 1, asttoks[0].Length - asttoks[0].IndexOf('(') - 2).Split(',');
 
                     var numargs = args.Length;
 
@@ -320,7 +554,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             var prodexistpreds = string.Join("",
                                 prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.TypeName + @"""] = [=](std::string typenm){
     if(false){return false;}" +
-        Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
+        Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
         + @"
     else { return false; }
     };"));
@@ -334,7 +568,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         clang::Stmt* rhsstmt;
             
 
-        if(bostr.find(""" + asttoks[1] + @""") != string::npos){
+        if(bostr==""" + asttoks[1] + @""" or bostr == ""const " + asttoks[1] + @""" or bostr == ""class " + asttoks[1] + @"""/*bostr.find(""" + asttoks[1] + @""") != string::npos*/){
             auto lhs = binaryOperator_->getLHS();
             auto lhsstr = ((clang::QualType)lhs->getType()).getAsString();
             auto rhs = binaryOperator_->getRHS();
@@ -343,28 +577,9 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
             clang::Stmt* rhsresult = nullptr;
             if(false){}
             "
-         /*+
-         Peirce.Join("\n", prodArgs, p_ => {
-             var retstr =
-             @"
-            if(false){" + m + ";}" + Peirce.Join(@"
-            ", p_.InheritGroup, p__ => @"
-            else if(arg" + y + @"str.find(""" + p__.TypeName + @""") != string::npos){
-            "
-          +
-          p__.ClassName + @" 
-                arg" + m + @"m{this->context_,this->interp_};
-                arg" + m + @"m.setup();
-                arg" + m + @"m.visit(*arg" + m + @");
-                arg" + m + @"stmt = arg" + m + @"m.getChildExprStore();
-            }");
-             y++;
-             m++;
-             return retstr;
-         })*/
          +
         Peirce.Join(@"
-            ", new List<MatcherProduction>( prodArgs[0].InheritGroup ), p_ => @"else if(lhsstr.find(""" + p_.TypeName + @""") != string::npos){
+            ", new List<MatcherProduction>(prodArgs[0].InheritGroup), p_ => @"else if(lhsstr==""" + p_.TypeName + @""" or lhsstr==""const " + p_.TypeName + @""" or lhsstr==""class " + p_.TypeName + @"""/*lhsstr.find(""" + p_.TypeName + @""") != string::npos*/){
                 " + p_.ClassName + @" lhsm{this->context_,this->interp_};
                 lhsm.setup();
                 lhsm.visit(*lhs);
@@ -376,8 +591,8 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
             if(false){}
             "
         +
-        Peirce.Join("", new List<MatcherProduction>( prodArgs[1].InheritGroup), p_ => @"
-            else if(rhsstr.find(""" + p_.TypeName + @""") != string::npos){
+        Peirce.Join("", new List<MatcherProduction>(prodArgs[1].InheritGroup), p_ => @"
+            else if(rhsstr==""" + p_.TypeName + @""" or rhsstr==""const " + p_.TypeName + @""" or rhsstr==""class " + p_.TypeName + @"""/*rhsstr.find(""" + p_.TypeName + @""") != string::npos*/){
                 " + p_.ClassName + @" rhsm{this->context_,this->interp_};
                 rhsm.setup();
                 rhsm.visit(*rhs);
@@ -423,11 +638,11 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         BuildCallbackHandler = (prod) =>
                         {
                             int i = 0,// j = 0, k = 0,
-                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0,  q = 0;
+                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0, q = 0;
                             var prodexistpreds = string.Join("",
                                    prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.TypeName + @"""] = [=](std::string typenm){
         if(false){ return false;}" +
-           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
+           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
            + @"
         else { return false; }
     };"));
@@ -437,7 +652,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         if(auto dc = clang::dyn_cast<clang::NamedDecl>(decl_)){
             auto name = dc->getNameAsString();
 
-            if(name.find(""" + asttoks[1] + @""") != string::npos){"
+            if(name==""" + asttoks[1] + @""" or name==""const " + asttoks[1] + @""" or name==""class " + asttoks[1] + @"""/*name.find(""" + asttoks[1] + @""") != string::npos*/){"
  +
  Peirce.Join("", prodArgs, p_ => @"
                 auto arg" + l + "=cxxOperatorCallExpr_->getArg(" + l++ + @");
@@ -454,7 +669,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                    + Peirce.Join(@"
                     ", p_.InheritGroup, p__ =>
                    {
-                       return "else if(arg" + y + @"str.find(""" + p__.TypeName + @""") != string::npos){
+                       return "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str==""const " + p__.TypeName + @""" or arg" + y + @"str==""class " + p__.TypeName + @"""/*arg" + y + @"str.find(""" + p__.TypeName + @""") != string::npos*/){
             "
            + @"
                         " +
@@ -483,7 +698,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         }
     }
 ";
-                           }
+                        }
                     });
                 }
                 else if (asttoks[0].Contains("CXXConstructExpr"))
@@ -494,17 +709,17 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                     //                var numargs = asttoks[0]
                     //try
                     //{
-                        var args = asttoks[0].Substring(asttoks[0].IndexOf('(') + 1, asttoks[0].Length - asttoks[0].IndexOf('(') - 2).Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+                    var args = asttoks[0].Substring(asttoks[0].IndexOf('(') + 1, asttoks[0].Length - asttoks[0].IndexOf('(') - 2).Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
 
-                        var numargs = args.Length;
+                    var numargs = args.Length;
 
-                        var prodArgs = args.Where(a => a != "IGNORE").Select(a => allProductions.Single(p_ => p_.TypeName == a)).ToList();
-                        var targetCase = MatcherProduction.FindCase(production, grammartype, prodArgs);
-                   /* }
-                    catch(Exception ex)
-                    {
-                        Console.WriteLine(ex.StackTrace);
-                    }*/
+                    var prodArgs = args.Where(a => a != "IGNORE").Select(a => allProductions.Single(p_ => p_.TypeName == a)).ToList();
+                    var targetCase = MatcherProduction.FindCase(production, grammartype, prodArgs);
+                    /* }
+                     catch(Exception ex)
+                     {
+                         Console.WriteLine(ex.StackTrace);
+                     }*/
 
                     //var switchers =
                     retval.Add(new MatcherCase()
@@ -519,15 +734,15 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         BuildCallbackHandler = (prod) =>
                          {
 
-                             int i = 0, j = 0, 
-                                 l = 0, m = 0, n = 0, o = 0, x = 0, y = 0,  q = 0;
+                             int i = 0, j = 0,
+                                 l = 0, m = 0, n = 0, o = 0, x = 0, y = 0, q = 0;
 
 
                              var prodexistpreds = string.Join("",
                                  prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}
     " +
-         Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
+         Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
          + @"
         else { return false;}
     };"));
@@ -537,45 +752,45 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         
     }
 };"));
-                        //first declare arg results
-                        //then , for each arg
-                        //
-                        //if all children exists, declare a match in interp, or else throw a matcher wartning -invalid logic
+                             //first declare arg results
+                             //then , for each arg
+                             //
+                             //if all children exists, declare a match in interp, or else throw a matcher wartning -invalid logic
 
-                        return prodexistpreds + @"
+                             return prodexistpreds + @"
     if(cxxConstructExpr_ and cxxConstructExpr_->getNumArgs() == " + args.Length + @"){" +
-     Peirce.Join("", prodArgs, p_ => @"
+          Peirce.Join("", prodArgs, p_ => @"
         clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
-     +
-     Peirce.Join("", prodArgs, p_ => @"
+          +
+          Peirce.Join("", prodArgs, p_ => @"
         auto arg" + l + "=cxxConstructExpr_->getArg(" + l++ + @");
         auto arg" + q + "str = ((clang::QualType)arg" + q++ + "->getType()).getAsString();\n")
-     + @"
-        if(true " + (prodArgs.Count > 0 ? " and " : "") +Peirce.Join(@" and 
+          + @"
+        if(true " + (prodArgs.Count > 0 ? " and " : "") + Peirce.Join(@" and 
             ", prodArgs, p_ => "arg_decay_exist_predicates[\"" + raw + p_.TypeName + @"""](arg" + x++ + "str)") + @"){
-            "+
-         Peirce.Join("\n", prodArgs, p_ => {
-             var retstr =
-             @"
+            " +
+              Peirce.Join("\n", prodArgs, p_ => {
+                  var retstr =
+                  @"
             if(false){}" + Peirce.Join(@"
             ", p_.InheritGroup, p__ => @"
-            else if(arg" + y + @"str.find(""" + p__.TypeName + @""") != string::npos){
+            else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + "\"/*arg" + y + @"str.find(""" + p__.TypeName + @""") != string::npos*/){
             "
-          +
-          p__.ClassName + @" 
+               +
+               p__.ClassName + @" 
                 arg" + m + @"m{this->context_,this->interp_};
                 arg" + m + @"m.setup();
                 arg" + m + @"m.visit(*arg" + m + @");
                 arg" + m + @"stmt = arg" + m + @"m.getChildExprStore();
             }");
-             y++;
-             m++;
-             return retstr;
-         })
-         + @"
+                  y++;
+                  m++;
+                  return retstr;
+              })
+              + @"
             if(true " + (prodArgs.Count > 0 ? " and " : "") +
-             Peirce.Join(" and ", prodArgs, p_ => "arg" + n++ + "stmt")
-             + @"){
+                  Peirce.Join(" and ", prodArgs, p_ => "arg" + n++ + "stmt")
+                  + @"){
                 interp_->mk" + targetCase.Name + "(cxxConstructExpr_" + (prodArgs.Count > 0 ? " , " : "") + Peirce.Join(",", prodArgs, p_ => "arg" + o++ + "stmt") + @");
                 this->childExprStore_ = (clang::Stmt*)cxxConstructExpr_;
                 return;
@@ -584,100 +799,6 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     }";
                          }
                     });
-                    /*
-                    retval.Add(new MatcherCase()
-                    {
-                        ClangName = "CXXTemporaryObjectExpr",
-                        LocalName = "cxxTemporaryObjectExpr_",
-                        Args = prodArgs,
-                        TargetGrammarCase = targetCase,
-                        TargetGrammarProduction = targetProd,
-                        BuildMatcher = (prod) => "cxxTemporaryObjectExpr().bind(\"CXXTemporaryObjectExpr\")",
-
-                        BuildCallbackHandler = (prod) =>
-                        {
-
-
-                            int i = 0, j = 0, 
-                                l = 0, m = 0, n = 0, o = 0, x = 0, y = 0,  q = 0;
-
-
-                            var prodexistpreds = string.Join("",
-                                prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.TypeName + @"""] = [=](std::string typenm){
-        if(false){return false;}" +
-            Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
-            + @"
-    };"));
-                            var prodmatchpreds = string.Join("",
-                                prodArgs.Select(a => "\n\targ_decay_match_predicates[\"" + raw + ++j + @"""] = [=](std::string typenm){
-    if(false){
-        
-    }
-};"));
-                        //first declare arg results
-                        //then , for each arg
-                        //
-                        //if all children exists, declare a match in interp, or else throw a matcher wartning -invalid logic
-
-                        return prodexistpreds + @"
-    if(cxxTemporaryObjectExpr_ and cxxTemporaryObjectExpr_->getNumArgs() == " + args.Length + @"){" +
-     Peirce.Join("", prodArgs, p_ => @"
-        clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
-     +
-     Peirce.Join("", prodArgs, p_ => @"
-        auto arg" + l + "=cxxTemporaryObjectExpr_->getArg(" + l++ + @");
-        auto arg" + q + "str = ((clang::QualType)arg" + q++ + "->getType()).getAsString();\n")
-     + @"
-        if(true " + (prodArgs.Count > 0 ? " and " : "") + Peirce.Join(@" and 
-            ", prodArgs, p_ => "arg_decay_exist_predicates[\"" + raw + p_.TypeName + @"""](arg" + x++ + "str)") + @"){
-            " +
-         Peirce.Join("\n", prodArgs, p_ => {
-             var retstr =
-             @"
-            if(false){" + m + ";}" + Peirce.Join(@"
-            ", p_.InheritGroup, p__ => @"
-            else if(arg" + y + @"str.find(""" + p__.TypeName + @""") != string::npos){
-            "
-          +
-          p__.ClassName + @" 
-                arg" + m + @"m{this->context_,this->interp_};
-                arg" + m + @"m.setup();
-                arg" + m + @"m.visit(*arg" + m + @");
-                arg" + m + @"stmt = arg" + m + @"m.getChildExprStore();
-            }");
-             y++;
-             m++;
-             return retstr;
-         })
-         + @"
-            if(true " + (prodArgs.Count > 0 ? " and " : "") +
-             Peirce.Join(" and ", prodArgs, p_ => "arg" + n++ + "stmt")
-             + @"){
-                interp_->mk" + targetCase.Name + "(cxxTemporaryObjectExpr_" + (prodArgs.Count > 0 ? " , " : "") + Peirce.Join(",", prodArgs, p_ => "arg" + o++ + "stmt") + @");
-                this->childExprStore_ = (clang::Stmt*)cxxTemporaryObjectExpr_;
-                return;
-            }
-        }
-    }";
-                        }
-                    });
-                    */
-                    /*retval.Add(new MatcherCase()
-                    {
-                         Args = new List<MatcherProduction>(),
-                          BuildCallbackHandler = (prod) => {
-                            return "";
-                        },
-                           BuildMatcher = (prod) =>
-                           {
-                               return "";
-                           },
-                            ClangName = "",
-                             LocalName = "",
-                              TargetGrammarCase = null,
-
-                         
-                    });*/
                 }
                 else if (asttoks[0].Contains("CXXBoolLiteralExpr"))
                 {
@@ -695,11 +816,11 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                                    new List<MatcherProduction>() { prod },
                                    a => "\n\targ_decay_exist_predicates[\"cxxBoolLiteralExpr__" + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
+           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
            + @"
         else { return false; }
     };");
-                               // int y = 0, m = 0;
+                                // int y = 0, m = 0;
                                 return prodexistpreds + @"
     if (cxxBoolLiteralExpr_)
     {
@@ -727,7 +848,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                                    new List<MatcherProduction>() { prod },
                                    a => "\n\targ_decay_exist_predicates[\"integerLiteral__" + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
+           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
            + @"
         else { return false; }
     };");
@@ -764,7 +885,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                                    new List<MatcherProduction>() { prod },
                                    a => "\n\targ_decay_exist_predicates[\"floatLiteral_" + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
+           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
            + @"
         else { return false; }
     };");
@@ -801,7 +922,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         }
 
 
-        public static List<MatcherCase> BuildDefaults(MatcherProduction production, Grammar.Case defaultcase = null)
+        public static List<MatcherCase> BuildDefaults(MatcherProduction production, bool suppressCaptureEscape = false, Grammar.Case defaultcase = null)
         {
             var retval = new List<MatcherCase>()
             {
@@ -834,8 +955,10 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     }
 " : @"
             else{
+                " + ( suppressCaptureEscape ? "" : @"
                 std::cout<<""WARNING: Capture Escaping! Dump : \n"";
                 cxxConstructExpr_->dump();
+           ") +@"
             }
             return;
         }
@@ -858,7 +981,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             new List<MatcherProduction>(){prod},
                             a => "\n\targ_decay_exist_predicates[\"memberExpr_"  + a.TypeName + @"""] = [=](std::string typenm){
     if(false){return false;}" +
-    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
+    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
     + @"
     else { return false; }
     };");
@@ -868,7 +991,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         auto inner = memberExpr_->getBase();
         auto typestr = ((clang::QualType)inner->getType()).getAsString();
         if(false){}
-        "+ Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"else if(typestr.find("""+p__.TypeName+@""") != string::npos){
+        "+ Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"else if(typestr=="""+p__.TypeName+@""" or typestr == ""const " + p__.TypeName + @""" or typestr == ""const " + p__.TypeName + @"""/*typestr.find("""+p__.TypeName+@""") != string::npos*/){
             "
       +
       p__.ClassName + @" innerm{this->context_,this->interp_};
@@ -897,7 +1020,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             new List<MatcherProduction>(){prod},
                             a => "\n\targ_decay_exist_predicates[\"implicitCastExpr_"  + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false; }" +
-    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
+    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
     + @"
         else { return false; } 
     };");
@@ -910,7 +1033,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         auto typestr = inner->getType().getAsString();
 
         if(false){}
-        "+ Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"else if(typestr.find("""+p__.TypeName+@""") != string::npos){
+        "+ Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"else if(typestr=="""+p__.TypeName+@""" or typestr == ""const " + p__.TypeName + @""" or typestr == ""class " + p__.TypeName + @"""/*typestr.find("""+p__.TypeName+@""") != string::npos*/){
             "
       +
       p__.ClassName + @" innerm{this->context_,this->interp_};
@@ -927,9 +1050,11 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     }
 " : @"
         else{
-            std::cout<<""WARNING: Capture Escaping! Dump : \n"";
-            implicitCastExpr_->dump();
-        }
+                " + ( suppressCaptureEscape ? "" : @"
+                std::cout<<""WARNING: Capture Escaping! Dump : \n"";
+                implicitCastExpr_->dump();
+           ") +@"
+            }
             return;
 
     }");
@@ -947,7 +1072,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             new List<MatcherProduction>(){prod},
                             a => "\n\targ_decay_exist_predicates[\"cxxBindTemporaryExpr_"  + a.TypeName + @"""] = [=](std::string typenm){
         if(false){ return false; }" +
-    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
+    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
     + @"
         else { return false; }
     };");
@@ -969,9 +1094,11 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     }
 " : @"
         else{
-            std::cout<<""WARNING: Capture Escaping! Dump : \n"";
-            cxxBindTemporaryExpr_->dump();
-        }
+                " + ( suppressCaptureEscape ? "" : @"
+                std::cout<<""WARNING: Capture Escaping! Dump : \n"";
+                cxxBindTemporaryExpr_->dump();
+           ") +@"
+            }
             return;
 
     }");
@@ -991,7 +1118,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             new List<MatcherProduction>(){prod},
                             a => "\n\targ_decay_exist_predicates[\"materializeTemporaryExpr_"  + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
+    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
     + @"
         else { return false; }
     };");
@@ -1014,8 +1141,10 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         }
 " : @"
             else{
+                " + ( suppressCaptureEscape ? "" : @"
                 std::cout<<""WARNING: Capture Escaping! Dump : \n"";
                 materializeTemporaryExpr_->dump();
+           ") +@"
             }
             return;
 
@@ -1036,7 +1165,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             new List<MatcherProduction>(){prod},
                             a => "\n\targ_decay_exist_predicates[\"parenExpr_"  + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm.find(\"" + a_.TypeName + "\") != string::npos){ return true; }")
+    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
     + @"
         else { return false; } 
     };");
@@ -1050,9 +1179,11 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         this->childExprStore_ = (clang::Stmt*)inner.getChildExprStore();
         if(this->childExprStore_){}
         else{
-            std::cout<<""WARNING: Capture Escaping! Dump :\n"";
-            parenExpr_->dump();
-        }
+                " + ( suppressCaptureEscape ? "" : @"
+                std::cout<<""WARNING: Capture Escaping! Dump : \n"";
+                parenExpr_->dump();
+           ") +@"
+            }
         return;
     }";
                      },
@@ -1086,34 +1217,14 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         }
     " : @"
             else{
+                " + ( suppressCaptureEscape ? "" : @"
                 std::cout<<""WARNING: Capture Escaping! Dump : \n"";
                 exprWithCleanups_->dump();
+           ") +@"
             }
 
     }");               }
 
-                },
-                new MatcherCase()
-                {
-                     ClangName = "DeclRefExpr",
-                      LocalName = "declRefExpr_",
-                      Args = new List<MatcherProduction>(),
-                       BuildMatcher = (prod) => "declRefExpr().bind(\"DeclRefExpr\")",
-                       BuildCallbackHandler = (prod) =>
-                       {
-                           var refexpr = prod.GrammarType.Cases.Single(pcase => pcase.Name.Contains("VAR"));
-
-                           return @"
-    if(declRefExpr_){
-        if(auto dc = clang::dyn_cast<clang::VarDecl>(declRefExpr_->getDecl())){
-            interp_->mk" + refexpr.Name + @"(declRefExpr_, dc);
-            this->childExprStore_ = (clang::Stmt*)declRefExpr_;
-            return;
-
-        }
-    }
-";
-                       }
                 },
                 new MatcherCase()
                 {
@@ -1141,8 +1252,10 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         }
     " : @"
             else{
+                " + ( suppressCaptureEscape ? "" : @"
                 std::cout<<""WARNING: Capture Escaping! Dump : \n"";
                 cxxFunctionalCastExpr_->dump();
+           ") +@"
             }
 
     }");               }
@@ -1203,6 +1316,39 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                 }*/
                
             };
+
+            if (production.GrammarType.Cases.Exists(pc => pc.Name.Contains("VAR")))
+            {
+                retval.Add(new MatcherCase()
+                {
+                    ClangName = "DeclRefExpr",
+                    LocalName = "declRefExpr_",
+                    Args = new List<MatcherProduction>(),
+                    BuildMatcher = (prod) => "declRefExpr().bind(\"DeclRefExpr\")",
+                    BuildCallbackHandler = (prod) =>
+                    {
+                        var refexpr = prod.GrammarType.Cases.Single(pcase => pcase.Name.Contains("VAR"));
+
+                        return @"
+    if(declRefExpr_){
+        if(auto dc = clang::dyn_cast<clang::VarDecl>(declRefExpr_->getDecl())){
+            interp_->mk" + refexpr.Name + @"(declRefExpr_, dc);
+            this->childExprStore_ = (clang::Stmt*)declRefExpr_;
+            return;
+
+        }
+    }
+";
+                    }
+                });
+
+            }
+            else
+            {
+                var i = "";
+
+            }
+
             return retval;
         }
 
@@ -1466,6 +1612,22 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                             //Console.WriteLine(line);
                             try
                             {
+                                bool hasDefault = true;
+
+                                if(toks[0][0] == '!')
+                                {
+                                    hasDefault = false;
+                                    toks[0] = toks[0].Substring(1);
+                                }
+
+                                bool suppressCaptureEscape = false;
+
+                                if(toks[0][0] == '#')
+                                {
+                                    suppressCaptureEscape = true;
+                                    toks[0] = toks[0].Substring(1);
+                                }
+
                                 currentprod = new MatcherProduction()
                                 {
                                     TypeName = toks[0].Contains("~") ? cn : toks[0],
@@ -1479,8 +1641,25 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                                         toks.Count() > 3 ?
                                           ParsePeirce.Instance.Grammar
                                             .Productions.Single(p_ => p_.Name == toks[3].Split('.')[0])
-                                            .Cases[int.Parse(toks[3].Split('.')[1])] : null
+                                            .Cases[int.Parse(toks[3].Split('.')[1])] : null,
+                                    HasDefaultMatchers = hasDefault
+                                    ,SuppressCaptureEscape = suppressCaptureEscape
                                 };
+
+
+                                if (toks.Count() > 3)
+                                {
+                                    Console.WriteLine(line);
+                                    var defaultcase = toks[3].Split('.');
+                                    var defaultprod = ParsePeirce.Instance.Grammar.Productions.Single(p_ => p_.Name == defaultcase[0]);
+                                    if (hasDefault)
+                                        currentprod.Cases.AddRange(MatcherProduction.BuildDefaults(currentprod, suppressCaptureEscape, defaultprod.Cases[int.Parse(defaultcase[1])]));
+                                }
+                                else
+                                {
+                                    if (hasDefault)
+                                        currentprod.Cases.AddRange(MatcherProduction.BuildDefaults(currentprod, suppressCaptureEscape));
+                                }
                             }
                             catch(Exception ex)
                             {
@@ -1489,16 +1668,6 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
 
                             retval.Add(currentprod);
 
-
-                            if (toks.Count() > 3)
-                            {
-                                Console.WriteLine(line);
-                                var defaultcase = toks[3].Split('.');
-                                var defaultprod = ParsePeirce.Instance.Grammar.Productions.Single(p_ => p_.Name == defaultcase[0]);
-                                currentprod.Cases.AddRange(MatcherProduction.BuildDefaults(currentprod, defaultprod.Cases[int.Parse(defaultcase[1])]));
-                            }
-                            else
-                                currentprod.Cases.AddRange(MatcherProduction.BuildDefaults(currentprod));
                             globalstate = enterprod;
                             prodstate = unk;
                         }

@@ -33,7 +33,7 @@ namespace PeirceGen
             { "GenPath", @"/peirce/gen/symlinkme/"},
             { "MatcherPath", @"/peirce/gen/symlinkme/ros_matchers/"}
             //{ "GrammarPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\Grammars\" },
-            //{ "GenPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\"},
+           // { "GenPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\"},
             //{ "MatcherPath", @"C:\Users\msfti\source\repos\givemeros\PeirceGen\symlinkme\ros_matchers\"}
         };
 

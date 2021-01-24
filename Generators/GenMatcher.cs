@@ -152,6 +152,9 @@ void ROSStatementMatcher::setup(){
     StatementMatcher 
         whileStmt_ = whileStmt().bind(""WhileStmt"");
 
+    StatementMatcher
+        tryStmt_ = cxxTryStmt().bind(""TryStmt"");
+
     localFinder_.addMatcher(decl_, this);
     localFinder_.addMatcher(assign_, this);
     localFinder_.addMatcher(expr_, this);
@@ -159,6 +162,7 @@ void ROSStatementMatcher::setup(){
     localFinder_.addMatcher(cmpdStmt_, this);
     localFinder_.addMatcher(returnStmt_, this);
     localFinder_.addMatcher(whileStmt_, this);
+    localFinder_.addMatcher(tryStmt_, this);
 };
 
 void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
@@ -179,17 +183,11 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
 
     //const auto returnStmt_ = Result.Nodes.getNodeAs<clang::ReturnStmt>(""ReturnStmt"");
 
-    //const auto whileStmt_ = Result.Nodes.getNodeAs<clang::WhileStmt>(""WhileStmt"");
+    const auto whileStmt_ = Result.Nodes.getNodeAs<clang::WhileStmt>(""WhileStmt"");
 
-    /*
-        if(declStmt)
-            declStmt->dump();
-        else if(assignStmt)
-            assignStmt->dump();
-        else if(exprStmt)
-            exprStmt->dump();
-        */
-    /*
+    const auto tryStmt_ = Result.Nodes.getNodeAs<clang::CXXTryStmt>(""TryStmt"");
+
+    
     if(whileStmt_){
         auto wcond = whileStmt_->getCond();
         auto wbody = whileStmt_->getBody();
@@ -218,7 +216,7 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
         this->childExprStore_ = (clang::Stmt*)whileStmt_;
         return;
 
-    }*/
+    }
 
     /*
     if(returnStmt_){
@@ -234,7 +232,7 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                         //var woInit = p_.SearchForDecl(t)
 
                         return @"
-        else if (typestr.find(""" + p_.TypeName + @""") != string::npos){
+        else if (typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @"""  or typestr == ""class " + p_.TypeName + @""" /*typestr.find(""" + p_.TypeName + @""") != string::npos) != string::npos){
             " + p_.ClassName + @" m{ this->context_, this->interp_};
             m.setup();
             m.visit(*_expr);
@@ -257,6 +255,83 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
             stmti.visit(*st);
             if(stmti.getChildExprStore()){
                 stmts.push_back(stmti.getChildExprStore());
+            }
+            else{
+                auto current = st;
+                std::vector<std::vector<clang::Stmt*>> stack;
+                std::vector<int> recptr;
+
+                /*search up to depth 3 for now. this is not sound, but a sound approach may lead to other issues
+                */
+                for(auto c1 : st->children()){
+                    ROSStatementMatcher i1{this->context_,this->interp_};
+                    i1.setup();
+                    i1.visit(*c1);
+                    if(i1.getChildExprStore()){
+                        stmts.push_back(i1.getChildExprStore());
+                    }
+                    else{
+                        for(auto c2 : c1->children()){
+                            ROSStatementMatcher i2{this->context_,this->interp_};
+                            i2.setup();
+                            i2.visit(*c2);
+                            if(i2.getChildExprStore()){
+                                stmts.push_back(i2.getChildExprStore());
+                            }
+                            else{
+                                for(auto c3 : c2->children()){
+                                    ROSStatementMatcher i3{this->context_,this->interp_};
+                                    i3.setup();
+                                    i3.visit(*c3);
+                                    if(i3.getChildExprStore()){
+                                        stmts.push_back(i3.getChildExprStore());
+                                    }
+                                    else{
+                                        for(auto c4 : c3->children()){
+                                            ROSStatementMatcher i4{this->context_,this->interp_};
+                                            i4.setup();
+                                            i4.visit(*c4);
+                                            if(i4.getChildExprStore()){
+                                                stmts.push_back(i4.getChildExprStore());
+                                            }
+                                            else{
+                                                
+                                            }
+                                        } 
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                /*
+                restart:
+                std::vector<clang::Stmt*> current_stack;
+                for(auto c : current->children()) current_stack.push_back(c);
+                stack.push_back(current_stack);
+                recptr.push_back(0);
+                while(!stack.empty()){
+                    for(int i = 0; i<stack.back().size();i++){
+                        if(recptr.back() > i) continue;
+                        auto c = 
+                        ROSStatementMatcher inner{this->context_,this->interp_};
+                        inner.setup();
+                        inner.visit(*c);
+                        if(inner.getChildExprStore()){
+                            stmts.push_back(inner.getChildExprStore());
+                            recptr.back()++;
+                        }
+                        else if(c->child_begin() != c->child_end()){
+                            current = c;
+                            goto restart;
+                        }
+                    }
+                }
+                */
+                    
+                    
+                
             }
         }
         this->interp_->mkCOMPOUND_STMT(cmpdStmt_, stmts);
@@ -381,11 +456,14 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                 Peirce.Join("",ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_=>p_.TypeName.Length), 
                     p_=>
                     {
-                       //var withInit = p_.SearchForDecl(true);
+                        //var withInit = p_.SearchForDecl(true);
                         //var woInit = p_.SearchForDecl(t)
+                        if (p_.SearchForDecl(true) == null)
+                            return "";
+
 
                         return @"
-                else if (typestr.find(""" + p_.TypeName + @""") != string::npos){
+                else if (typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos*/){
                     interp_->mk" + p_.SearchForIdent().Production.Name + @"(vd);
                     if (vd->hasInit())
                     {
@@ -413,7 +491,8 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                     }
                 }
             ";
-                    })
+                    }
+                    )
                 + @"
             }
         }
@@ -431,8 +510,10 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                 Peirce.Join("",ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length), 
                     p_=>
                     {
+                        if (p_.SearchForDecl(true) == null) return "";
+
                         return @"
-                    else if(typestr.find(""" + p_.TypeName + @""") != string::npos){
+                    else if(typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos*/){
                         interp_->mk" + p_.SearchForIdent().Production.Name + @"(vd);
                         if (vd->hasInit())
                         {
@@ -478,27 +559,38 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                     p_ =>
                     {
                         return @"
-        if(typestr.find(""" + p_.TypeName + @""") != string::npos){
+        if(typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos*/){
             " + p_.ClassName + @" m{ this->context_, this->interp_};
             m.setup();
             m.visit(*exprStmt);
-            if (m.getChildExprStore())
+            if (m.getChildExprStore()){
                 this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
                 return;
+            }
                 
         }";
                     }) + @"
     }
-
-
+    else if(tryStmt_){
+        auto tryBlock = tryStmt_->getTryBlock();
+        ROSStatementMatcher innerMatcher{ this->context_, this->interp_};
+        innerMatcher.setup();
+        innerMatcher.visit(*tryBlock);
+        if (innerMatcher.getChildExprStore()){
+            this->childExprStore_ = (clang::Stmt*)tryStmt_;//const_cast<clang::Stmt*>(innerMatcher.getChildExprStore());
+            interp_->mkTRY_STMT(tryStmt_,innerMatcher.getChildExprStore());
+            return;
+        }
+    }
     else if (exprWithCleanupsDiscard)
     {//matches fluff node to discard
         ROSStatementMatcher innerMatcher{ this->context_, this->interp_};
         innerMatcher.setup();
         innerMatcher.visit(*exprWithCleanupsDiscard->getSubExpr());
-        if (innerMatcher.getChildExprStore())
+        if (innerMatcher.getChildExprStore()){
             this->childExprStore_ = const_cast<clang::Stmt*>(innerMatcher.getChildExprStore());
             return;
+        }
     }
     else
     {
@@ -588,7 +680,6 @@ void ROSFunctionMatcher::setup()
                 auto decl = dc->getSingleDecl();
                 if (auto ddc = clang::dyn_cast<clang::VarDecl>(decl))
                 {
-                    //  ddc->getType()->dump();
                 }
             }
         }

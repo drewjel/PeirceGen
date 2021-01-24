@@ -112,6 +112,9 @@ namespace PeirceGen
                 Decl,
                 Var,
                 Expr,
+                While,
+                TryCatch,
+                Func,
                 Unk
             }
 
@@ -192,7 +195,7 @@ namespace PeirceGen
                 public enum PrintType
                 {
                     Binary,
-                    Child,
+                    Var,
                     FrameChange,
                     Unk
                 }
@@ -322,7 +325,7 @@ namespace PeirceGen
                                  Interp.Fix.Post,
                      Symbol = spl[1] == "S" ? " " : spl[1]
                               ,
-                      PrintType_ = spl[2] == "C" ? Interp.PrintType.Child : 
+                      PrintType_ = spl[2] == "C" ? Interp.PrintType.Var : 
                       spl[2] == "T" ? Interp.PrintType.FrameChange : 
                       spl[2] == "B" ? Interp.PrintType.Binary : Interp.PrintType.Unk
                 };

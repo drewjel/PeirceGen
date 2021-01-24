@@ -220,6 +220,30 @@ ImperialMeasurementSystem* Domain::mkImperialMeasurementSystem(std::string name)
 ";
             file += "\n" + mkSystems + "\n";
 
+            var mkOrientations = @"
+NWUOrientation* Domain::mkNWUOrientation(std::string name){
+    auto si = new NWUOrientation(name);
+    this->axisOrientations.push_back(si);
+    return si;
+};
+
+NEDOrientation* Domain::mkNEDOrientation(std::string name){
+    auto imp = new NEDOrientation(name);
+    this->axisOrientations.push_back(imp);
+    return imp;
+
+};
+
+ENUOrientation* Domain::mkENUOrientation(std::string name){
+    auto imp = new ENUOrientation(name);
+    this->axisOrientations.push_back(imp);
+    return imp;
+
+};
+
+";
+            file += "\n" + mkOrientations + "\n";
+
             var mkTransformMap = @"MapSpace* Domain::mkMapSpace(Space* space, Frame* dom, Frame* cod){
     return new MapSpace(space, dom, cod);
 };";
@@ -277,8 +301,8 @@ ImperialMeasurementSystem* Domain::mkImperialMeasurementSystem(std::string name)
 
 
                 var mkAliasedFrame = "" +sp.Name + "AliasedFrame* Domain::mk" + sp.Name + 
-                    "AliasedFrame(std::string name, domain::" + sp.Name + @"* space, domain::" + sp.Name + @"Frame* parent, domain::MeasurementSystem* ms){
-    " + sp.Name + @"AliasedFrame* child = new domain::" + sp.Name + @"AliasedFrame(name, space, parent,ms);
+                    "AliasedFrame(std::string name, domain::" + sp.Name + @"* space, domain::" + sp.Name + @"Frame* parent, domain::MeasurementSystem* ms, domain::AxisOrientation* ax){
+    " + sp.Name + @"AliasedFrame* child = new domain::" + sp.Name + @"AliasedFrame(name, space, parent,ms, ax);
     space->addFrame(child);
     return child;
 }
@@ -287,8 +311,8 @@ ImperialMeasurementSystem* Domain::mkImperialMeasurementSystem(std::string name)
 
                 file += "\n" + mkAliasedFrame + "\n";
                 
-                var mkDerivedFrame = "" + sp.Name + "DerivedFrame* Domain::mk" + sp.Name + "DerivedFrame(std::string name, domain::" + sp.Name + @"* space, domain::" + sp.Name + @"Frame* parent){
-    " + sp.Name + @"DerivedFrame* child = new domain::" + sp.Name + @"DerivedFrame(name, space, parent);
+                var mkDerivedFrame = "" + sp.Name + "DerivedFrame* Domain::mk" + sp.Name + "DerivedFrame(std::string name, domain::" + sp.Name + @"* space, domain::" + sp.Name + @"Frame* parent, domain::MeasurementSystem* ms, domain::AxisOrientation* ax){
+    " + sp.Name + @"DerivedFrame* child = new domain::" + sp.Name + @"DerivedFrame(name, space, parent, ms, ax);
     space->addFrame(child);
     return child;
 }
@@ -373,6 +397,12 @@ namespace domain{
 
                 file += "\nclass ImperialMeasurementSystem;\n";
 
+                file += "\nclass AxisOrientation;\n";
+                file += "\nclass NWUOrientation;\n";
+                file += "\nclass NEDOrientation;\n";
+                file += "\nclass ENUOrientation;\n";
+
+
                 foreach (var spObj in sp.Category.Objects)
                 {
                     file += "\ntemplate<typename ValueType,int ValueCount>\nclass " + sp.Name +  spObj.Name + ";\n";
@@ -428,12 +458,30 @@ public:
     ImperialMeasurementSystem* mkImperialMeasurementSystem(string name);
 ";
 
+            var mkNWU = @"
+    NWUOrientation* mkNWUOrientation(string name);
+";
+
+            var mkENU = @"
+    ENUOrientation* mkENUOrientation(string name);
+";
+
+            var mkNED = @"
+    NEDOrientation* mkNEDOrientation(string name);
+";
 
             var meassys = @"
     std::vector<MeasurementSystem*> measurementSystems;
     std::vector<MeasurementSystem*> getMeasurementSystems() const{return measurementSystems;};
+
+";
+            var axes = @"
+
+    std::vector<AxisOrientation*> axisOrientations;
+    std::vector<AxisOrientation*> getAxisOrientations() const {return axisOrientations;};
 ";
             file += "\n" + mkSI + "\n" + mkImp + "\n" + meassys + "\n";
+            file += "\n" + mkNWU + "\n" + mkENU + "\n" + mkNED + "\n" + axes + "\n";
 
             foreach (var sp in ParsePeirce.Instance.Spaces)
             {
@@ -456,11 +504,11 @@ public:
                     file += "\n\t" + mkSpace + "\n\t" + getSVec + "\n";
                 }
 
-                var mkAliasedFrame = sp.Name + "AliasedFrame* mk" + sp.Name + "AliasedFrame(std::string name," + (@" domain::" + sp.Name + @"* space") + @", domain::" + sp.Name + @"Frame* aliased, domain::MeasurementSystem* ms);";
+                var mkAliasedFrame = sp.Name + "AliasedFrame* mk" + sp.Name + "AliasedFrame(std::string name," + (@" domain::" + sp.Name + @"* space") + @", domain::" + sp.Name + @"Frame* aliased, domain::MeasurementSystem* ms, domain::AxisOrientation* ax);";
 
                 file += "\n\t" + mkAliasedFrame;
 
-                var mkDerivedFrame = sp.Name + "DerivedFrame* mk" + sp.Name + "DerivedFrame(std::string name," + (@" domain::" + sp.Name + @"* space") + @", domain::" + sp.Name + @"Frame* parent);";
+                var mkDerivedFrame = sp.Name + "DerivedFrame* mk" + sp.Name + "DerivedFrame(std::string name," + (@" domain::" + sp.Name + @"* space") + @", domain::" + sp.Name + @"Frame* parent, domain::MeasurementSystem* ms, domain::AxisOrientation* ax);";
 
                 file += "\n\t" + mkDerivedFrame;
 
@@ -656,6 +704,39 @@ public:
     virtual std::string toString() override { return ""@@Imperial "" + this->name_; };
 };
 
+class AxisOrientation {
+public:
+    AxisOrientation(std::string name) : name_(name) {};
+    virtual ~AxisOrientation() {};
+    virtual std::string toString() = 0;
+
+    virtual std::string getName() const { return this->name_; };
+
+protected :
+    std::string name_;
+};
+
+class NWUOrientation : public AxisOrientation {
+public:
+    NWUOrientation(std::string name) : AxisOrientation(name) {};
+    //virtual ~NWUOrientation() {};
+    virtual std::string toString() override { return ""@@NWU "" + this->name_; };
+};
+
+class NEDOrientation : public AxisOrientation {
+public:
+    NEDOrientation(std::string name) : AxisOrientation(name) {};
+    //virtual ~NEDOrientation() {};
+    virtual std::string toString() override { return ""@@NED "" + this->name_; };
+};
+
+class ENUOrientation : public AxisOrientation {
+public:
+    ENUOrientation(std::string name) : AxisOrientation(name) {};
+    //virtual ~ENUOrientation() {};
+    virtual std::string toString() override { return ""@@ENU "" + this->name_; };
+};
+
 class Frame {
 public:
     Frame(std::string name, Space* sp) : name_(name), sp_(sp) {};
@@ -695,7 +776,7 @@ protected:
 
 class AliasedFrame : public Frame {
 public:
-    AliasedFrame(std::string name, Space* sp, Frame* original, domain::MeasurementSystem* ms) : Frame(name, sp), original_(original), units_(ms) {};
+    AliasedFrame(std::string name, Space* sp, Frame* original, domain::MeasurementSystem* ms, AxisOrientation* ax) : Frame(name, sp), original_(original), units_(ms), orient_(ax) {};
     AliasedFrame() {};
     virtual ~AliasedFrame(){};
     virtual std::string toString() const {
@@ -704,6 +785,7 @@ public:
 
     Frame* getAliased() const{ return original_; };
     MeasurementSystem* getUnits() const { return units_; };
+    AxisOrientation* getOrientation() const { return orient_; };
     void setAliased(Frame* original);
 
     std::string getName() const { return name_; };
@@ -713,12 +795,13 @@ public:
 protected:
     Frame* original_;
     MeasurementSystem* units_;
+    AxisOrientation* orient_;
     //std::string name_;
 };
 
 class DerivedFrame : public Frame {
 public:
-    DerivedFrame(std::string name, domain::Space* sp, Frame* parent) : Frame(name, sp), parent_(parent) {};
+    DerivedFrame(std::string name, domain::Space* sp, Frame* parent, MeasurementSystem* ms, AxisOrientation* ax) : Frame(name, sp), parent_(parent), units_(ms), orient_(ax) {};
     DerivedFrame() {};
     virtual ~DerivedFrame(){};
     virtual std::string toString() const override {
@@ -727,12 +810,14 @@ public:
 
     Frame* getParent() const{ return parent_; };
     MeasurementSystem* getUnits() const { return units_; };
+    AxisOrientation* getOrientation() const { return orient_; };
     void setParent(Frame* parent);
 
     //std::string getName() const { return name_; };
 protected:
     Frame* parent_;
     MeasurementSystem* units_;
+    AxisOrientation* orient_;
 };
 
 class DerivedSpace : public Space {
@@ -1019,13 +1104,16 @@ private:
 
                 var spaliasedframeclass = "\n\nclass " + sp.Name + @"AliasedFrame : public AliasedFrame, public " + sp.Name + @"Frame {
 public:
-	" + sp.Name + @"AliasedFrame(std::string name,  " + sp.Name + @"* space, " + sp.Name + @"Frame* aliased, domain::MeasurementSystem* ms) : AliasedFrame(name, space, aliased,  ms) {};
+	" + sp.Name + @"AliasedFrame(std::string name,  " + sp.Name + @"* space, " + sp.Name + @"Frame* aliased, domain::MeasurementSystem* ms, AxisOrientation* ax) : AliasedFrame(name, space, aliased,  ms, ax) {};
 	/*std::string toString() const override {
         std::string parentName = ((" + sp.Name + @"*)this->space_)->getName();
 		return ""@@" + sp.Name + @"Frame  "" + this->getName() + ""("" + parentName + (this->parent_? "","" + parentName + ""."" + this->parent_->getName() : """") + "")"";
 	}*/
     virtual std::string toString() const override {
         return std::string(""" + sp.Name + @"AliasedFrame "") + AliasedFrame::toString();
+    };
+    virtual std::string getName() const override {
+        return AliasedFrame::getName();
     };
 
 private:
@@ -1035,13 +1123,16 @@ private:
 
                 var spderivedframeclass = "\n\nclass " + sp.Name + @"DerivedFrame : public DerivedFrame, public " + sp.Name + @"Frame {
 public:
-	" + sp.Name + @"DerivedFrame(std::string name,  " + sp.Name + @"* space, " + sp.Name + @"Frame* parent) : DerivedFrame(name, space, parent) {};
+	" + sp.Name + @"DerivedFrame(std::string name,  " + sp.Name + @"* space, " + sp.Name + @"Frame* parent, MeasurementSystem* ms, AxisOrientation* ax) : DerivedFrame(name, space, parent, ms, ax) {};
 	/*std::string toString() const override {
         std::string parentName = ((" + sp.Name + @"*)this->space_)->getName();
 		return ""@@" + sp.Name + @"Frame  "" + this->getName() + ""("" + parentName + (this->parent_? "","" + parentName + ""."" + this->parent_->getName() : """") + "")"";
 	}*/
     virtual std::string toString() const override {
         return std::string(""" + sp.Name + @"DerivedFrame "") + DerivedFrame::toString();
+    };
+    virtual std::string getName() const override {
+        return DerivedFrame::getName();
     };
 
 private:

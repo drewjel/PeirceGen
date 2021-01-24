@@ -578,8 +578,11 @@ std::string Coords::getSourceLoc() const {
                                 file += "\nstd::string " + pcase.Name + "::toString() const{ return " + (prod.ProductionType == Grammar.ProductionType.Hidden ? "\"\""
                                     :
                                         prod.ProductionType == Grammar.ProductionType.Capture || prod.ProductionType == Grammar.ProductionType.CaptureSingle ?
-                                        "std::string(\"\")" + @" + state_->name_" + @"+" + @" "".B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)" :
-                                        pcase.Productions.Count > 0 ? "operand1->toString()" : @""""""
+                                        "std::string(\"\")" + @" + state_->name_" + @"+" + @" (state_->name_.length() > 0 ? ""."" : """") + ""B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)" :
+                                        prod.Name.Contains("WHILE") ? "std::string(\"\")" + @" + state_->name_" + @"+" + @" (state_->name_.length() > 0 ? ""."" : ""WHILE."") + ""B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)" :
+                                        prod.Name.Contains("TRY") ? "std::string(\"\")" + @" + state_->name_" + @"+" + @" (state_->name_.length() > 0 ? ""."" : ""TRY."") + ""B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)" :
+                                        prod.Name.Contains("ASSIGN") ? "std::string(\"\")" + @" + state_->name_" + @"+" + @" (state_->name_.length() > 0 ? ""."" : ""ASSIGN."") + ""B.L""+ std::to_string(state_->begin_line_no_) + ""C"" + std::to_string(state_->begin_col_no_) + "".E.L"" + std::to_string(state_->end_line_no_) + ""C"" + std::to_string(state_->end_col_no_)" :
+                                        prod.Name.Contains("DECL") ? "operand1->toString()" : @""""""
                                     )
                                     
                                     

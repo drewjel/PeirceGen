@@ -85,6 +85,33 @@ using namespace interp2domain;
 }";
             file += "\n\t" + putms + "\n\t" + getms + "\n\t" + getms2 + "\n";
 
+            var putax = @"void InterpToDomain::putAxisOrientation(interp::AxisOrientation* key, domain::AxisOrientation* val){
+    interp2dom_AxisOrientations[key] = val;
+    dom2interp_AxisOrientations[val] = key;
+}";
+            var getax = @"domain::AxisOrientation* InterpToDomain::getAxisOrientation(interp::AxisOrientation* i) const{
+    domain::AxisOrientation* dom = NULL;
+    try {
+        dom = interp2dom_AxisOrientations.at(i);
+    }
+    catch (std::out_of_range &e) {
+        dom = NULL;
+    }
+    return dom;
+}";
+            var getax2 = @"interp::AxisOrientation* InterpToDomain::getAxisOrientation(domain::AxisOrientation* d) const{
+    interp::AxisOrientation *interp = NULL;
+    try {
+        interp = dom2interp_AxisOrientations.at(d);
+    }
+    catch (std::out_of_range &e) {
+        interp = NULL;
+    }
+    return interp;
+}";
+            file += "\n\t" + putax + "\n\t" + getax + "\n\t" + getax2 + "\n";
+
+
             var putFrame = @"void InterpToDomain::putFrame(interp::Frame* key, domain::Frame* val){
     interp2dom_Frames[key] = val;
     dom2interp_Frames[val] = key;
@@ -278,6 +305,7 @@ namespace interp
 {
     class Space;
     class MeasurementSystem;
+    class AxisOrientation;
     class Frame;
     "
     +
@@ -311,8 +339,13 @@ class InterpToDomain
             var getms = @"domain::MeasurementSystem* getMeasurementSystem(interp::MeasurementSystem* c) const;";
             var getms2 = @"interp::MeasurementSystem* getMeasurementSystem(domain::MeasurementSystem* d) const;";
 
+            var putax = @"void putAxisOrientation(interp::AxisOrientation* key, domain::AxisOrientation* val);";
+            var getax = @"domain::AxisOrientation* getAxisOrientation(interp::AxisOrientation* c) const;";
+            var getax2 = @"interp::AxisOrientation* getAxisOrientation(domain::AxisOrientation* d) const;";
+
             file += "\n\t" + putspace + "\n\t" + getdomspace + "\n\t" + getintspace + "\n";
             file += "\n\t" + putms + "\n\t" + getms + "\n\t" + getms2 + "\n";
+            file += "\n\t" + putax + "\n\t" + getax + "\n\t" + getax2 + "\n";
             var putFrame = @"void putFrame(interp::Frame* key, domain::Frame* val);";
             var getdomFrame = @"domain::Frame* getFrame(interp::Frame* c) const;";
             var getintFrame = @"interp::Frame* getFrame(domain::Frame* d) const;";
@@ -377,6 +410,8 @@ class InterpToDomain
             file += "\nstd::unordered_map<domain::Space*, interp::Space*> dom2interp_Spaces;\n";
             file += "\nstd::unordered_map<interp::MeasurementSystem*, domain::MeasurementSystem*> interp2dom_MeasurementSystems;\n";
             file += "\nstd::unordered_map<domain::MeasurementSystem*, interp::MeasurementSystem*> dom2interp_MeasurementSystems;\n";
+            file += "\nstd::unordered_map<interp::AxisOrientation*, domain::AxisOrientation*> interp2dom_AxisOrientations;\n";
+            file += "\nstd::unordered_map<domain::AxisOrientation*, interp::AxisOrientation*> dom2interp_AxisOrientations;\n";
             file += "\nstd::unordered_map<interp::Frame*, domain::Frame*> interp2dom_Frames;\n";
             file += "\nstd::unordered_map<domain::Frame*, interp::Frame*> dom2interp_Frames;\n";
 

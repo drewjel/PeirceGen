@@ -211,12 +211,17 @@ virtual domain::Space* Oracle_AskAll::getSpaceInterpretation(){
         int i = 0;
         std::cout<<""Available Frames For : "" << space->toString() << ""\n"";
         for(auto fr : frames){
-            std::cout<<""(""+std::to_string((i++))+"") ""<<fr->toString()<<""\n"";
+            if(auto dc = dynamic_cast<domain::StandardFrame*>(fr)) continue;
+            std::cout<<""(""+std::to_string((++i))+"") ""<<fr->toString()<<""\n"";
+        }
+        if(i == 0){
+            std::cout<<""No available interpreted frames"";
+            return nullptr;
         }
         int choice = 0;
         std::cin>>choice;
         choice_buffer->push_back(std::to_string(choice));
-        if(choice > 0 and choice <= sz){
+        if(choice >= 0 and choice < sz){
             return frames[choice];
         }
     }
@@ -342,6 +347,10 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                                 + @"(sp" + (cur.HasValueContainer() ? ",cp" : "") + @");
                         //delete[] cp;
                         auto frame = (domain::" + sppair.Item1.Name + @"Frame*)this->getFrameForInterpretation(sp); 
+                        if(!frame) {
+                            std::cout<<""Missing frame : failed to build interpretation\n"";
+                            return nullptr;
+                        }
                         ret->setFrame(frame);"
 + (cur.HasValueContainer() ? new List<string>() {"one" }.Select(x =>
 {
@@ -423,16 +432,22 @@ domain::DomainObject* Oracle_AskAll::getInterpretationFor" + cur.Name + @"(coord
                             int dom_choice = 0, 
                                 cod_choice = 0;
                             for(auto fr: frs){
+                                if(auto dc = dynamic_cast<domain::StandardFrame*>(fr)) continue;
                                 index_to_dom[++dom_index] = (domain::" + sppair.Item1.Name + @"Frame*)fr;
                                 std::cout<<""(""<<std::to_string(dom_index)<<"") ""<<fr->toString()<<""\n"";
                             }
+                            if(dom_index == 0) {
+                                std::cout<<""No available interpreted frames\n"";
+                                return nullptr;
+                            }
                             std::cin>>dom_choice;
-        choice_buffer->push_back(std::to_string(dom_choice));
+                            choice_buffer->push_back(std::to_string(dom_choice));
 
                         
                             std::cout<<""Enter Frame of Transform Co-Domain : \n"";
                             std::unordered_map<int, domain::" + sppair.Item1.Name + @"Frame*> index_to_cod;
                             for(auto fr: frs){
+                                if(auto dc = dynamic_cast<domain::StandardFrame*>(fr)) continue;
                                 index_to_cod[++cod_index] = (domain::" + sppair.Item1.Name + @"Frame*)fr;
                                 std::cout<<""(""<<std::to_string(cod_index)<<"") ""<<fr->toString()<<""\n"";
                             }

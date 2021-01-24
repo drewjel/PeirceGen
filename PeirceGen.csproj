@@ -44,6 +44,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CustomMatchers.cs" />
     <Compile Include="Generators\GenAST.cs" />
     <Compile Include="Generators\GenBase.cs" />
     <Compile Include="Generators\GenCoordsToDomain.cs" />

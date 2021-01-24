@@ -79,28 +79,27 @@ std::string Interpretation::toString_AST(){
             math += ""def "" + interp::getEnvName() + "" := environment.init_env"";
             //math += interp->toString_Spaces();
             //math += interp->toString_PROGRAMs();
-            math += this->toString_COMPOUND_STMTs();
-
+            //math += this->toString_COMPOUND_STMTs();
+            std::vector<interp::MAIN_FUNC_DECL_STMT*> interps;
+            for(auto coord : this->MAIN_FUNC_DECL_STMT_vec){
+                interps.push_back(this->coords2interp_->getMAIN_FUNC_DECL_STMT(coord));
+            }
+            for(auto interp_ : interps){
+                if(auto dc = dynamic_cast<interp::COMPOUND_STMT*>(interp_->getOperand1())){
+                    math += ""\n"" + dc->toStringLinked(
+                        this->getSpaceInterps(), 
+                        this->getSpaceNames(), 
+                        this->getMSInterps(), this->getMSNames(),  
+                        this->getAxisInterps(), this->getAxisNames(),   
+                        this->getFrameInterps(), this->getFrameNames(), interp2domain_, true) + ""\n"";
+                }
+            }
+                
             return math;
         };
 
 
 ";
-            /*
-             * 
-             * void Interpretation::mkVecIdent(ast::VecIdent *ast)
-                {
-                  coords::VecIdent *coords = ast2coords_->mkVecIdent(ast, context_);
-                  LOG(DBUG) << "Interpretation::mkVecIdent. ast=" << std::hex << ast << ", " << coords->toString() << "\n";
-                  //domain::Space &space = oracle_->getSpaceForVecIdent(coords);
-                  domain::VecIdent *dom = domain_->mkVecIdent();
-                  coords2dom_->putVecIdent(coords, dom);
-                  interp::VecIdent *interp = new interp::VecIdent(coords, dom);
-                  coords2interp_->putVecIdent(coords, interp);
-                  interp2domain_->putVecIdent(interp, dom);
-                }
-             * */
-
 
             var file = header;
 
@@ -265,7 +264,8 @@ void Interpretation::mk" + pcase.Name + @"(const ast::" + pcase.Name + @" * ast 
         retval += ""\n"" + interp_->toStringLinked(
             this->getSpaceInterps(), 
             this->getSpaceNames(), 
-            this->getMSInterps(), this->getMSNames(),    
+            this->getMSInterps(), this->getMSNames(),  
+            this->getAxisInterps(), this->getAxisNames(),   
             this->getFrameInterps(), this->getFrameNames(), interp2domain_, true) + ""\n"";
 " : 
      @"
@@ -383,6 +383,17 @@ std::vector<interp::MeasurementSystem*> Interpretation::getMSInterps(){
     return interps;
 };
 
+std::vector<interp::AxisOrientation*> Interpretation::getAxisInterps(){
+    std::vector<interp::AxisOrientation*> interps;
+    auto mss = domain_->getAxisOrientations();
+    for (auto& m : mss)
+    {
+        auto ms = interp2domain_->getAxisOrientation(m);
+        interps.push_back(ms);
+    }
+    return interps;
+};
+
 std::vector<std::string> Interpretation::getSpaceNames() {
     std::vector<std::string> names;
     " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => "\n\tauto " + sp_.Name + @"s = domain_->get" + sp_.Name + @"Spaces();
@@ -402,6 +413,16 @@ std::vector<std::string> Interpretation::getMSNames(){
     for (auto& m : mss)
     {
         names.push_back(m->getName());
+    }
+    return names;
+};
+
+std::vector<std::string> Interpretation::getAxisNames(){
+    std::vector<std::string> names;
+    auto axs = domain_->getAxisOrientations();
+    for (auto& ax : axs)
+    {
+        names.push_back(ax->getName());
     }
     return names;
 };
@@ -643,12 +664,66 @@ void Interpretation::printMeasurementSystems(){
 };
 
 
+
+void Interpretation::buildAxisOrientation(){
+    while(true){
+        std::cout<<""Build Axis Orientation : \n"";
+        std::cout<<""(1) NWU Orientation (Standard body - X north, Y west, Z up) \n"";
+        std::cout<<""(2) NED Orientation\n"";
+        std::cout<<""(3) ENU Orientation\n"";
+        int choice = 0;
+        std::cin>>choice;
+        choice_buffer->push_back(std::to_string(choice));
+        if(choice == 1){
+            std::cout<<""Enter reference name:"";
+            std::string nm;
+            std::cin>>nm;
+            choice_buffer->push_back(nm);
+            auto ax = this->domain_->mkNWUOrientation(nm);
+            auto iax = new interp::AxisOrientation(ax);
+            interp2domain_->putAxisOrientation(iax, ax);
+            return;
+        }
+        else if (choice == 2){
+            std::cout<<""Enter reference name:"";
+            std::string nm;
+            std::cin>>nm;
+            choice_buffer->push_back(nm);
+            auto ax = this->domain_->mkNEDOrientation(nm);
+            auto iax = new interp::AxisOrientation(ax);
+            interp2domain_->putAxisOrientation(iax, ax);
+            return;
+        }
+        else if (choice == 3){
+            std::cout<<""Enter reference name:"";
+            std::string nm;
+            std::cin>>nm;
+            choice_buffer->push_back(nm);
+            auto ax = this->domain_->mkENUOrientation(nm);
+            auto iax = new interp::AxisOrientation(ax);
+            interp2domain_->putAxisOrientation(iax, ax);
+            return;
+        }
+    }
+
+};
+
+void Interpretation::printAxisOrientations(){
+    auto axs = this->domain_->getAxisOrientations();
+    for(auto& ax:axs){
+        std::cout<<ax->toString()<<""\n"";
+    }
+
+};
+
+
+//1/18/20 : Probably worth revisiting this method and input in general in the feature
 void Interpretation::buildFrame(){
     while(true){
         std::cout<<""Select Space : ""<<""\n"";
         int index = 0;
         std::unordered_map<int, domain::Space*> index_to_sp;
-    " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => "\n\tauto " + sp_.Name + @"s = domain_->get" + sp_.Name + @"Spaces();
+    " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ => "\n\t\tauto " + sp_.Name + @"s = domain_->get" + sp_.Name + @"Spaces();
         for (auto it = " + sp_.Name + @"s.begin(); it != " + sp_.Name + @"s.end(); it++)
         {
             std::cout<<""(""<<std::to_string(++index)<<"")""<<(*it)->toString() + ""\n"";
@@ -667,7 +742,7 @@ void Interpretation::buildFrame(){
                 std::cout<<"" (1) Alias For Existing Frame \n"";
                 std::cout<<"" (2) Derived Frame From Existing Frame \n"";
                 std::cin>>frameType;
-        choice_buffer->push_back(std::to_string(frameType));
+                choice_buffer->push_back(std::to_string(frameType));
 
                 if(frameType == 1){
                     auto frames = chosen->getFrames();
@@ -682,28 +757,68 @@ void Interpretation::buildFrame(){
                     }
                     choice = 0;
                     std::cin>>choice;
-        choice_buffer->push_back(std::to_string(choice));
+                    choice_buffer->push_back(std::to_string(choice));
 
                     if(choice > 0 and choice<= index){
                         auto aliased = index_to_fr[choice];
                         std::cout<<""Enter Name:\n"";
                         std::string name;
                         std::cin>>name;
-        choice_buffer->push_back(name);
+                        choice_buffer->push_back(name);
                         //domain::MeasurementSystem* ms;
                         auto mss = this->domain_->getMeasurementSystems();
-                        choice = 0;
                         std::unordered_map<int, domain::MeasurementSystem*> index_to_ms;
+
+                        ms:
+
+                        index_to_ms.clear();
+                        choice = 0;
                         index = 0;
                         std::cout<<""Select Measurement System to Interpret Frame With : \n"";
                         for(auto& m : mss){
                             std::cout<<""(""<<std::to_string(++index)<<"")""<<(m)->toString()<<""\n"";
                             index_to_ms[index] = m;
                         }
+                        if(index == 0){
+                            std::cout<<""Warning: No available Measurement Systems! You must instantiate one in order to provide an intepretation to the frame."";
+                            return;
+                        }
                         std::cin>>choice;
-        choice_buffer->push_back(std::to_string(choice));
-                        if(choice>0 and choice<=index){
+                        choice_buffer->push_back(std::to_string(choice));
+                        
+
+                        if(choice<0 or choice>index){
+                            goto ms;
+                        }
+                        
                         auto cms = index_to_ms[choice];
+
+                        auto axs = this->domain_->getAxisOrientations();
+                        std::unordered_map<int, domain::AxisOrientation*> index_to_ax;
+
+                        ax:
+
+                        choice = 0;
+                        index = 0;
+                        std::cout<<""Select Axis Orientation to Interpret Frame With : \n"";
+                        for(auto& ax : axs){
+                            std::cout<<""(""<<std::to_string(++index)<<"")""<<(ax)->toString()<<""\n"";
+                            index_to_ax[index] = ax;
+                        }
+                        if(index == 0){
+                            std::cout<<""Warning: No available Axis Orientations! You must instantiate one in order to provide an intepretation to the frame."";
+                            return;
+                        }
+                        std::cin>>choice;
+                        choice_buffer->push_back(std::to_string(choice));
+
+                        if(choice<0 or choice>index){
+                            goto ax;
+                        }
+
+                        auto cax = index_to_ax[choice];
+
+                        if(choice>0 and choice<=index){
 
 " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ =>
     {
@@ -714,10 +829,11 @@ void Interpretation::buildFrame(){
         return @"
                         if(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(chosen)){
 
-                            auto child = (domain::" + sp_.Name + @"Frame*)domain_->mk" + sp_.Name + @"AliasedFrame(name, dc, (domain::" + sp_.Name + @"Frame*)aliased,cms);
+                            auto child = (domain::" + sp_.Name + @"Frame*)domain_->mk" + sp_.Name + @"AliasedFrame(name, dc, (domain::" + sp_.Name + @"Frame*)aliased,cms,cax);
                             auto isp = interp2domain_->getSpace(dc);
                             auto ims = interp2domain_->getMeasurementSystem(cms);
-                            interp::Frame* interp = new interp::Frame(child, isp, ims);
+                            auto iax = interp2domain_->getAxisOrientation(cax);
+                            interp::Frame* interp = new interp::Frame(child, isp, ims, iax);
                             interp2domain_->putFrame(interp, child);
                             return;
                         }";
@@ -738,13 +854,97 @@ void Interpretation::buildFrame(){
                     }
                     choice = 0;
                     std::cin>>choice;
-        choice_buffer->push_back(std::to_string(choice));
+                    choice_buffer->push_back(std::to_string(choice));
                     if(choice > 0 and choice<= index){
-                        auto parent = index_to_fr[index];
+                        auto parent = index_to_fr[choice];
                         std::cout<<""Enter Name of Frame:\n"";
                         std::string name;
                         std::cin>>name;
-        choice_buffer->push_back(name);
+                        choice_buffer->push_back(name);
+
+                        auto der = dynamic_cast<domain::DerivedFrame*>(parent);
+                        auto al = dynamic_cast<domain::AliasedFrame*>(parent);
+                        bool reinterpret=false;
+
+                        if
+                            (
+                            (der && der->getUnits() && der->getOrientation()) ||
+                            (al && al->getUnits() && al->getOrientation())
+                            )
+                        {
+                            std::cout<<""Use available measurement units & orientation from Parent Frame? (1 - Yes, 2 - No)\n"";
+                            std::cin>>choice;
+                            choice_buffer->push_back(std::to_string(choice));
+                            if(choice == 2)
+                                reinterpret = true;
+                        }
+                        else
+                            reinterpret = true;
+
+                        domain::MeasurementSystem* cms;                       
+                        domain::AxisOrientation* cax;
+
+                        if(reinterpret){
+                            ms2:
+                            auto mss = this->domain_->getMeasurementSystems();
+                            std::unordered_map<int, domain::MeasurementSystem*> index_to_ms;
+
+                            index_to_ms.clear();
+                            choice = 0;
+                            index = 0;
+                            std::cout<<""Select Measurement System to Interpret Frame With : \n"";
+                            for(auto& m : mss){
+                                std::cout<<""(""<<std::to_string(++index)<<"")""<<(m)->toString()<<""\n"";
+                                index_to_ms[index] = m;
+                            }
+                            if(index == 0){
+                                std::cout<<""Warning: No available Measurement Systems! You must instantiate one in order to provide an intepretation to the frame."";
+                                return;
+                            }
+                            std::cin>>choice;
+                            choice_buffer->push_back(std::to_string(choice));
+                        
+
+                            if(choice<0 or choice>index){
+                                goto ms2;
+                            }
+                        
+                            cms = index_to_ms[choice];
+
+                            auto axs = this->domain_->getAxisOrientations();
+                            std::unordered_map<int, domain::AxisOrientation*> index_to_ax;
+
+                            ax2:
+
+                            choice = 0;
+                            index = 0;
+                            std::cout<<""Select Axis Orientation to Interpret Frame With : \n"";
+                            for(auto& ax : axs){
+                                std::cout<<""(""<<std::to_string(++index)<<"")""<<(ax)->toString()<<""\n"";
+                                index_to_ax[index] = ax;
+                            }
+                            if(index == 0){
+                                std::cout<<""Warning: No available Axis Orientations! You must instantiate one in order to provide an intepretation to the frame."";
+                                return;
+                            }
+                            std::cin>>choice;
+                            choice_buffer->push_back(std::to_string(choice));
+
+                            if(choice<0 or choice>index){
+                                goto ax2;
+                            }
+
+                            cax = index_to_ax[choice];
+                        }
+                        else if(der){
+                            cms = der->getUnits();
+                            cax = der->getOrientation();
+                        }
+                        else if(al){
+                            cms = al->getUnits();
+                            cax = al->getOrientation();
+                        }
+
 " + string.Join("", ParsePeirce.Instance.Spaces.Select(sp_ =>
     {
 
@@ -754,9 +954,11 @@ void Interpretation::buildFrame(){
         return @"
                         if(auto dc = dynamic_cast<domain::" + sp_.Name + @"*>(chosen)){
 
-                            auto child = (domain::" + sp_.Name + @"Frame*)domain_->mk" + sp_.Name + @"DerivedFrame(name, dc, (domain::" + sp_.Name + @"Frame*)parent);
+                            auto child = (domain::" + sp_.Name + @"Frame*)domain_->mk" + sp_.Name + @"DerivedFrame(name, dc, (domain::" + sp_.Name + @"Frame*)parent, cms, cax);
                             auto isp = interp2domain_->getSpace(dc);
-                            interp::Frame* interp = new interp::Frame(child,isp);
+                            auto ims = interp2domain_->getMeasurementSystem(cms);
+                            auto iax = interp2domain_->getAxisOrientation(cax);
+                            interp::Frame* interp = new interp::Frame(child, isp, ims, iax);
                             interp2domain_->putFrame(interp, child);
                             return;
                         }";
@@ -824,7 +1026,7 @@ void Interpretation::printVarTable(){ " +
         p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"*>(this->index2coords_[i])){
         auto dom = (domain::DomainContainer*)this->coords2dom_->get" 
 + (p_.ProductionType == Grammar.ProductionType.Single || p_.ProductionType == Grammar.ProductionType.CaptureSingle ? p_.Name : c_.Name) + @"(dc);
-        std::cout<<""Index: ""<<i<<"",""<<" + (string.IsNullOrEmpty(c_.Description) ? "" : @"""" + c_.Description + @",""<<") + @"dc->state_->code_<<"", \n\t""<<dc->getSourceLoc()<<""\nExisting Interpretation: ""<<dom->toString()<<std::endl;
+        std::cout<<""Index: ""<<i<<"", ""<<" + (string.IsNullOrEmpty(c_.Description) ? "\n\tSnippet:" : @"""Description: " + c_.Description + @", \n\t""<<""Snippet: ""<<") + @"dc->state_->code_<<"", \n\t""<<dc->getSourceLoc()<<""\nExisting Interpretation: ""<<dom->toString()<<""\n""<<std::endl;
 
     }"))))  : "{");
 
@@ -872,14 +1074,26 @@ void Interpretation::updateVarTable(){
         std::cout<<""Enter -4 to create a New Frame\n"";
         std::cout<<""Enter -5 to print available Measurement Systems\n"";
         std::cout<<""Enter -6  to create a Measurement System\n"";
+        std::cout<<""Enter -7 to print available Axis Orientations\n"";
+        std::cout<<""Enter -8  to create an Axis Orientation\n"";
         std::cout<<""Enter 0 to print the Variable Table again.\n"";
         std::cout << ""Enter the index of a Variable to update its physical type. Enter "" << sz << "" to exit and check."" << std::endl;
         std::cin >> choice;
         choice_buffer->push_back(std::to_string(choice));
         std::cout << std::to_string(choice) << ""\n"";
 
-        while (((choice >= -6 and choice <= 0) || this->index2coords_.find(choice) != this->index2coords_.end()) && choice != sz)
+        while (((choice >= -8 and choice <= 0) || this->index2coords_.find(choice) != this->index2coords_.end()) && choice != sz)
         {
+            if (choice == -8)
+            {
+                this->buildAxisOrientation();
+            }
+
+            if (choice == -7)
+            {
+                this->printAxisOrientations();
+            }
+
             if (choice == -6)
             {
                 this->buildMeasurementSystem();
@@ -947,6 +1161,8 @@ void Interpretation::updateVarTable(){
             std::cout<<""Enter -4 to create a New Frame\n"";
             std::cout<<""Enter -5 to print available Measurement Systems\n"";
             std::cout<<""Enter -6  to create a Measurement System\n"";
+            std::cout<<""Enter -7 to print available Axis Orientations\n"";
+            std::cout<<""Enter -8  to create an Axis Orientation\n"";
 
             std::cout<<""Enter 0 to print the Variable Table again.\n"";
             std::cout << ""Enter the index of a Variable to update its physical type. Enter "" << sz << "" to exit and check."" << std::endl;
@@ -1114,6 +1330,7 @@ public:
 
             file += "\n\tstd::string toString_Spaces();\n\tstd::vector<interp::Space*> getSpaceInterps();\n\tstd::vector<std::string> getSpaceNames();";
             file += "\n\tstd::vector<interp::MeasurementSystem*> getMSInterps();std::vector<std::string> getMSNames();";
+            file += "\n\tstd::vector<interp::AxisOrientation*> getAxisInterps();std::vector<std::string> getAxisNames();";
             file += "\n\tstd::vector<interp::Frame*> getFrameInterps();\n\tstd::vector<std::string> getFrameNames();\n\t";
             var footer = @"    void buildDefaultSpaces();
 
@@ -1122,6 +1339,9 @@ public:
 
     void buildMeasurementSystem();
     void printMeasurementSystems();
+
+    void buildAxisOrientation();
+    void printAxisOrientations();
 
     //void setAll_Spaces();
     void printSpaces();
