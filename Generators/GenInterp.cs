@@ -66,8 +66,18 @@ std::string Space::toString() const {
            // retval += ""def "" + dc->getName() + ""var : lang." + sp_.Prefix + @".var := lang." + sp_.Prefix + @".var.mk "" + std::to_string(id) + """" + ""\n"";
             //retval += " + (sp_.DimensionType == Space.DimensionType_.ANY ? @"""\ndef "" + dc->getName() + ""sp := lang." + sp_.Prefix + @".expr.lit (" + sp_.Prefix + @".mk "" + std::to_string(id-1) + "" "" + std::to_string(dc->getDimension()) + "")""; " :
                              @"""\ndef "" + dc->getName() + ""sp := lang." + sp_.Prefix + @".expr.lit (" + sp_.Prefix + @".mk "" + std::to_string(id) + "")""; ") + @"
-            retval += ""\ndef "" + dc->getName() + "" := cmd." + sp_.Prefix + @"Assmt (⟨⟨"" + std::to_string(id) + ""⟩⟩) (" + 
-                (sp_.DimensionType == Space.DimensionType_.ANY ? @"lang." + sp_.Prefix + @".spaceExpr.lit(" + sp_.Prefix + @".build "" + std::to_string(id) + "" "" + std::to_string(dc->getDimension()) + "")""" : @"lang." + sp_.Prefix + @".spaceExpr.lit(" + sp_.Prefix + @".build "" + std::to_string(id-1) + "")""") + @""")\n"";
+            //retval += ""\ndef "" + dc->getName() + "" := cmd." + sp_.Prefix + @"Assmt (⟨⟨"" + std::to_string(id) + ""⟩⟩) (" + (sp_.DimensionType == Space.DimensionType_.ANY ? @"lang." + sp_.Prefix + @".spaceExpr.lit(" + sp_.Prefix + @".build "" + std::to_string(id) + "" "" + std::to_string(dc->getDimension()) + "")""" : @"lang." + sp_.Prefix + @".spaceExpr.lit(" + sp_.Prefix + @".build "" + std::to_string(id-1) + "")""") + @""")\n"";
+            " + 
+             (
+                sp_.DimensionType == Space.DimensionType_.ANY ? 
+                "" 
+                :
+                @"
+            retval += ""\ndef "" + dc->getName() + "" := \n\tlet var := (⟨⟨"" + std::to_string(id) + ""⟩⟩ : lang." + sp_.Prefix + @".spaceVar) in\n"";
+            retval += ""\tlet spaceLiteral := lang." + sp_.Prefix + @".spaceExpr.lit(" + sp_.Prefix + @".build "" + std::to_string(id-1) + "") in\n"";
+            retval += ""\tvar=spaceLiteral"";"
+             )  
+            +@"
             retval += ""\ndef "" + getEnvName() + "" := cmdEval "" + dc->getName() + "" "" + getLastEnv();
     }";
             })) + @"
@@ -152,12 +162,12 @@ std::string MeasurementSystem::toString() const {
     if(((domain::SIMeasurementSystem*)this->ms_)){
         //retval += ""def "" + this->ms_->getName() + "" := cmd.measurementSystemAssmt (⟨⟨"" + std::to_string(id) + ""⟩⟩) (lang.measurementSystem.measureExpr.lit measurementSystem.si_measurement_system)"";
         //retval += ""\ndef "" + getEnvName() + "" := cmdEval "" + this->ms_->getName() + "" "" + getLastEnv();
-        retval += ""(⟨⟨"" + std::to_string(id) + ""⟩⟩ : lang.measurementSystem.measureVar)=(lang.measurementSystem.measureExpr.lit measurementSystem.si_measurement_system)"";
+        retval += ""\tlet var := (⟨⟨"" + std::to_string(id) + ""⟩⟩ : lang.measurementSystem.measureVar) in\n\tlet measurementSystemLiteral := (lang.measurementSystem.measureExpr.lit measurementSystem.si_measurement_system) in\n\tvar=measurementSystemLiteral"";
     }
     else if((domain::ImperialMeasurementSystem*)this->ms_){
         //retval += ""def "" + this->ms_->getName() + "" :=  cmd.measurementSystemAssmt (⟨⟨"" + std::to_string(id) + ""⟩⟩) (lang.measurementSystem.measureExpr.lit measurementSystem.imperial_measurement_system)"";
         //retval += ""\ndef "" + getEnvName() + "" := cmdEval "" + this->ms_->getName() + "" "" + getLastEnv();
-        retval += ""(⟨⟨"" + std::to_string(id) + ""⟩⟩ : lang.measurementSystem.measureVar)=(lang.measurementSystem.measureExpr.lit measurementSystem.imperial_measurement_system)"";
+        retval += ""\tlet var := (⟨⟨"" + std::to_string(id) + ""⟩⟩ : lang.measurementSystem.measureVar) in\n\tlet measurementSystemLiteral := (lang.measurementSystem.measureExpr.lit measurementSystem.imperial_measurement_system) in\n\tvar=measurementSystemLiteral"";
 
     }
         return retval;
@@ -183,18 +193,18 @@ std::string AxisOrientation::toString() const {
     if(((domain::NWUOrientation*)this->ax_)){
         //retval += ""def "" + this->ax_->getName() + "" := cmd.axisOrientationAssmt (⟨⟨"" + std::to_string(id) + ""⟩⟩) (lang.axisOrientation.orientationExpr.lit orientation.NWU)"";
         //retval += ""\n def "" + getEnvName() + "" := cmdEval "" + this->ax_->getName() + "" "" + getLastEnv();
-        retval += ""(⟨⟨"" + std::to_string(id) + ""⟩⟩ : lang.axisOrientation.orientationVar)=(lang.axisOrientation.orientationExpr.lit orientation.NWU)"";
+        retval += ""\n\tlet var := (⟨⟨"" + std::to_string(id) + ""⟩⟩ : lang.axisOrientation.orientationVar) in\n\tlet axisOrientationLiteral := (lang.axisOrientation.orientationExpr.lit orientation.NWU) in\n\tvar=axisOrientationLiteral"";
     }
     else if((domain::NEDOrientation*)this->ax_){
         //retval += ""def "" + this->ax_->getName() + "" := cmd.axisOrientationAssmt (⟨⟨"" + std::to_string(id) + ""⟩⟩) (lang.axisOrientation.orientationExpr.lit orientation.NED)"";
         //retval += ""\n def "" + getEnvName() + "" := cmdEval "" + this->ax_->getName() + "" "" + getLastEnv();
-        retval += ""(⟨⟨"" + std::to_string(id) + ""⟩⟩ : lang.axisOrientation.orientationVar)=(lang.axisOrientation.orientationExpr.lit orientation.NED)"";
+        retval += ""\n\tlet var := (⟨⟨"" + std::to_string(id) + ""⟩⟩ : lang.axisOrientation.orientationVar) in\n\tlet axisOrientationLiteral := (lang.axisOrientation.orientationExpr.lit orientation.NED) in\n\tvar=axisOrientationLiteral"";
 
     }
     else if((domain::ENUOrientation*)this->ax_){
         //retval += ""def "" + this->ax_->getName() + "" := cmd.axisOrientationAssmt (⟨⟨"" + std::to_string(id) + ""⟩⟩) (lang.axisOrientation.orientationExpr.lit orientation.ENU)"";
         //retval += ""\n def "" + getEnvName() + "" := cmdEval "" + this->ax_->getName() + "" "" + getLastEnv();
-        retval += ""(⟨⟨"" + std::to_string(id) + ""⟩⟩ : lang.axisOrientation.orientationVar)=(lang.axisOrientation.orientationExpr.lit orientation.ENU)"";
+        retval += ""\n\tlet var := (⟨⟨"" + std::to_string(id) + ""⟩⟩ : lang.axisOrientation.orientationVar) in\n\tlet axisOrientationLiteral := (lang.axisOrientation.orientationExpr.lit orientation.ENU) in\n\tvar=axisOrientationLiteral"";
 
     }
         return retval;
@@ -250,10 +260,11 @@ std::string Frame::toString() const {
             retval += ""    let parent := (" + sp_.Prefix + @"FrameEval (lang." + sp_.Prefix + @".frameExpr.var ⟨⟨"" + std::to_string(fid) +""⟩⟩) "" + getLastEnv() + "") in\n"";
         } 
         retval += ""    let axis := (axisOrientationEval (lang.axisOrientation.orientationExpr.var ⟨⟨"" + std::to_string(aid) + ""⟩⟩) "" + getLastEnv() + "") in\n"";
-        retval += ""    cmd." + sp_.Prefix + @"FrameAssmt (⟨⟨"" + std::to_string(id) + ""⟩⟩) (" +
-                (sp_.DimensionType == Space.DimensionType_.ANY ? @"lang." + sp_.Prefix + @".frameExpr.lit(" + sp_.Prefix + @"Eval "" + std::to_string(sid)  + "")""" 
-            : @"lang." + sp_.Prefix + @".frameExpr.lit (" + sp_.Prefix 
-                + @"Frame.interpret parent ms axis)""") + @""")\n"";
+        retval += ""    let var : lang." + sp_.Prefix + @".frameVar := (⟨⟨"" + std::to_string(id) + ""⟩⟩) in\n"";
+        retval += ""    let frame_alias_literal := \n\t\t\tlang." + sp_.Prefix + @".frameExpr.lit (" + sp_.Prefix + @"Frame.interpret parent ms axis) in\n"";
+        retval += ""    var=frame_alias_literal\n"";      
+
+
         //retval += ""\n def "" + env + "" := cmdEval "" + ((domain::AliasedFrame*)df)->getName() + "" "" + getLastEnv();
     }";
                         })) + @"
@@ -281,10 +292,19 @@ std::string Frame::toString() const {
         }
         retval += ""    let ms := (measurementSystemEval (lang.measurementSystem.measureExpr.var ⟨⟨"" + std::to_string(mid) + ""⟩⟩) "" + getLastEnv() + "") in\n"";
         retval += ""    let axis := (axisOrientationEval (lang.axisOrientation.orientationExpr.var ⟨⟨"" + std::to_string(aid) + ""⟩⟩) "" + getLastEnv() + "") in\n"";
-        retval += ""    cmd." + sp_.Prefix + @"FrameAssmt (⟨⟨"" + std::to_string(id) + ""⟩⟩) (\n"";
-        retval += ""        lang." + sp_.Prefix + @".frameExpr.lit (" + sp_.Prefix + @"Frame.build_derived_from_coords fr \n"";
-        retval += ""        "";
-        retval += ""   (⟨[]"";
+        retval += ""    let var : lang." + sp_.Prefix + @".frameVar := (⟨⟨"" + std::to_string(id) + ""⟩⟩) in\n"";
+        retval += ""    let o := aff_lib.affine_coord_space.std_origin_vector ℝ "" + std::to_string(dim) + "" in\n"";
+        for(auto i = 0; i < dim" + @";i++)
+            retval += ""    let b"" + std::to_string(i)+"" := aff_lib.affine_coord_space.std_basis_vector ℝ "" + std::to_string(dim) + "" "" + std::to_string(i)+"" in\n"";
+        //retval += ""    cmd." + sp_.Prefix + @"FrameAssmt (⟨⟨"" + std::to_string(id) + ""⟩⟩) (\n"";
+        retval += ""    let derived_frame_literal := \n\t\t\tlang." + sp_.Prefix + @".frameExpr.lit (\n\t\t\t\t" + sp_.Prefix + @"Frame.build_derived_from_coords fr o "";
+        for(auto i = 0; i < dim" + @";i++)
+            retval += "" b"" + std::to_string(i) + "" "";
+        retval += "" ms axis ) in\n"";
+        retval += ""    var=derived_frame_literal \n"";
+        //retval += ""        lang." + sp_.Prefix + @".frameExpr.lit (" + sp_.Prefix + @"Frame.build_derived_from_coords fr \n"";
+        //retval += ""        "";
+        /*retval += ""   (⟨[]"";
         for(auto i = 0; i < dim" + @";i++)
             retval += std::string(""++["") + std::to_string(0) + ""]"";
         retval += std::string(""\n\t\t,by refl⟩ : vector ℝ "") + std::to_string(dim)" + @" +  "")"";
@@ -293,8 +313,8 @@ std::string Frame::toString() const {
             for(auto i = 0; i < dim" + @";i++)
                 retval += std::string(""++["") + std::to_string(1) + ""]"";
             retval += std::string(""\n\t\t,by refl⟩ : vector ℝ "") + std::to_string(dim)" + @" +  "")"";
-        }
-        retval += ""    ms axis   ))\n"";
+        }*/
+        //retval += ""    ms axis   ))\n"";
         //retval += ""\n def "" + env + "" := cmdEval "" + ((domain::AliasedFrame*)df)->getName() + "" "" + getLastEnv();
     }";
                         })) + @"
@@ -319,7 +339,7 @@ std::string Frame::toDefString() const {
     int mid = GLOBAL_IDS.count(const_cast<MeasurementSystem*>(ms_)) ? GLOBAL_IDS[const_cast<MeasurementSystem*>(ms_)] : GLOBAL_IDS[const_cast<MeasurementSystem*>(ms_)] = (GLOBAL_INDEX += 2); 
         
     int aid = GLOBAL_IDS.count(const_cast<AxisOrientation*>(ax_)) ? GLOBAL_IDS[const_cast<AxisOrientation*>(ax_)] : GLOBAL_IDS[const_cast<AxisOrientation*>(ax_)] = (GLOBAL_INDEX += 2); 
-    if(auto af = dynamic_cast<domain::AliasedFrame*>(f_)){
+    if(auto sf = dynamic_cast<domain::StandardFrame*>(f_)){
         return retval;
     }
     else if(auto af = dynamic_cast<domain::AliasedFrame*>(f_)){
