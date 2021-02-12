@@ -26,7 +26,7 @@ namespace PeirceGen.Generators
         {
             var header = @"
 #include ""ASTToCoords.h""
-#include <g3log/g3log.hpp>
+//#include <g3log/g3log.hpp>
 
 #include <iostream>
 #include <exception>

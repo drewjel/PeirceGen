@@ -33,7 +33,7 @@ namespace PeirceGen.Generators
 
 #include ""Domain.h""
 
-#include <g3log/g3log.hpp>
+//#include <g3log/g3log.hpp>
 
 #ifndef leanInferenceWildcard
 #define leanInferenceWildcard ""_""
@@ -356,7 +356,7 @@ void " + sp.Name + @"::addFrame(" + sp.Name + @"Frame* frame){
 #include ""AST.h""
 #include ""Coords.h""
 
-#include <g3log/g3log.hpp>
+//#include <g3log/g3log.hpp>
 
 
 using namespace std;

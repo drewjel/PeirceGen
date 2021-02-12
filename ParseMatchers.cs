@@ -1245,6 +1245,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
             if(this->childExprStore_){}
         " + (defaultcase != null ?@"
             else{
+
                 this->childExprStore_ = (clang::Stmt*)cxxFunctionalCastExpr_;
                 interp_->mk" + defaultcase.Name + @"((clang::Stmt*)cxxFunctionalCastExpr_);
                 return;
@@ -1259,7 +1260,43 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
             }
 
     }");               }
-                },
+                }/*,
+                new MatcherCase()
+                {
+                    ClangName = "ArraySubscriptExpr",
+                    LocalName = "arraySubscriptExpr_",
+                    Args = new List<MatcherProduction>(),
+                    BuildMatcher = (prod) => "",
+                    BuildCallbackHandler = (prod) =>
+                    {
+                        return @"
+    if (arraySubscriptExpr_)
+        {
+            " + prod.ClassName + @" exprMatcher{ context_, interp_};
+            exprMatcher.setup();
+            exprMatcher.visit(*arraySubscriptExpr_->getSubExpr());
+            this->childExprStore_ = (clang::Stmt*)exprMatcher.getChildExprStore();
+        
+            if(this->childExprStore_){}
+        " + (defaultcase != null ?@"
+            else{
+
+                this->childExprStore_ = (clang::Stmt*)arraySubscriptExpr_;
+                interp_->mk" + defaultcase.Name + @"((clang::Stmt*)arraySubscriptExpr_);
+                return;
+            }
+        }
+    " : @"
+            else{
+                " + ( suppressCaptureEscape ? "" : @"
+                std::cout<<""WARNING: Capture Escaping! Dump : \n"";
+                arraySubscriptExpr_->dump();
+           ") +@"
+            }
+
+    }");
+                    }
+                }*/
                 /*new MatcherCase()
                 {
                     ClangName = "CallExpr",
@@ -1268,9 +1305,9 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                     BuildMatcher = (prod) => "callExpr().bind(\"CallExpr\")",
                     BuildCallbackHandler = (prod) =>
                     {
-                        var callexpr = prod.GrammarType.Cases.Single(pcase => pcase.Name.Contains("CALL"));
+                        var callexpr = prod.GrammarType.Cases.Single(pcse => pcase.Name.Contains("CALL"));
 
-                        return @"
+                        return @"a
     if(callExpr_){
         if(auto dc = clang::dyn_cast<clang::FunctionDecl>(callExpr_->getCalleeDecl())){
             interp_->mk" + callexpr.Name + @"(callExpr_);//, dc);

@@ -18,6 +18,7 @@ _STMT :=
 	=REXPR | ~An R-Value Expression
 	=LEXPR | ~An L-Value Expression
 	=WHILE | ~A While Statement
+	=FOR | ~A For Statement
 	=TRY  ~A Try Statement
 
 _FUNC_DECL :=
@@ -36,6 +37,8 @@ _WHILE INTERP:W :=
 _TRY INTERP:T :=
 	TRY +STMT <$NAME$LOC> <B,⊢=⊢,D> ~Missing a catch for now!
 
+_FOR INTERP:F :=
+	FOR +BOOL_EXPR +STMT <$NAME$LOC> <B,⊢=⊢,D> ~What's missing here? 
 
 
 _DECLARE INTERP:D :=
@@ -157,8 +160,9 @@ _BOOL_LITERAL VALUE(bool,1,true) :=
 	EuclideanGeometry, Euclidean,{Dimension=*},classicalGeometry
 	ClassicalTime, Affine, {Dimension=1},classicalTime
 	EuclideanGeometry3, Euclidean,{Dimension=3},euclideanGeometry3
-	ClassicalVelocity, Vector, {Derived=true},classicalVelocity
-	ClassicalHertz, Vector, {Dimension=1},classicalHertz
+	ClassicalVelocity, Vector,{Derived=true},classicalVelocity
+	ClassicalHertz, Vector,{Dimension=1},classicalHertz
+	ClassicalLuminousIntensity, Vector,{Dimension=1},classicalLuminousIntensity
 }
 --Define instances
 {
