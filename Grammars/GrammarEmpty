@@ -91,7 +91,7 @@ _LEXPR :=
 	ADD +REAL3_EXPR +REAL3_EXPR <$OP$LOC> <P,+ᵥ,B> | ~Addition Expression : R3 Expression + R3 Expression
 	LMUL +REAL1_EXPR +REAL3_EXPR <$OP$LOC> <P,•,B> | ~Multiplication Expression : R1 Expression * R3 Expression
 	RMUL +REAL3_EXPR +REAL1_EXPR <$OP$LOC> <P,•,B> | ~Multiplication Expression : R1 Expression * R3 Expression
-	TMUL +REALMATRIX4_EXPR +REAL3_EXPR <$OP$LOC> <P,⬝,B> | ~Multiplication Expression : R4 Matrix Expression * R3 Expression
+	TMUL +REALMATRIX4_EXPR +REAL3_EXPR <$OP$LOC> <P,S,B> | ~Multiplication Expression : R4 Matrix Expression * R3 Expression
 	=REAL3_LITERAL
 
 +REAL3_LEXPR VALUE(float,3) :=

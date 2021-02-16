@@ -661,7 +661,7 @@ std::string " + prod.Name + @"::toAlgebraString() const {
         found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< " + prod.Name + @"*>(this)) ? GLOBAL_IDS[const_cast<" + prod.Name + @"*>(this)] : GLOBAL_IDS[const_cast<" + prod.Name + @"*>(this)] = (GLOBAL_INDEX += 2); 
-        return ""(" + sppair.Item1.Prefix + sppair.Item2.Name + @".algebra \n"" + this->toEvalString() + "")"";
+        return ""(" + sppair.Item1.Prefix + sppair.Item2.Name + @".algebra \n("" + this->toEvalString() + ""\n))"";
         
     }
 "; return retval;
@@ -686,7 +686,7 @@ std::string " + prod.Name + @"::toAlgebraString() const {
                 found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< " + prod.Name + @"*>(this)) ? GLOBAL_IDS[const_cast<" + prod.Name + @"*>(this)] : GLOBAL_IDS[const_cast<" + prod.Name + @"*>(this)] = (GLOBAL_INDEX += 2); 
-        return ""(" + sppair_.Item1.Prefix + sppair_.Item2.Name + @".algebra \n"" + this->toEvalString() + "")"";
+        return ""(" + sppair_.Item1.Prefix + sppair_.Item2.Name + @".algebra (\n"" + this->toEvalString() + ""\n))"";
         
             }";
                                                return retval_;
@@ -1269,7 +1269,7 @@ std::string " + pcase.Name + @"::toString() const {
         : @"
         retval += std::string(""\tlet literal := (" + sppair.Item1.Prefix + sppair.Item2.Name + @".fromalgebra sp "
             + (sppair.Item2.HasFrame ? "fr " : sppair.Item2.IsTransform ? "domain_ codomain_ " : "") 
-            + @"\n\t\t(("") + this->operand_1->toAlgebraString() + "")" + pcase.Interp_.Symbol + @"("" + this->operand_2->toAlgebraString() + "")) in\n"";"
+            + @"(\n\t\t("") + this->operand_1->toAlgebraString() + "")" + pcase.Interp_.Symbol + @"("" + this->operand_2->toAlgebraString() + ""\n))) in\n"";"
         ) + @"
         retval += ""\tlang." + sppair.Item1.Prefix + @"." + sppair.Item2.Name + @"Expr.lit literal"";
 
@@ -1286,7 +1286,7 @@ std::string " + pcase.Name + @"::toString() const {
         //" + (prod.HasValueContainer() ? @"   retval += ""(⟨[]"";
         //for (auto i = 0; i < " + prod.GetPriorityValueContainer().ValueCount + @"; i++)
         //    retval += ""++["" + std::to_string(*dc->getValue(i)) + ""]"";
-        //retval += ""\n\t\t,by refl⟩ : vector ℝ " + prod.GetPriorityValueContainer().ValueCount + @")" : @"retval += """) + @"))"";
+        //retval += ""\n\t\t,by refl⟩ : vector ℝ " + prod.GetPriorityValueContainer().ValueCount + @")" : @"//retval += """) + @"))"";
         " : @"
        // retval += ""(" + sppair.Item1.Prefix + sppair.Item2.Name + @".fromalgebra "";
         //retval += std::string(""(" + sppair.Item1.Prefix + @"Eval "") + ""(lang." + sppair.Item1.Prefix + @".spaceExpr.var ⟨⟨"" + std::to_string(sid) + ""⟩⟩) "" + getLastEnv() + "")\n"";
@@ -1345,9 +1345,10 @@ std::string " + pcase.Name + @"::toString() const {
                 + (sppair.Item2.HasFrame ? "fr " : sppair.Item2.IsTransform ? "domain_ codomain_ " : "")
                 + (prod.HasValueContainer() ? "val " : "") + @") in\n"");"
             : @"
+
             retval += std::string(""\tlet literal := (" + sppair.Item1.Prefix + sppair.Item2.Name + @".fromalgebra sp "
                 + (sppair.Item2.HasFrame ? "fr " : sppair.Item2.IsTransform ? "domain_ codomain_ " : "")
-                + @"(\n\t\t("") + this->operand_1->toAlgebraString() + "")" + pcase.Interp_.Symbol + @"("" + this->operand_2->toAlgebraString() + "")) in\n"";"
+                + @"(\n\t\t("") + this->operand_1->toAlgebraString() + ""\n)" + pcase.Interp_.Symbol + @"("" + this->operand_2->toAlgebraString() + ""\n)\n)) in\n"";"
             ) + @"
             retval += ""\tlang." + sppair.Item1.Prefix + @"." + sppair.Item2.Name + @"Expr.lit literal"";      
 
@@ -1365,7 +1366,7 @@ std::string " + pcase.Name + @"::toString() const {
         // " + (prod.HasValueContainer() ? @"   retval += ""(⟨[]"";
         //for (auto i = 0; i < " + prod.GetPriorityValueContainer().ValueCount + @"; i++)
         //    retval += ""++["" + std::to_string(*dc->getValue(i)) + ""]"";
-        //retval += ""\n\t\t,by refl⟩ : vector ℝ " + prod.GetPriorityValueContainer().ValueCount + @")" : @"retval += """) + @"))"";
+        //retval += ""\n\t\t,by refl⟩ : vector ℝ " + prod.GetPriorityValueContainer().ValueCount + @")" : @"//retval += """) + @"))"";
         "
               : @"
         //retval += ""(" + sppair.Item1.Prefix + sppair.Item2.Name + @".fromalgebra "";
@@ -1511,7 +1512,7 @@ std::string " + pcase.Name + @"::toAlgebraString() const {
         found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< " + pcase.Name + @"*>(this)) ? GLOBAL_IDS[const_cast<" + pcase.Name + @"*>(this)] : GLOBAL_IDS[const_cast<" + pcase.Name + @"*>(this)] = (GLOBAL_INDEX += 2); 
-        return ""(" + sppair.Item1.Prefix + sppair.Item2.Name + @".algebra \n"" + this->toEvalString() + ""\n)\n"";
+        return ""(" + sppair.Item1.Prefix + sppair.Item2.Name + @".algebra (\n"" + this->toEvalString() + ""\n))\n"";
         
     }
 "; return retval;
@@ -1536,7 +1537,7 @@ std::string " + pcase.Name + @"::toAlgebraString() const {
                 found = true;
         auto env = getLastEnv();
         //int id = GLOBAL_IDS.count(const_cast< " + pcase.Name + @"*>(this)) ? GLOBAL_IDS[const_cast<" + pcase.Name + @"*>(this)] : GLOBAL_IDS[const_cast<" + pcase.Name + @"*>(this)] = (GLOBAL_INDEX += 2); 
-        return ""\t(" + sppair_.Item1.Prefix + sppair_.Item2.Name + @".algebra \n"" + this->toEvalString() + "")"";
+        return ""\t(" + sppair_.Item1.Prefix + sppair_.Item2.Name + @".algebra (\n"" + this->toEvalString() + ""\n))"";
         
             }";
                                                return retval_;
@@ -1678,7 +1679,7 @@ std::string " + pcase.Name + @"::toEvalString() const {
         : @"
         retval += std::string(""\t(" + sppair.Item1.Prefix + sppair.Item2.Name + @".fromalgebra sp "
             + (sppair.Item2.HasFrame ? "fr " : sppair.Item2.IsTransform ? "domain_ codomain_ " : "")
-            + @"(("") + this->operand_1->toAlgebraString() + "")" + pcase.Interp_.Symbol + @"("" + this->operand_2->toAlgebraString() + ""))\n"";"
+            + @""") + this->operand_1->toAlgebraString() + """ + pcase.Interp_.Symbol + @""" + this->operand_2->toAlgebraString() + ""\n"";"
         ) +
 
                     (pcase.Interp_.PrintType_ == Grammar.Case.Interp.PrintType.Unk ? @"
@@ -1692,7 +1693,7 @@ std::string " + pcase.Name + @"::toEvalString() const {
         " + (prod.HasValueContainer() ? @"//   retval += ""(⟨[]"";
         //for (auto i = 0; i < " + prod.GetPriorityValueContainer().ValueCount + @"; i++)
         //    retval += ""++["" + std::to_string(*dc->getValue(i)) + ""]"";
-        //retval += ""\n\t\t,by refl⟩ : vector ℝ " + prod.GetPriorityValueContainer().ValueCount + @")" : @"retval += """) + @"))"";
+        //retval += ""\n\t\t,by refl⟩ : vector ℝ " + prod.GetPriorityValueContainer().ValueCount + @")" : @"//retval += """) + @"))"";
         " : @"
         //retval += ""(" + sppair.Item1.Prefix + sppair.Item2.Name + @".fromalgebra "";
         //retval += std::string(""(" + sppair.Item1.Prefix + @"Eval "") + ""(lang." + sppair.Item1.Prefix + @".spaceExpr.var ⟨⟨"" + std::to_string(sid) + ""⟩⟩) "" + getLastEnv() + "")\n"";
@@ -1752,7 +1753,7 @@ std::string " + pcase.Name + @"::toEvalString() const {
         : @"
         retval += std::string(""\t(" + sppair.Item1.Prefix + sppair.Item2.Name + @".fromalgebra sp "
             + (sppair.Item2.HasFrame ? "fr " : sppair.Item2.IsTransform ? "domain_ codomain_ " : "")
-            + @"(\n\t\t"") + this->operand_1->toAlgebraString() + """ + pcase.Interp_.Symbol + @""" + this->operand_2->toAlgebraString() + ""))\n"";"
+            + @"\n\t\t("") + this->operand_1->toAlgebraString() + """ + pcase.Interp_.Symbol + @""" + this->operand_2->toAlgebraString() + "")\n"";"
         ) +
 
 
@@ -1766,7 +1767,7 @@ std::string " + pcase.Name + @"::toEvalString() const {
          " + (prod.HasValueContainer() ? @"   //retval += ""(⟨[]"";
         //for (auto i = 0; i < " + prod.GetPriorityValueContainer().ValueCount + @"; i++)
         //    retval += ""++["" + std::to_string(*dc->getValue(i)) + ""]"";
-       //retval += ""\n\t\t,by refl⟩ : vector ℝ " + prod.GetPriorityValueContainer().ValueCount + @")" : @"retval += """) + @"))"";
+       //retval += ""\n\t\t,by refl⟩ : vector ℝ " + prod.GetPriorityValueContainer().ValueCount + @")" : @"//retval += """) + @"))"";
         "
               : @"
         //retval += ""(" + sppair.Item1.Prefix + sppair.Item2.Name + @".fromalgebra "";
