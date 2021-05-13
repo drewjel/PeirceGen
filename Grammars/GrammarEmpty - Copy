@@ -217,55 +217,210 @@ Base
     }
 }
 
-bool ROSBooleanMatcher BOOL_EXPR BOOL
+
+
+bool ROSBooleanMatcher BOOL_EXPR BOOL_LITERAL.0
 {
 	Capture:
 	{
-		CXXBoolLiteralExpr()@$.REF
-		--CXXMemberCallExpr(IGNORE).IGNORE@DEFAULT
+		CXXBoolLiteralExpr()@DEFAULT
+		CXXMemberCallExpr(IGNORE).IGNORE@DEFAULT
 	}
 }
 
-float FloatMatcher REAL1_EXPR R1
+tfScalar ROSTFScalarMatcher REAL1_EXPR REAL1_LITERAL.0
 {
 	Capture:
     {
-		CXXConstructExpr(IGNORE)@REAL1_LITERAL.? LIT_R1
-		BinaryOperator(float?FORCE,float?FORCE).+@$.ADD ADD_R1_R1
-		BinaryOperator(float?FORCE,float?FORCE).*@$.MUL MUL_R1_R1
+        BinaryOperator(tfScalar,tfScalar).+@$.ADD
+        --BinaryOperator(tfScalar,tfScalar)./@$.DIV
+        BinaryOperator(tfScalar,tfScalar).*@$.MUL
+		--CXXMemberCallExpr(tf::Vector3).angle@$.FROMR3
+		--CXXMemberCallExpr(tf::Vector3).distance@$.FROMR3
+		--CXXMemberCallExpr(tf::Vector3).distance2@$.FROMR3
+		--CXXMemberCallExpr(tf::Vector3).dot@$.FROMR3
+		--CXXMemberCallExpr(tf::Vector3).length@$.FROMR3
+		--CXXMemberCallExpr(tf::Vector3).length2@$.FROMR3
+        --CXXMemberCallExpr(tf::Vector3).x@$.FROMR3
+        --CXXMemberCallExpr(tf::Vector3).y@$.FROMR3
+        --CXXMemberCallExpr(tf::Vector3).z@$.FROMR3
+		--CXXMemberCallExpr(tf::Vector3).getX@$.FROMR3
+		--CXXMemberCallExpr(tf::Vector3).getY@$.FROMR3
+		--CXXMemberCallExpr(tf::Vector3).getZ@$.FROMR3
     }
 }
 
-double DoubleMatcher REAL1_EXPR R1
+float FloatMatcher REAL1_EXPR REAL1_LITERAL.0
 {
 	Capture:
     {
-		CXXConstructExpr(IGNORE)@REAL1_LITERAL.? LIT_R1
-		BinaryOperator(double?FORCE,double?FORCE).+@$.ADD ADD_R1_R1
-		BinaryOperator(double?FORCE,double?FORCE).*@$.MUL MUL_R1_R1
     }
 }
 
-#ros::Time ROSTFTimeMatcher REAL1_EXPR R1
+double DoubleMatcher REAL1_EXPR REAL1_LITERAL.0
+{
+	Capture:
+    {
+    }
+}
+
+int IntMatcher REAL1_EXPR REAL1_LITERAL.0
+{
+	Capture:
+    {
+    }
+}
+
+
+
+tf::Vector3 ROSTFVector3Matcher REAL3_EXPR
+{
+	Capture:
+    {	
+		CXXConstructExpr(IGNORE,IGNORE,IGNORE)@REAL3_LITERAL.?
+		--CXXConstructExpr(tfScalar,tfScalar,tfScalar)@REAL3_LITERAL.?
+		CXXOperatorCallExpr(tf::Vector3,tf::Vector3).+@$.ADD
+		CXXOperatorCallExpr(tf::Vector3,double).*@$.RMUL
+		CXXOperatorCallExpr(double,tf::Vector3).*@$.LMUL
+		CXXOperatorCallExpr(tf::Transform,tf::Vector3).*@$.TMUL
+		--CXXMemberCallExpr(tf::Vector3).absolute@$.UNOP
+        --CXXMemberCallExpr(tf::Vector3,tf::Vector3).cross@$.CROSS
+
+
+		--CXXOperatorCallExpr(tf::Vector3,tf::Vector3).-@$.SUB
+
+
+		--CXXConstructExpr(tfScalar,tfScalar,tfScalar)@REAL3_LITERAL.?
+    }
+}
+
+tf::Point~tf::Vector3 ROSTFPointMatcher REAL3_EXPR
+{
+
+}
+
+tf::Stamped<tf::Point>~tf::Vector3 ROSTFStampedPoint REAL3_EXPR
+{
+
+}
+
+tf::Quaternion ROSTFQuaternionMatcher REAL4_EXPR
 {
 	Capture:
 	{
-		CXXConstructExpr(IGNORE)@REAL1_LITERAL.? LIT_R1
-		--CXXConstructExpr(float)@REAL1_LITERAL.? 
-		CXXOperatorCallExpr(ros::Time?FORCE,ros::Duration?FORCE).+@$.ADD ADD_R1_R1
+		CXXConstructExpr(IGNORE,IGNORE,IGNORE,IGNORE)@REAL4_LITERAL.?
+		--CXXOperatorCallExpr(tf::Transform,tf::Quaternion).*@$.MUL
+		--CXXOperatorCallExpr(tf::Quaternion,tf::Quaternion).+@$.ADD
+		--CXXOperatorCallExpr(tf::Quaternion,tf::Quaternion).*@$.MUL
 	}
 }
 
-ros::Duration ROSTFDurationMatcher REAL1_EXPR R1
+
+#ros::Time ROSTFTimeMatcher REAL1_EXPR
 {
 	Capture:
 	{
-		CXXConstructExpr(IGNORE)@REAL1_LITERAL.? LIT_R1
-		CXXOperatorCallExpr(ros::Duration?FORCE,ros::Duration?FORCE).+@$.ADD ADD_R1_R1
-		CXXOperatorCallExpr(ros::Duration?FORCE,double).*@$.MUL MUL_R1_R1
+		CXXConstructExpr(IGNORE)@REAL1_LITERAL.?
+		--CXXConstructExpr(float)@REAL1_LITERAL.?
+		CXXOperatorCallExpr(ros::Time,ros::Duration).+@$.ADD
+	}
+}
+
+ros::Duration ROSTFDurationMatcher REAL1_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr(IGNORE)@REAL1_LITERAL.?
+		CXXOperatorCallExpr(ros::Duration,ros::Duration).+@$.ADD
+		CXXOperatorCallExpr(ros::Duration,double).*@$.MUL
 		--CXXConstructExpr(int)@REAL1_LITERAL.?
 		--CXXConstructExpr(double)@REAL1_LITERAL.?
 		--CXXConstructExpr(float)@REAL1_LITERAL.?
 	}
 	
+}
+
+ros::Rate ROSRateMatcher REAL1_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr(IGNORE)@REAL1_LITERAL.?
+	}
+}
+
+tf::Transform ROSTFTransformMatcher REALMATRIX4_EXPR
+{
+	Capture:
+	{
+		CXXConstructExpr()@REALMATRIX4_LITERAL.?
+		CXXConstructExpr(tf::Quaternion,tf::Vector3)@REALMATRIX4_LITERAL.R4R3_LIT
+		--CXXConstructExpr(tf::Matrix3x3,tf::Vector3)@REALMATRIX4_LITERAL.?
+		CXXOperatorCallExpr(tf::Transform,tf::Transform).*@$.MUL
+	}
+}
+
+tf::StampedTransform~tf::Transform ROSTFStampedTransform REALMATRIX4_EXPR
+{
+	Capture:
+	{
+		--CXXConstructExpr(tf::Transform,IGNORE,IGNORE,IGNORE)@REALMATRIX4_LITERAL.REALMATRIX4_EMPTY2
+		CXXConstructExpr(IGNORE,IGNORE,IGNORE,IGNORE)@REALMATRIX4_LITERAL.REALMATRIX4_EMPTY
+	}
+}
+
+
+geometry_msgs::Vector3Stamped ROSGeometryMsgsVector3StampedMatcher REAL3_EXPR
+{
+	Capture: 
+	{
+		CXXConstructExpr()@REAL3_LITERAL.?
+	}
+}
+
+geometry_msgs::PointStamped ROSGeometryMsgsPointStampedMatcher REAL3_EXPR
+{
+	Capture: 
+	{
+		CXXConstructExpr()@REAL3_LITERAL.?
+	}
+}
+
+--!tf::TransformListener ROSTransformListenerMatcher SINK
+--{
+--	Capture:
+--	{
+--	}
+--}
+
+--!tf::TransformBroadcaster ROSTransformBroadcasterMatcher SINK
+--{
+--	Capture:
+--	{
+--	}
+--}
+
+
+--      //tf::StampedTransform laser_to_base;
+--      //listener.lookupTransform("base_link", "base_laser", ros::Time(0),laser_to_base);
+--      // tf::Stamped<tf::Point> laser_point_tf;
+--      // tf::pointStampedMsgToTF(laser_point,laser_point_tf);
+--      // tf::Stamped<tf::Point> base_point_tf = laser_point_tf*laser_to_base;
+--      // tf::pointStampedTFToMsg(base_point_tf,base_point);
+      
+#void ROSVoid1Matcher SINK
+{
+	Capture:
+	{
+		CallExpr(geometry_msgs::PointStamped,tf::Stamped<tf::Point>).pointStampedMsgToTF@ASSIGN.ASNR3 1
+		CallExpr(tf::Stamped<tf::Point>,geometry_msgs::PointStamped).pointStampedTFToMsg@ASSIGN.ASNR3 1
+
+	}
+}
+
+#void ROSVoid2Matcher SINK
+{
+	Capture:
+	{
+		CXXMemberCallExpr(IGNORE,IGNORE,geometry_msgs::PointStamped,geometry_msgs::PointStamped).transformPoint@ASSIGN.ASNR3 2
+	}
 }

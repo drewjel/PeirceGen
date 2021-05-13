@@ -7,23 +7,10 @@
 
 #include "ROSStatementMatcher.h"
 #include "ROSBooleanMatcher.h"
-#include "ROSTFScalarMatcher.h"
 #include "FloatMatcher.h"
 #include "DoubleMatcher.h"
-#include "IntMatcher.h"
-#include "ROSTFVector3Matcher.h"
-#include "ROSTFPointMatcher.h"
-#include "ROSTFStampedPoint.h"
-#include "ROSTFQuaternionMatcher.h"
 #include "ROSTFTimeMatcher.h"
 #include "ROSTFDurationMatcher.h"
-#include "ROSRateMatcher.h"
-#include "ROSTFTransformMatcher.h"
-#include "ROSTFStampedTransform.h"
-#include "ROSGeometryMsgsVector3StampedMatcher.h"
-#include "ROSGeometryMsgsPointStampedMatcher.h"
-#include "ROSVoid1Matcher.h"
-#include "ROSVoid2Matcher.h"
 
 #include <string>
 
@@ -32,7 +19,7 @@
 
 #include <memory>
 
-#include "../ASTToCoords.h"
+#include "../maps/ASTToCoords.h"
 /*
 This manages all statements in Clang.
 */
@@ -134,7 +121,11 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
             throw "Broken Parse";
         }
 
-        this->interp_->mkWHILE_BOOL_EXPR_STMT(whileStmt_, condm.getChildExprStore(), bodym.getChildExprStore());
+        //this->interp_->mkWHILE_BOOL_EXPR_STMT(whileStmt_, condm.getChildExprStore(), bodym.getChildExprStore());
+        interp_->buffer_operand(condm.getChildExprStore());
+        interp_->buffer_operand(bodym.getChildExprStore());
+        interp_->mkNode("WHILE_STMT", whileStmt_, false);
+        
         this->childExprStore_ = (clang::Stmt*)whileStmt_;
         return;
 
@@ -164,7 +155,10 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
             throw "Broken Parse";
         }
 
-        this->interp_->mkFOR_BOOL_EXPR_STMT(forStmt_, condm.getChildExprStore(), bodym.getChildExprStore());
+        //this->interp_->mkFOR_BOOL_EXPR_STMT(forStmt_, condm.getChildExprStore(), bodym.getChildExprStore());
+        interp_->buffer_operand(condm.getChildExprStore());
+        interp_->buffer_operand(bodym.getChildExprStore());
+        interp_->mkNode("FOR_STMT",forStmt_,false); 
         this->childExprStore_ = (clang::Stmt*)forStmt_;
         return;
     }
@@ -175,56 +169,6 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
         auto typestr = ((clang::QualType)_expr->getType()).getAsString();
         if(false){}
         
-        else if (typestr == "geometry_msgs::Vector3Stamped" or typestr == "const geometry_msgs::Vector3Stamped"  or typestr == "class geometry_msgs::Vector3Stamped" /*typestr.find("geometry_msgs::Vector3Stamped") != string::npos) != string::npos){
-            ROSGeometryMsgsVector3StampedMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
-        else if (typestr == "geometry_msgs::PointStamped" or typestr == "const geometry_msgs::PointStamped"  or typestr == "class geometry_msgs::PointStamped" /*typestr.find("geometry_msgs::PointStamped") != string::npos) != string::npos){
-            ROSGeometryMsgsPointStampedMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
-        else if (typestr == "tf::Stamped<tf::Point>" or typestr == "const tf::Stamped<tf::Point>"  or typestr == "class tf::Stamped<tf::Point>" /*typestr.find("tf::Stamped<tf::Point>") != string::npos) != string::npos){
-            ROSTFStampedPoint m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
-        else if (typestr == "tf::StampedTransform" or typestr == "const tf::StampedTransform"  or typestr == "class tf::StampedTransform" /*typestr.find("tf::StampedTransform") != string::npos) != string::npos){
-            ROSTFStampedTransform m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
-        else if (typestr == "tf::Quaternion" or typestr == "const tf::Quaternion"  or typestr == "class tf::Quaternion" /*typestr.find("tf::Quaternion") != string::npos) != string::npos){
-            ROSTFQuaternionMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
         else if (typestr == "ros::Duration" or typestr == "const ros::Duration"  or typestr == "class ros::Duration" /*typestr.find("ros::Duration") != string::npos) != string::npos){
             ROSTFDurationMatcher m{ this->context_, this->interp_};
             m.setup();
@@ -235,58 +179,8 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
             return;
         }
             
-        else if (typestr == "tf::Transform" or typestr == "const tf::Transform"  or typestr == "class tf::Transform" /*typestr.find("tf::Transform") != string::npos) != string::npos){
-            ROSTFTransformMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
-        else if (typestr == "tf::Vector3" or typestr == "const tf::Vector3"  or typestr == "class tf::Vector3" /*typestr.find("tf::Vector3") != string::npos) != string::npos){
-            ROSTFVector3Matcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
-        else if (typestr == "tf::Point" or typestr == "const tf::Point"  or typestr == "class tf::Point" /*typestr.find("tf::Point") != string::npos) != string::npos){
-            ROSTFPointMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
         else if (typestr == "ros::Time" or typestr == "const ros::Time"  or typestr == "class ros::Time" /*typestr.find("ros::Time") != string::npos) != string::npos){
             ROSTFTimeMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
-        else if (typestr == "ros::Rate" or typestr == "const ros::Rate"  or typestr == "class ros::Rate" /*typestr.find("ros::Rate") != string::npos) != string::npos){
-            ROSRateMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
-        else if (typestr == "tfScalar" or typestr == "const tfScalar"  or typestr == "class tfScalar" /*typestr.find("tfScalar") != string::npos) != string::npos){
-            ROSTFScalarMatcher m{ this->context_, this->interp_};
             m.setup();
             m.visit(*_expr);
             if(m.getChildExprStore()){
@@ -317,36 +211,6 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
             
         else if (typestr == "bool" or typestr == "const bool"  or typestr == "class bool" /*typestr.find("bool") != string::npos) != string::npos){
             ROSBooleanMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
-        else if (typestr == "void" or typestr == "const void"  or typestr == "class void" /*typestr.find("void") != string::npos) != string::npos){
-            ROSVoid1Matcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
-        else if (typestr == "void" or typestr == "const void"  or typestr == "class void" /*typestr.find("void") != string::npos) != string::npos){
-            ROSVoid2Matcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*_expr);
-            if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
-            }
-            return;
-        }
-            
-        else if (typestr == "int" or typestr == "const int"  or typestr == "class int" /*typestr.find("int") != string::npos) != string::npos){
-            IntMatcher m{ this->context_, this->interp_};
             m.setup();
             m.visit(*_expr);
             if(m.getChildExprStore()){
@@ -445,7 +309,9 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                 
             }
         }
-        this->interp_->mkCOMPOUND_STMT(cmpdStmt_, stmts);
+        //this->interp_->mkCOMPOUND_STMT(cmpdStmt_, stmts);
+        interp_->buffer_operands(stmts);
+        interp_->mkNode("COMPOUND_STMT", cmpdStmt_);
         this->childExprStore_ = (clang::Stmt*)cmpdStmt_;
         return;
         
@@ -461,148 +327,9 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                 auto typestr = ((clang::QualType)vd->getType()).getAsString();
                 if(false){}
 
-                else if (typestr == "geometry_msgs::Vector3Stamped" or typestr == "const geometry_msgs::Vector3Stamped" or typestr == "class geometry_msgs::Vector3Stamped"/*typestr.find("geometry_msgs::Vector3Stamped") != string::npos*/){
-                    interp_->mkREAL3_VAR_IDENT(vd);
-                    if (vd->hasInit())
-                    {
-                        ROSGeometryMsgsVector3StampedMatcher m{ this->context_, this->interp_};
-                        m.setup();
-                        m.visit((*vd->getInit()));
-                        if (m.getChildExprStore())
-                        {
-                            interp_->mkDECL_REAL3_VAR_REAL3_EXPR(declStmt, vd, m.getChildExprStore());
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                        this->childExprStore_ = (clang::Stmt*)declStmt;
-                        return;
-                    }
-                }
-            
-                else if (typestr == "geometry_msgs::PointStamped" or typestr == "const geometry_msgs::PointStamped" or typestr == "class geometry_msgs::PointStamped"/*typestr.find("geometry_msgs::PointStamped") != string::npos*/){
-                    interp_->mkREAL3_VAR_IDENT(vd);
-                    if (vd->hasInit())
-                    {
-                        ROSGeometryMsgsPointStampedMatcher m{ this->context_, this->interp_};
-                        m.setup();
-                        m.visit((*vd->getInit()));
-                        if (m.getChildExprStore())
-                        {
-                            interp_->mkDECL_REAL3_VAR_REAL3_EXPR(declStmt, vd, m.getChildExprStore());
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                        this->childExprStore_ = (clang::Stmt*)declStmt;
-                        return;
-                    }
-                }
-            
-                else if (typestr == "tf::Stamped<tf::Point>" or typestr == "const tf::Stamped<tf::Point>" or typestr == "class tf::Stamped<tf::Point>"/*typestr.find("tf::Stamped<tf::Point>") != string::npos*/){
-                    interp_->mkREAL3_VAR_IDENT(vd);
-                    if (vd->hasInit())
-                    {
-                        ROSTFStampedPoint m{ this->context_, this->interp_};
-                        m.setup();
-                        m.visit((*vd->getInit()));
-                        if (m.getChildExprStore())
-                        {
-                            interp_->mkDECL_REAL3_VAR_REAL3_EXPR(declStmt, vd, m.getChildExprStore());
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                        this->childExprStore_ = (clang::Stmt*)declStmt;
-                        return;
-                    }
-                }
-            
-                else if (typestr == "tf::StampedTransform" or typestr == "const tf::StampedTransform" or typestr == "class tf::StampedTransform"/*typestr.find("tf::StampedTransform") != string::npos*/){
-                    interp_->mkREALMATRIX4_VAR_IDENT(vd);
-                    if (vd->hasInit())
-                    {
-                        ROSTFStampedTransform m{ this->context_, this->interp_};
-                        m.setup();
-                        m.visit((*vd->getInit()));
-                        if (m.getChildExprStore())
-                        {
-                            interp_->mkDECL_REALMATRIX4_VAR_REALMATRIX4_EXPR(declStmt, vd, m.getChildExprStore());
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REALMATRIX4_VAR(declStmt, vd);
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        interp_->mkDECL_REALMATRIX4_VAR(declStmt, vd);
-                        this->childExprStore_ = (clang::Stmt*)declStmt;
-                        return;
-                    }
-                }
-            
-                else if (typestr == "tf::Quaternion" or typestr == "const tf::Quaternion" or typestr == "class tf::Quaternion"/*typestr.find("tf::Quaternion") != string::npos*/){
-                    interp_->mkREAL4_VAR_IDENT(vd);
-                    if (vd->hasInit())
-                    {
-                        ROSTFQuaternionMatcher m{ this->context_, this->interp_};
-                        m.setup();
-                        m.visit((*vd->getInit()));
-                        if (m.getChildExprStore())
-                        {
-                            interp_->mkDECL_REAL4_VAR_REAL4_EXPR(declStmt, vd, m.getChildExprStore());
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL4_VAR(declStmt, vd);
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        interp_->mkDECL_REAL4_VAR(declStmt, vd);
-                        this->childExprStore_ = (clang::Stmt*)declStmt;
-                        return;
-                    }
-                }
-            
                 else if (typestr == "ros::Duration" or typestr == "const ros::Duration" or typestr == "class ros::Duration"/*typestr.find("ros::Duration") != string::npos*/){
-                    interp_->mkREAL1_VAR_IDENT(vd);
+                    //interp_->mkREAL1_VAR_IDENT(vd);
+                    interp_->mkNode("IDENT_R1",vd, true);
                     if (vd->hasInit())
                     {
                         ROSTFDurationMatcher m{ this->context_, this->interp_};
@@ -610,111 +337,35 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                         m.visit((*vd->getInit()));
                         if (m.getChildExprStore())
                         {
-                            interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                            //interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                            interp_->buffer_operand(vd);
+                            interp_->buffer_operand(m.getChildExprStore());
+                            interp_->mkNode("DECL_INIT_R1", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                         else
                         {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            interp_->buffer_operand(vd);
+                            interp_->mkNode("DECL_R1", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                     }
                     else
                     {
-                        interp_->mkDECL_REAL1_VAR(declStmt, vd);
-                        this->childExprStore_ = (clang::Stmt*)declStmt;
-                        return;
-                    }
-                }
-            
-                else if (typestr == "tf::Transform" or typestr == "const tf::Transform" or typestr == "class tf::Transform"/*typestr.find("tf::Transform") != string::npos*/){
-                    interp_->mkREALMATRIX4_VAR_IDENT(vd);
-                    if (vd->hasInit())
-                    {
-                        ROSTFTransformMatcher m{ this->context_, this->interp_};
-                        m.setup();
-                        m.visit((*vd->getInit()));
-                        if (m.getChildExprStore())
-                        {
-                            interp_->mkDECL_REALMATRIX4_VAR_REALMATRIX4_EXPR(declStmt, vd, m.getChildExprStore());
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REALMATRIX4_VAR(declStmt, vd);
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        interp_->mkDECL_REALMATRIX4_VAR(declStmt, vd);
-                        this->childExprStore_ = (clang::Stmt*)declStmt;
-                        return;
-                    }
-                }
-            
-                else if (typestr == "tf::Vector3" or typestr == "const tf::Vector3" or typestr == "class tf::Vector3"/*typestr.find("tf::Vector3") != string::npos*/){
-                    interp_->mkREAL3_VAR_IDENT(vd);
-                    if (vd->hasInit())
-                    {
-                        ROSTFVector3Matcher m{ this->context_, this->interp_};
-                        m.setup();
-                        m.visit((*vd->getInit()));
-                        if (m.getChildExprStore())
-                        {
-                            interp_->mkDECL_REAL3_VAR_REAL3_EXPR(declStmt, vd, m.getChildExprStore());
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                        this->childExprStore_ = (clang::Stmt*)declStmt;
-                        return;
-                    }
-                }
-            
-                else if (typestr == "tf::Point" or typestr == "const tf::Point" or typestr == "class tf::Point"/*typestr.find("tf::Point") != string::npos*/){
-                    interp_->mkREAL3_VAR_IDENT(vd);
-                    if (vd->hasInit())
-                    {
-                        ROSTFPointMatcher m{ this->context_, this->interp_};
-                        m.setup();
-                        m.visit((*vd->getInit()));
-                        if (m.getChildExprStore())
-                        {
-                            interp_->mkDECL_REAL3_VAR_REAL3_EXPR(declStmt, vd, m.getChildExprStore());
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        interp_->mkDECL_REAL3_VAR(declStmt, vd);
+                        //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                        interp_->buffer_operand(vd);
+                        interp_->mkNode("DECL_R1", declStmt);
                         this->childExprStore_ = (clang::Stmt*)declStmt;
                         return;
                     }
                 }
             
                 else if (typestr == "ros::Time" or typestr == "const ros::Time" or typestr == "class ros::Time"/*typestr.find("ros::Time") != string::npos*/){
-                    interp_->mkREAL1_VAR_IDENT(vd);
+                    //interp_->mkREAL1_VAR_IDENT(vd);
+                    interp_->mkNode("IDENT_R1",vd, true);
                     if (vd->hasInit())
                     {
                         ROSTFTimeMatcher m{ this->context_, this->interp_};
@@ -722,83 +373,35 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                         m.visit((*vd->getInit()));
                         if (m.getChildExprStore())
                         {
-                            interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                            //interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                            interp_->buffer_operand(vd);
+                            interp_->buffer_operand(m.getChildExprStore());
+                            interp_->mkNode("DECL_INIT_R1", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                         else
                         {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            interp_->buffer_operand(vd);
+                            interp_->mkNode("DECL_R1", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                     }
                     else
                     {
-                        interp_->mkDECL_REAL1_VAR(declStmt, vd);
-                        this->childExprStore_ = (clang::Stmt*)declStmt;
-                        return;
-                    }
-                }
-            
-                else if (typestr == "ros::Rate" or typestr == "const ros::Rate" or typestr == "class ros::Rate"/*typestr.find("ros::Rate") != string::npos*/){
-                    interp_->mkREAL1_VAR_IDENT(vd);
-                    if (vd->hasInit())
-                    {
-                        ROSRateMatcher m{ this->context_, this->interp_};
-                        m.setup();
-                        m.visit((*vd->getInit()));
-                        if (m.getChildExprStore())
-                        {
-                            interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        interp_->mkDECL_REAL1_VAR(declStmt, vd);
-                        this->childExprStore_ = (clang::Stmt*)declStmt;
-                        return;
-                    }
-                }
-            
-                else if (typestr == "tfScalar" or typestr == "const tfScalar" or typestr == "class tfScalar"/*typestr.find("tfScalar") != string::npos*/){
-                    interp_->mkREAL1_VAR_IDENT(vd);
-                    if (vd->hasInit())
-                    {
-                        ROSTFScalarMatcher m{ this->context_, this->interp_};
-                        m.setup();
-                        m.visit((*vd->getInit()));
-                        if (m.getChildExprStore())
-                        {
-                            interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                        //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                        interp_->buffer_operand(vd);
+                        interp_->mkNode("DECL_R1", declStmt);
                         this->childExprStore_ = (clang::Stmt*)declStmt;
                         return;
                     }
                 }
             
                 else if (typestr == "double" or typestr == "const double" or typestr == "class double"/*typestr.find("double") != string::npos*/){
-                    interp_->mkREAL1_VAR_IDENT(vd);
+                    //interp_->mkREAL1_VAR_IDENT(vd);
+                    interp_->mkNode("IDENT_R1",vd, true);
                     if (vd->hasInit())
                     {
                         DoubleMatcher m{ this->context_, this->interp_};
@@ -806,27 +409,35 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                         m.visit((*vd->getInit()));
                         if (m.getChildExprStore())
                         {
-                            interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                            //interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                            interp_->buffer_operand(vd);
+                            interp_->buffer_operand(m.getChildExprStore());
+                            interp_->mkNode("DECL_INIT_R1", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                         else
                         {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            interp_->buffer_operand(vd);
+                            interp_->mkNode("DECL_R1", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                     }
                     else
                     {
-                        interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                        //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                        interp_->buffer_operand(vd);
+                        interp_->mkNode("DECL_R1", declStmt);
                         this->childExprStore_ = (clang::Stmt*)declStmt;
                         return;
                     }
                 }
             
                 else if (typestr == "float" or typestr == "const float" or typestr == "class float"/*typestr.find("float") != string::npos*/){
-                    interp_->mkREAL1_VAR_IDENT(vd);
+                    //interp_->mkREAL1_VAR_IDENT(vd);
+                    interp_->mkNode("IDENT_R1",vd, true);
                     if (vd->hasInit())
                     {
                         FloatMatcher m{ this->context_, this->interp_};
@@ -834,27 +445,35 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                         m.visit((*vd->getInit()));
                         if (m.getChildExprStore())
                         {
-                            interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                            //interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                            interp_->buffer_operand(vd);
+                            interp_->buffer_operand(m.getChildExprStore());
+                            interp_->mkNode("DECL_INIT_R1", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                         else
                         {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            interp_->buffer_operand(vd);
+                            interp_->mkNode("DECL_R1", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                     }
                     else
                     {
-                        interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                        //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                        interp_->buffer_operand(vd);
+                        interp_->mkNode("DECL_R1", declStmt);
                         this->childExprStore_ = (clang::Stmt*)declStmt;
                         return;
                     }
                 }
             
                 else if (typestr == "bool" or typestr == "const bool" or typestr == "class bool"/*typestr.find("bool") != string::npos*/){
-                    interp_->mkBOOL_VAR_IDENT(vd);
+                    //interp_->mkBOOL_VAR_IDENT(vd);
+                    interp_->mkNode("IDENT_BOOL",vd, true);
                     if (vd->hasInit())
                     {
                         ROSBooleanMatcher m{ this->context_, this->interp_};
@@ -862,48 +481,27 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                         m.visit((*vd->getInit()));
                         if (m.getChildExprStore())
                         {
-                            interp_->mkDECL_BOOL_VAR_BOOL_EXPR(declStmt, vd, m.getChildExprStore());
+                            //interp_->mkDECL_BOOL_VAR_BOOL_EXPR(declStmt, vd, m.getChildExprStore());
+                            interp_->buffer_operand(vd);
+                            interp_->buffer_operand(m.getChildExprStore());
+                            interp_->mkNode("DECL_INIT_BOOL", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                         else
                         {
-                            interp_->mkDECL_BOOL_VAR(declStmt, vd);
+                            //interp_->mkDECL_BOOL_VAR(declStmt, vd);
+                            interp_->buffer_operand(vd);
+                            interp_->mkNode("DECL_BOOL", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                     }
                     else
                     {
-                        interp_->mkDECL_BOOL_VAR(declStmt, vd);
-                        this->childExprStore_ = (clang::Stmt*)declStmt;
-                        return;
-                    }
-                }
-            
-                else if (typestr == "int" or typestr == "const int" or typestr == "class int"/*typestr.find("int") != string::npos*/){
-                    interp_->mkREAL1_VAR_IDENT(vd);
-                    if (vd->hasInit())
-                    {
-                        IntMatcher m{ this->context_, this->interp_};
-                        m.setup();
-                        m.visit((*vd->getInit()));
-                        if (m.getChildExprStore())
-                        {
-                            interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
-                            this->childExprStore_ =  (clang::Stmt*)declStmt;
-                            return;
-                        }
-                    }
-                    else
-                    {
-                        interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                        //interp_->mkDECL_BOOL_VAR(declStmt, vd);
+                        interp_->buffer_operand(vd);
+                        interp_->mkNode("DECL_BOOL", declStmt);
                         this->childExprStore_ = (clang::Stmt*)declStmt;
                         return;
                     }
@@ -921,118 +519,10 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                     auto typestr = ((clang::QualType)vd->getType()).getAsString();
                     if(false){}
                 
-                    else if(typestr == "geometry_msgs::Vector3Stamped" or typestr == "const geometry_msgs::Vector3Stamped" or typestr == "class geometry_msgs::Vector3Stamped"/*typestr.find("geometry_msgs::Vector3Stamped") != string::npos*/){
-                        interp_->mkREAL3_VAR_IDENT(vd);
-                        if (vd->hasInit())
-                        {
-                            ROSGeometryMsgsVector3StampedMatcher m{ this->context_, this->interp_};
-                            m.setup();
-                            m.visit((*vd->getInit()));
-                            if (m.getChildExprStore())
-                            {
-                                interp_->mkDECL_REAL3_VAR_REAL3_EXPR(declStmt, vd, m.getChildExprStore());
-                            }
-                            else
-                            {
-                                interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                            }
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                        }
-                        anyfound = true;
-                    }
-                    else if(typestr == "geometry_msgs::PointStamped" or typestr == "const geometry_msgs::PointStamped" or typestr == "class geometry_msgs::PointStamped"/*typestr.find("geometry_msgs::PointStamped") != string::npos*/){
-                        interp_->mkREAL3_VAR_IDENT(vd);
-                        if (vd->hasInit())
-                        {
-                            ROSGeometryMsgsPointStampedMatcher m{ this->context_, this->interp_};
-                            m.setup();
-                            m.visit((*vd->getInit()));
-                            if (m.getChildExprStore())
-                            {
-                                interp_->mkDECL_REAL3_VAR_REAL3_EXPR(declStmt, vd, m.getChildExprStore());
-                            }
-                            else
-                            {
-                                interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                            }
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                        }
-                        anyfound = true;
-                    }
-                    else if(typestr == "tf::Stamped<tf::Point>" or typestr == "const tf::Stamped<tf::Point>" or typestr == "class tf::Stamped<tf::Point>"/*typestr.find("tf::Stamped<tf::Point>") != string::npos*/){
-                        interp_->mkREAL3_VAR_IDENT(vd);
-                        if (vd->hasInit())
-                        {
-                            ROSTFStampedPoint m{ this->context_, this->interp_};
-                            m.setup();
-                            m.visit((*vd->getInit()));
-                            if (m.getChildExprStore())
-                            {
-                                interp_->mkDECL_REAL3_VAR_REAL3_EXPR(declStmt, vd, m.getChildExprStore());
-                            }
-                            else
-                            {
-                                interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                            }
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                        }
-                        anyfound = true;
-                    }
-                    else if(typestr == "tf::StampedTransform" or typestr == "const tf::StampedTransform" or typestr == "class tf::StampedTransform"/*typestr.find("tf::StampedTransform") != string::npos*/){
-                        interp_->mkREALMATRIX4_VAR_IDENT(vd);
-                        if (vd->hasInit())
-                        {
-                            ROSTFStampedTransform m{ this->context_, this->interp_};
-                            m.setup();
-                            m.visit((*vd->getInit()));
-                            if (m.getChildExprStore())
-                            {
-                                interp_->mkDECL_REALMATRIX4_VAR_REALMATRIX4_EXPR(declStmt, vd, m.getChildExprStore());
-                            }
-                            else
-                            {
-                                interp_->mkDECL_REALMATRIX4_VAR(declStmt, vd);
-                            }
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REALMATRIX4_VAR(declStmt, vd);
-                        }
-                        anyfound = true;
-                    }
-                    else if(typestr == "tf::Quaternion" or typestr == "const tf::Quaternion" or typestr == "class tf::Quaternion"/*typestr.find("tf::Quaternion") != string::npos*/){
-                        interp_->mkREAL4_VAR_IDENT(vd);
-                        if (vd->hasInit())
-                        {
-                            ROSTFQuaternionMatcher m{ this->context_, this->interp_};
-                            m.setup();
-                            m.visit((*vd->getInit()));
-                            if (m.getChildExprStore())
-                            {
-                                interp_->mkDECL_REAL4_VAR_REAL4_EXPR(declStmt, vd, m.getChildExprStore());
-                            }
-                            else
-                            {
-                                interp_->mkDECL_REAL4_VAR(declStmt, vd);
-                            }
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL4_VAR(declStmt, vd);
-                        }
-                        anyfound = true;
-                    }
                     else if(typestr == "ros::Duration" or typestr == "const ros::Duration" or typestr == "class ros::Duration"/*typestr.find("ros::Duration") != string::npos*/){
-                        interp_->mkREAL1_VAR_IDENT(vd);
+                        //interp_->mkREAL1_VAR_IDENT(vd);
+                        
+                        interp_->mkNode("IDENT_R1",vd, true);
                         if (vd->hasInit())
                         {
                             ROSTFDurationMatcher m{ this->context_, this->interp_};
@@ -1040,87 +530,33 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                             m.visit((*vd->getInit()));
                             if (m.getChildExprStore())
                             {
-                                interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                                //interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                                interp_->buffer_operand(vd);
+                                interp_->buffer_operand(m.getChildExprStore());
+                                interp_->mkNode("DECL_INIT_R1", declStmt);
+                                this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                             else
                             {
-                                interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                                //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                                interp_->buffer_operand(vd);
+                                interp_->mkNode("DECL_R1", declStmt);
+                                this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                         }
                         else
                         {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
-                        }
-                        anyfound = true;
-                    }
-                    else if(typestr == "tf::Transform" or typestr == "const tf::Transform" or typestr == "class tf::Transform"/*typestr.find("tf::Transform") != string::npos*/){
-                        interp_->mkREALMATRIX4_VAR_IDENT(vd);
-                        if (vd->hasInit())
-                        {
-                            ROSTFTransformMatcher m{ this->context_, this->interp_};
-                            m.setup();
-                            m.visit((*vd->getInit()));
-                            if (m.getChildExprStore())
-                            {
-                                interp_->mkDECL_REALMATRIX4_VAR_REALMATRIX4_EXPR(declStmt, vd, m.getChildExprStore());
-                            }
-                            else
-                            {
-                                interp_->mkDECL_REALMATRIX4_VAR(declStmt, vd);
-                            }
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REALMATRIX4_VAR(declStmt, vd);
-                        }
-                        anyfound = true;
-                    }
-                    else if(typestr == "tf::Vector3" or typestr == "const tf::Vector3" or typestr == "class tf::Vector3"/*typestr.find("tf::Vector3") != string::npos*/){
-                        interp_->mkREAL3_VAR_IDENT(vd);
-                        if (vd->hasInit())
-                        {
-                            ROSTFVector3Matcher m{ this->context_, this->interp_};
-                            m.setup();
-                            m.visit((*vd->getInit()));
-                            if (m.getChildExprStore())
-                            {
-                                interp_->mkDECL_REAL3_VAR_REAL3_EXPR(declStmt, vd, m.getChildExprStore());
-                            }
-                            else
-                            {
-                                interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                            }
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                        }
-                        anyfound = true;
-                    }
-                    else if(typestr == "tf::Point" or typestr == "const tf::Point" or typestr == "class tf::Point"/*typestr.find("tf::Point") != string::npos*/){
-                        interp_->mkREAL3_VAR_IDENT(vd);
-                        if (vd->hasInit())
-                        {
-                            ROSTFPointMatcher m{ this->context_, this->interp_};
-                            m.setup();
-                            m.visit((*vd->getInit()));
-                            if (m.getChildExprStore())
-                            {
-                                interp_->mkDECL_REAL3_VAR_REAL3_EXPR(declStmt, vd, m.getChildExprStore());
-                            }
-                            else
-                            {
-                                interp_->mkDECL_REAL3_VAR(declStmt, vd);
-                            }
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL3_VAR(declStmt, vd);
+                            //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            interp_->buffer_operand(vd);
+                            interp_->mkNode("DECL_R1", declStmt);
+                            this->childExprStore_ =  (clang::Stmt*)declStmt;
                         }
                         anyfound = true;
                     }
                     else if(typestr == "ros::Time" or typestr == "const ros::Time" or typestr == "class ros::Time"/*typestr.find("ros::Time") != string::npos*/){
-                        interp_->mkREAL1_VAR_IDENT(vd);
+                        //interp_->mkREAL1_VAR_IDENT(vd);
+                        
+                        interp_->mkNode("IDENT_R1",vd, true);
                         if (vd->hasInit())
                         {
                             ROSTFTimeMatcher m{ this->context_, this->interp_};
@@ -1128,65 +564,33 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                             m.visit((*vd->getInit()));
                             if (m.getChildExprStore())
                             {
-                                interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                                //interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                                interp_->buffer_operand(vd);
+                                interp_->buffer_operand(m.getChildExprStore());
+                                interp_->mkNode("DECL_INIT_R1", declStmt);
+                                this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                             else
                             {
-                                interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                                //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                                interp_->buffer_operand(vd);
+                                interp_->mkNode("DECL_R1", declStmt);
+                                this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                         }
                         else
                         {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
-                        }
-                        anyfound = true;
-                    }
-                    else if(typestr == "ros::Rate" or typestr == "const ros::Rate" or typestr == "class ros::Rate"/*typestr.find("ros::Rate") != string::npos*/){
-                        interp_->mkREAL1_VAR_IDENT(vd);
-                        if (vd->hasInit())
-                        {
-                            ROSRateMatcher m{ this->context_, this->interp_};
-                            m.setup();
-                            m.visit((*vd->getInit()));
-                            if (m.getChildExprStore())
-                            {
-                                interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
-                            }
-                            else
-                            {
-                                interp_->mkDECL_REAL1_VAR(declStmt, vd);
-                            }
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
-                        }
-                        anyfound = true;
-                    }
-                    else if(typestr == "tfScalar" or typestr == "const tfScalar" or typestr == "class tfScalar"/*typestr.find("tfScalar") != string::npos*/){
-                        interp_->mkREAL1_VAR_IDENT(vd);
-                        if (vd->hasInit())
-                        {
-                            ROSTFScalarMatcher m{ this->context_, this->interp_};
-                            m.setup();
-                            m.visit((*vd->getInit()));
-                            if (m.getChildExprStore())
-                            {
-                                interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
-                            }
-                            else
-                            {
-                                interp_->mkDECL_REAL1_VAR(declStmt, vd);
-                            }
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            interp_->buffer_operand(vd);
+                            interp_->mkNode("DECL_R1", declStmt);
+                            this->childExprStore_ =  (clang::Stmt*)declStmt;
                         }
                         anyfound = true;
                     }
                     else if(typestr == "double" or typestr == "const double" or typestr == "class double"/*typestr.find("double") != string::npos*/){
-                        interp_->mkREAL1_VAR_IDENT(vd);
+                        //interp_->mkREAL1_VAR_IDENT(vd);
+                        
+                        interp_->mkNode("IDENT_R1",vd, true);
                         if (vd->hasInit())
                         {
                             DoubleMatcher m{ this->context_, this->interp_};
@@ -1194,21 +598,33 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                             m.visit((*vd->getInit()));
                             if (m.getChildExprStore())
                             {
-                                interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                                //interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                                interp_->buffer_operand(vd);
+                                interp_->buffer_operand(m.getChildExprStore());
+                                interp_->mkNode("DECL_INIT_R1", declStmt);
+                                this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                             else
                             {
-                                interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                                //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                                interp_->buffer_operand(vd);
+                                interp_->mkNode("DECL_R1", declStmt);
+                                this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                         }
                         else
                         {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            interp_->buffer_operand(vd);
+                            interp_->mkNode("DECL_R1", declStmt);
+                            this->childExprStore_ =  (clang::Stmt*)declStmt;
                         }
                         anyfound = true;
                     }
                     else if(typestr == "float" or typestr == "const float" or typestr == "class float"/*typestr.find("float") != string::npos*/){
-                        interp_->mkREAL1_VAR_IDENT(vd);
+                        //interp_->mkREAL1_VAR_IDENT(vd);
+                        
+                        interp_->mkNode("IDENT_R1",vd, true);
                         if (vd->hasInit())
                         {
                             FloatMatcher m{ this->context_, this->interp_};
@@ -1216,21 +632,33 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                             m.visit((*vd->getInit()));
                             if (m.getChildExprStore())
                             {
-                                interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                                //interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
+                                interp_->buffer_operand(vd);
+                                interp_->buffer_operand(m.getChildExprStore());
+                                interp_->mkNode("DECL_INIT_R1", declStmt);
+                                this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                             else
                             {
-                                interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                                //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                                interp_->buffer_operand(vd);
+                                interp_->mkNode("DECL_R1", declStmt);
+                                this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                         }
                         else
                         {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            //interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            interp_->buffer_operand(vd);
+                            interp_->mkNode("DECL_R1", declStmt);
+                            this->childExprStore_ =  (clang::Stmt*)declStmt;
                         }
                         anyfound = true;
                     }
                     else if(typestr == "bool" or typestr == "const bool" or typestr == "class bool"/*typestr.find("bool") != string::npos*/){
-                        interp_->mkBOOL_VAR_IDENT(vd);
+                        //interp_->mkBOOL_VAR_IDENT(vd);
+                        
+                        interp_->mkNode("IDENT_BOOL",vd, true);
                         if (vd->hasInit())
                         {
                             ROSBooleanMatcher m{ this->context_, this->interp_};
@@ -1238,38 +666,26 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                             m.visit((*vd->getInit()));
                             if (m.getChildExprStore())
                             {
-                                interp_->mkDECL_BOOL_VAR_BOOL_EXPR(declStmt, vd, m.getChildExprStore());
+                                //interp_->mkDECL_BOOL_VAR_BOOL_EXPR(declStmt, vd, m.getChildExprStore());
+                                interp_->buffer_operand(vd);
+                                interp_->buffer_operand(m.getChildExprStore());
+                                interp_->mkNode("DECL_INIT_BOOL", declStmt);
+                                this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                             else
                             {
-                                interp_->mkDECL_BOOL_VAR(declStmt, vd);
+                                //interp_->mkDECL_BOOL_VAR(declStmt, vd);
+                                interp_->buffer_operand(vd);
+                                interp_->mkNode("DECL_BOOL", declStmt);
+                                this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                         }
                         else
                         {
-                            interp_->mkDECL_BOOL_VAR(declStmt, vd);
-                        }
-                        anyfound = true;
-                    }
-                    else if(typestr == "int" or typestr == "const int" or typestr == "class int"/*typestr.find("int") != string::npos*/){
-                        interp_->mkREAL1_VAR_IDENT(vd);
-                        if (vd->hasInit())
-                        {
-                            IntMatcher m{ this->context_, this->interp_};
-                            m.setup();
-                            m.visit((*vd->getInit()));
-                            if (m.getChildExprStore())
-                            {
-                                interp_->mkDECL_REAL1_VAR_REAL1_EXPR(declStmt, vd, m.getChildExprStore());
-                            }
-                            else
-                            {
-                                interp_->mkDECL_REAL1_VAR(declStmt, vd);
-                            }
-                        }
-                        else
-                        {
-                            interp_->mkDECL_REAL1_VAR(declStmt, vd);
+                            //interp_->mkDECL_BOOL_VAR(declStmt, vd);
+                            interp_->buffer_operand(vd);
+                            interp_->mkNode("DECL_BOOL", declStmt);
+                            this->childExprStore_ =  (clang::Stmt*)declStmt;
                         }
                         anyfound = true;
                     }
@@ -1290,56 +706,6 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
     {
         auto typestr = ((clang::QualType)exprStmt->getType()).getAsString();
         
-        if(typestr == "geometry_msgs::Vector3Stamped" or typestr == "const geometry_msgs::Vector3Stamped" or typestr == "class geometry_msgs::Vector3Stamped"/*typestr.find("geometry_msgs::Vector3Stamped") != string::npos*/){
-            ROSGeometryMsgsVector3StampedMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
-        if(typestr == "geometry_msgs::PointStamped" or typestr == "const geometry_msgs::PointStamped" or typestr == "class geometry_msgs::PointStamped"/*typestr.find("geometry_msgs::PointStamped") != string::npos*/){
-            ROSGeometryMsgsPointStampedMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
-        if(typestr == "tf::Stamped<tf::Point>" or typestr == "const tf::Stamped<tf::Point>" or typestr == "class tf::Stamped<tf::Point>"/*typestr.find("tf::Stamped<tf::Point>") != string::npos*/){
-            ROSTFStampedPoint m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
-        if(typestr == "tf::StampedTransform" or typestr == "const tf::StampedTransform" or typestr == "class tf::StampedTransform"/*typestr.find("tf::StampedTransform") != string::npos*/){
-            ROSTFStampedTransform m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
-        if(typestr == "tf::Quaternion" or typestr == "const tf::Quaternion" or typestr == "class tf::Quaternion"/*typestr.find("tf::Quaternion") != string::npos*/){
-            ROSTFQuaternionMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
         if(typestr == "ros::Duration" or typestr == "const ros::Duration" or typestr == "class ros::Duration"/*typestr.find("ros::Duration") != string::npos*/){
             ROSTFDurationMatcher m{ this->context_, this->interp_};
             m.setup();
@@ -1350,58 +716,8 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
             }
                 
         }
-        if(typestr == "tf::Transform" or typestr == "const tf::Transform" or typestr == "class tf::Transform"/*typestr.find("tf::Transform") != string::npos*/){
-            ROSTFTransformMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
-        if(typestr == "tf::Vector3" or typestr == "const tf::Vector3" or typestr == "class tf::Vector3"/*typestr.find("tf::Vector3") != string::npos*/){
-            ROSTFVector3Matcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
-        if(typestr == "tf::Point" or typestr == "const tf::Point" or typestr == "class tf::Point"/*typestr.find("tf::Point") != string::npos*/){
-            ROSTFPointMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
         if(typestr == "ros::Time" or typestr == "const ros::Time" or typestr == "class ros::Time"/*typestr.find("ros::Time") != string::npos*/){
             ROSTFTimeMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
-        if(typestr == "ros::Rate" or typestr == "const ros::Rate" or typestr == "class ros::Rate"/*typestr.find("ros::Rate") != string::npos*/){
-            ROSRateMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
-        if(typestr == "tfScalar" or typestr == "const tfScalar" or typestr == "class tfScalar"/*typestr.find("tfScalar") != string::npos*/){
-            ROSTFScalarMatcher m{ this->context_, this->interp_};
             m.setup();
             m.visit(*exprStmt);
             if (m.getChildExprStore()){
@@ -1440,36 +756,6 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
             }
                 
         }
-        if(typestr == "void" or typestr == "const void" or typestr == "class void"/*typestr.find("void") != string::npos*/){
-            ROSVoid1Matcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
-        if(typestr == "void" or typestr == "const void" or typestr == "class void"/*typestr.find("void") != string::npos*/){
-            ROSVoid2Matcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
-        if(typestr == "int" or typestr == "const int" or typestr == "class int"/*typestr.find("int") != string::npos*/){
-            IntMatcher m{ this->context_, this->interp_};
-            m.setup();
-            m.visit(*exprStmt);
-            if (m.getChildExprStore()){
-                this->childExprStore_ = const_cast<clang::Stmt*>(m.getChildExprStore());
-                return;
-            }
-                
-        }
     }
     else if(tryStmt_){
         auto tryBlock = tryStmt_->getTryBlock();
@@ -1478,7 +764,8 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
         innerMatcher.visit(*tryBlock);
         if (innerMatcher.getChildExprStore()){
             this->childExprStore_ = (clang::Stmt*)tryStmt_;//const_cast<clang::Stmt*>(innerMatcher.getChildExprStore());
-            interp_->mkTRY_STMT(tryStmt_,innerMatcher.getChildExprStore());
+            interp_->buffer_operand(innerMatcher.getChildExprStore());
+            interp_->mkNode("TRY_STMT",tryStmt_);//,innerMatcher.getChildExprStore());
             return;
         }
     }

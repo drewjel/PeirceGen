@@ -116,7 +116,7 @@ Peirce.Join("\n",ParsePeirce.Instance.MatcherProductions,p_=>"#include \"" + p_.
 
 #include <memory>
 
-#include ""../ASTToCoords.h""
+#include ""../maps/ASTToCoords.h""
 /*
 This manages all statements in Clang.
 */
@@ -218,7 +218,11 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
             throw ""Broken Parse"";
         }
 
-        this->interp_->mkWHILE_BOOL_EXPR_STMT(whileStmt_, condm.getChildExprStore(), bodym.getChildExprStore());
+        //this->interp_->mkWHILE_BOOL_EXPR_STMT(whileStmt_, condm.getChildExprStore(), bodym.getChildExprStore());
+        interp_->buffer_operand(condm.getChildExprStore());
+        interp_->buffer_operand(bodym.getChildExprStore());
+        interp_->mkNode(""WHILE_STMT"", whileStmt_, false);
+        
         this->childExprStore_ = (clang::Stmt*)whileStmt_;
         return;
 
@@ -248,7 +252,10 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
             throw ""Broken Parse"";
         }
 
-        this->interp_->mkFOR_BOOL_EXPR_STMT(forStmt_, condm.getChildExprStore(), bodym.getChildExprStore());
+        //this->interp_->mkFOR_BOOL_EXPR_STMT(forStmt_, condm.getChildExprStore(), bodym.getChildExprStore());
+        interp_->buffer_operand(condm.getChildExprStore());
+        interp_->buffer_operand(bodym.getChildExprStore());
+        interp_->mkNode(""FOR_STMT"",forStmt_,false); 
         this->childExprStore_ = (clang::Stmt*)forStmt_;
         return;
     }
@@ -369,7 +376,9 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                 
             }
         }
-        this->interp_->mkCOMPOUND_STMT(cmpdStmt_, stmts);
+        //this->interp_->mkCOMPOUND_STMT(cmpdStmt_, stmts);
+        interp_->buffer_operands(stmts);
+        interp_->mkNode(""COMPOUND_STMT"", cmpdStmt_);
         this->childExprStore_ = (clang::Stmt*)cmpdStmt_;
         return;
         
@@ -458,7 +467,14 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                 elses->dump();
                 throw ""Broken Parse"";
             }
-            if(auto dc = clang::dyn_cast<clang::IfStmt>(ifStmt_->getElse())){
+
+            interp_->buffer_operand(condm.getChildExprStore());
+            interp_->buffer_operand(thenm.getChildExprStore());
+            interp_->buffer_operand(elsem.getChildExprStore());
+            interp_->mkNode(""IF_THEN_ELSE_STMT"",ifStmt_,false);
+            
+            //no need, redundant case
+            /*if(auto dc = clang::dyn_cast<clang::IfStmt>(ifStmt_->getElse())){
                 interp_->mk" + ifthenelseif.Name + @"(ifStmt_, condm.getChildExprStore(), thenm.getChildExprStore(), elsem.getChildExprStore());
                 this->childExprStore_ = (clang::Stmt*)ifStmt_;
                 return;
@@ -467,10 +483,14 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                 interp_->mk" + ifthenelse.Name + @"(ifStmt_, condm.getChildExprStore(), thenm.getChildExprStore(), elsem.getChildExprStore());
                 this->childExprStore_ = (clang::Stmt*)ifStmt_;
                 return;
-            }
+            }*/
         }
         else{
-            interp_->mk" + ifthen.Name + @"(ifStmt_, condm.getChildExprStore(), thenm.getChildExprStore());
+            //interp_->mk" + ifthen.Name + @"(ifStmt_, condm.getChildExprStore(), thenm.getChildExprStore());
+            interp_->buffer_operand(condm.getChildExprStore());
+            interp_->buffer_operand(thenm.getChildExprStore());
+            interp_->mkNode(""IF_THEN_ELSE_STMT"",ifStmt_,false);
+
             this->childExprStore_ = (clang::Stmt*)ifStmt_;
             return;
 
@@ -499,7 +519,8 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
 
                         return @"
                 else if (typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos*/){
-                    interp_->mk" + p_.SearchForIdent().Production.Name + @"(vd);
+                    //interp_->mk" + p_.SearchForIdent().Production.Name + @"(vd);
+                    interp_->mkNode(""IDENT_" + p_.DefaultCase + @""",vd, true);
                     if (vd->hasInit())
                     {
                         " + p_.ClassName + @" m{ this->context_, this->interp_};
@@ -507,20 +528,27 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                         m.visit((*vd->getInit()));
                         if (m.getChildExprStore())
                         {
-                            interp_->mk" + p_.SearchForDecl(true).Name + @"(declStmt, vd, m.getChildExprStore());
+                            //interp_->mk" + p_.SearchForDecl(true).Name + @"(declStmt, vd, m.getChildExprStore());
+                            interp_->buffer_operand(vd);
+                            interp_->buffer_operand(m.getChildExprStore());
+                            interp_->mkNode(""DECL_INIT_" + p_.DefaultCase + @""", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                         else
                         {
-                            interp_->mk" + p_.SearchForDecl(false).Name + @"(declStmt, vd);
+                            //interp_->mk" + p_.SearchForDecl(false).Name + @"(declStmt, vd);
+                            interp_->buffer_operand(vd);
+                            interp_->mkNode(""DECL_" + p_.DefaultCase + @""", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                     }
                     else
                     {
-                        interp_->mk" + p_.SearchForDecl(false).Name + @"(declStmt, vd);
+                        //interp_->mk" + p_.SearchForDecl(false).Name + @"(declStmt, vd);
+                        interp_->buffer_operand(vd);
+                        interp_->mkNode(""DECL_" + p_.DefaultCase + @""", declStmt);
                         this->childExprStore_ = (clang::Stmt*)declStmt;
                         return;
                     }
@@ -549,7 +577,9 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
 
                         return @"
                     else if(typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos*/){
-                        interp_->mk" + p_.SearchForIdent().Production.Name + @"(vd);
+                        //interp_->mk" + p_.SearchForIdent().Production.Name + @"(vd);
+                        
+                        interp_->mkNode(""IDENT_" + p_.DefaultCase + @""",vd, true);
                         if (vd->hasInit())
                         {
                             " + p_.ClassName + @" m{ this->context_, this->interp_};
@@ -557,16 +587,26 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                             m.visit((*vd->getInit()));
                             if (m.getChildExprStore())
                             {
-                                interp_->mk" + p_.SearchForDecl(true).Name + @"(declStmt, vd, m.getChildExprStore());
+                                //interp_->mk" + p_.SearchForDecl(true).Name + @"(declStmt, vd, m.getChildExprStore());
+                                interp_->buffer_operand(vd);
+                                interp_->buffer_operand(m.getChildExprStore());
+                                interp_->mkNode(""DECL_INIT_" + p_.DefaultCase + @""", declStmt);
+                                this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                             else
                             {
-                                interp_->mk" + p_.SearchForDecl(false).Name + @"(declStmt, vd);
+                                //interp_->mk" + p_.SearchForDecl(false).Name + @"(declStmt, vd);
+                                interp_->buffer_operand(vd);
+                                interp_->mkNode(""DECL_" + p_.DefaultCase + @""", declStmt);
+                                this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                         }
                         else
                         {
-                            interp_->mk" + p_.SearchForDecl(false).Name + @"(declStmt, vd);
+                            //interp_->mk" + p_.SearchForDecl(false).Name + @"(declStmt, vd);
+                            interp_->buffer_operand(vd);
+                            interp_->mkNode(""DECL_" + p_.DefaultCase + @""", declStmt);
+                            this->childExprStore_ =  (clang::Stmt*)declStmt;
                         }
                         anyfound = true;
                     }";
@@ -613,7 +653,8 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
         innerMatcher.visit(*tryBlock);
         if (innerMatcher.getChildExprStore()){
             this->childExprStore_ = (clang::Stmt*)tryStmt_;//const_cast<clang::Stmt*>(innerMatcher.getChildExprStore());
-            interp_->mkTRY_STMT(tryStmt_,innerMatcher.getChildExprStore());
+            interp_->buffer_operand(innerMatcher.getChildExprStore());
+            interp_->mkNode(""TRY_STMT"",tryStmt_);//,innerMatcher.getChildExprStore());
             return;
         }
     }
@@ -718,13 +759,18 @@ void ROSFunctionMatcher::setup()
                 }
             }
         }
-
-        this->interp_->mkCOMPOUND_STMT(mainCompoundStatement, stmts);
-        this->interp_->mkMAIN_STMT(mainCandidate, mainCompoundStatement);
+        interp_->buffer_operands(stmts);
+        interp_>mkNode(""COMPOUND_STMT"",mainCompoundStatement, false, true);
+        interp_->buffer_operand(mainCompoundStatement);
+        interp_->mkNode(""MAIN_STMT"", mainCandidate);
+        //this->interp_->mkCOMPOUND_STMT(mainCompoundStatement, stmts);
+        //this->interp_->mkMAIN_STMT(mainCandidate, mainCompoundStatement);
         auto tud = clang::TranslationUnitDecl::castFromDeclContext(mainCandidate->getParent());
         std::vector <const clang::FunctionDecl*> globals;
         globals.push_back(mainCandidate);
-        this->interp_->mkSEQ_GLOBALSTMT(tud, globals);
+        interp_->buffer_operands(globals);
+        interp_->mkNode(""SEQ_GLOBAL"",tud);
+        //this->interp_->mkSEQ_GLOBALSTMT(tud, globals);
     }
 };
 
@@ -838,14 +884,15 @@ public:
     this.HeaderFile = file;
 }
 
+
         public string GetCPPLoc()
         {
-            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\ros_matchers\" + Production.ClassName + ".cpp"; 
+            return PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + Production.ClassName + ".cpp";
         }
 
         public string GetHeaderLoc()
         {
-            return Directory.GetParent(Directory.GetParent(System.IO.Directory.GetCurrentDirectory()).FullName).FullName + @"\symlinkme\ros_matchers\" + Production.ClassName + ".h";
+            return PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + Production.ClassName + ".h";
         }
     }
 }

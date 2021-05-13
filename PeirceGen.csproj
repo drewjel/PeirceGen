@@ -53,8 +53,10 @@
     <Compile Include="Generators\GenCoordsToInterp.cs" />
     <Compile Include="Generators\GenDomain.cs" />
     <Compile Include="Generators\GenInterp.cs" />
+    <Compile Include="Generators\GenInterpDelegator.cs" />
     <Compile Include="Generators\GenInterpretation.cs" />
     <Compile Include="Generators\GenInterpToDomain.cs" />
+    <Compile Include="Generators\GenInterpUpdate.cs" />
     <Compile Include="Generators\GenMatcher.cs" />
     <Compile Include="Generators\GenOracle.cs" />
     <Compile Include="Grammar.cs" />
@@ -70,6 +72,7 @@
     <None Include="Grammars\Grammar" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="Grammars\GrammarEmpty - Copy" />
     <None Include="Grammars\GrammarOld" />
   </ItemGroup>
   <ItemGroup>
