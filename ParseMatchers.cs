@@ -14,18 +14,17 @@ namespace PeirceGen
 
         public List<MatcherCase> Cases { get; set; }
 
-        public Grammar.Production GrammarType { get; set; }
-
         public List<string> RawCases { get; set; }
 
         public string InheritStr { get; set; }
         public List<MatcherProduction> InheritGroup { get; set; }
 
-        public Grammar.Production DefaultProduction { get; set; }
-        public string DefaultCase { get; set; }//Grammar.Case DefaultCase { get; set; }
+        public string RefName { get; set; }//Grammar.Case DefaultCase { get; set; }
 
         public bool HasDefaultMatchers { get; set; }
         public bool SuppressCaptureEscape { get; set; }
+
+        public bool HasRef () { return !string.IsNullOrEmpty(this.RefName); }
 
         public string GetIncludes()
         {
@@ -47,7 +46,7 @@ namespace PeirceGen
 
             return Peirce.Join("", allprods, p_ => "\n#include \"" + p_.Prod.ClassName + ".h\"");
         }
-
+        /*
         public Grammar.Case SearchForDecl(bool withInit)
         {
             var declareProd = ParsePeirce.Instance.Grammar.Productions.SingleOrDefault(p_=>p_.Name.ToLower().Contains("declare"));
@@ -68,19 +67,19 @@ namespace PeirceGen
 
                 return ret;
             }
-        }
+        }*/
 
-        public Grammar.Case SearchForAssign()
+        /*public Grammar.Case SearchForAssign()
         {
             return default(Grammar.Case);
-        }
+        }*/
 
-        public Grammar.Case SearchForIdent()
+        /*public Grammar.Case SearchForIdent()
         {
             return SearchForDecl(false).Productions[0].Cases[0];
-        }
+        }*/
 
-        public static Grammar.Production FindProduction(MatcherProduction production, string query)
+        /*public static Grammar.Production FindProduction(MatcherProduction production, string query)
         {
             var gramprod = default(Grammar.Production);
             var toks = query.Split('.');
@@ -99,9 +98,9 @@ namespace PeirceGen
                 Console.WriteLine(ex.StackTrace);
             }
             return null;
-        }
+        }*/
 
-        public static Grammar.Case FindCase(MatcherProduction production, string query, List<MatcherProduction> args = null)
+        /*public static Grammar.Case FindCase(MatcherProduction production, string query, List<MatcherProduction> args = null)
         {
             var toks = query.Split('.');
 
@@ -138,7 +137,7 @@ namespace PeirceGen
                     test = gramprod.Cases.First(pcase => pcase.Name.StartsWith(toks[1]));
 
                     return gramprod.Cases.Single(pcase => pcase.Name.StartsWith(toks[1]) &&args.Count == pcase.Productions.Count &&(i=0)==0 
-                        /*&& args.TrueForAll(arg => arg.GrammarType == pcase.Productions[i++])*/);
+                        /*&& args.TrueForAll(arg => arg.GrammarType == pcase.Productions[i++]));
                 }
                 catch(Exception ex)
                 {
@@ -148,7 +147,7 @@ namespace PeirceGen
 
 
             return null;
-        }
+        }*/
 
         public class MatcherCase
         {
@@ -257,7 +256,7 @@ body
 
                 //Console.WriteLine(raw + " " + grammartype);
 
-                var targetProd = MatcherProduction.FindProduction(production, grammartype);
+                //var targetProd = MatcherProduction.FindProduction(production, grammartype);
 
                 if (asttoks[0].Contains("CXXMemberCallExpr"))
                 {
@@ -850,6 +849,10 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             .Select(a => ProductionArg.Parse(allProductions.Single(p_ => p_.TypeName == ProductionArg.StripFlags(a)), a))
                             .ToList();
 
+                    var allArgs = args
+                            .Select(a => a == "IGNORE" ? default(ProductionArg) : ProductionArg.Parse(allProductions.Single(p_ => p_.TypeName == ProductionArg.StripFlags(a)), a))
+                            .ToList();
+
                     //var targetCase = MatcherProduction.FindCase(production, grammartype, prodArgs);
                     /* }
                      catch(Exception ex)
@@ -942,7 +945,59 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                   + @"){
                 //interp_->mk" + "(cxxConstructExpr_" + (prodArgs.Count > 0 ? " , " : "") + Peirce.Join(",", prodArgs, p_ => "arg" + o++ + "stmt") + @");
                 " + Peirce.Join("", prodArgs, p_ => @"
+                
+
                 interp_->buffer_operand(arg" + t++ + "stmt);") + @"
+                auto consDecl_ = cxxConstructExpr_->getConstructor();
+                if(this->interp_->existsConstructor(consDecl_))
+                {
+
+                }
+                else
+                {
+                    std::vector<const clang::ParmVarDecl*> valid_params_;
+                    auto params_ = consDecl_->parameters();
+                    if(params_.size() > 0){
+                        int param_i = 0;
+                        auto param_ = params_[0];
+                        " + 
+                        Peirce.Join("param_i++;\n",allArgs, a =>
+                        {
+
+                            return a == default(ProductionArg) ? "" : @"
+                            param_ = params[i];
+                            if(auto dc = clang::dyn_cast<clang::ParmVarDecl>(param_)){
+                                interp_->mkNode(""CONSTRUCTOR_PARAM"", param_,false);
+                                valid_params_.push_back(const_cast<clang::ParmVarDecl*>(param_));
+                            }
+                            else
+                            {
+                                std::cout << ""Warning : Param is not a ParmVarDecl\n"";
+                                param_->dump();
+                            }
+    ";
+                        })
+                        +
+                        @"
+                        /*for(auto a:consDecl_->parameters())
+                        {
+                            if(auto dc = clang::dyn_cast<clang::ParmVarDecl>(a)){
+                                interp_->mkNode(""CONSTRUCTOR_PARAM"", a,false);
+                                params_.push_back(const_cast<clang::ParmVarDecl*>(a));
+                             }
+                            else
+                            {
+                                std::cout << ""Warning : Param is not a ParmVarDecl\n"";
+                                a->dump();
+                            }
+                        }*/
+                        if(valid_params_.size()>0)
+                            interp_->buffer_operands(valid_params_);
+                    }
+                    interp_->mkConstructor(consDecl_);
+                }
+
+                interp_->buffer_constructor(consDecl_);
                 interp_->mkNode(""" + nodeName + @""",cxxConstructExpr_, true);
                 this->childExprStore_ = (clang::Stmt*)cxxConstructExpr_;
                 return;
@@ -1104,8 +1159,8 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     " + (true ?@"
             else{
                 this->childExprStore_ = (clang::Stmt*)cxxBindTemporaryExpr_;
-                //interp_->mk" + production.DefaultCase + @"((clang::Stmt*)cxxBindTemporaryExpr_);
-                interp_->mkNode(""LIT_" + production.DefaultCase + @""",(clang::Stmt*)cxxBindTemporaryExpr_,true);
+                //interp_->mk" + production.RefName + @"((clang::Stmt*)cxxBindTemporaryExpr_);
+                interp_->mkNode(""LIT_" + production.RefName + @""",(clang::Stmt*)cxxBindTemporaryExpr_,true);
             }
         }
     }
@@ -1200,8 +1255,8 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         }") + (true ?@"
         else{
             this->childExprStore_ = (clang::Stmt*)implicitCastExpr_;
-            //interp_->mk" + production.DefaultCase + @"((clang::Stmt*)implicitCastExpr_);
-            interp_->mkNode(""LIT_" + production.DefaultCase + @""",(clang::Stmt*)implicitCastExpr_,true);
+            //interp_->mk" + production.RefName + @"((clang::Stmt*)implicitCastExpr_);
+            interp_->mkNode(""LIT_" + production.RefName + @""",(clang::Stmt*)implicitCastExpr_,true);
             return;
         }
     }
@@ -1245,8 +1300,8 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     " + (true ?@"
         else{
             this->childExprStore_ = (clang::Stmt*)cxxBindTemporaryExpr_;
-            //interp_->mk" + production.DefaultCase + @"((clang::Stmt*)cxxBindTemporaryExpr_);
-            interp_->mkNode(""LIT_" + production.DefaultCase + @""",(clang::Stmt*)cxxBindTemporaryExpr_,true);
+            //interp_->mk" + production.RefName + @"((clang::Stmt*)cxxBindTemporaryExpr_);
+            interp_->mkNode(""LIT_" + production.RefName + @""",(clang::Stmt*)cxxBindTemporaryExpr_,true);
             return;
         }
     }
@@ -1293,8 +1348,8 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         " + (true ?@"
             else{
                 this->childExprStore_ = (clang::Stmt*)materializeTemporaryExpr_;
-                //interp_->mk" + production.DefaultCase + @"((clang::Stmt*)materializeTemporaryExpr_);
-                interp_->mkNode(""LIT_" + production.DefaultCase + @""",(clang::Stmt*)materializeTemporaryExpr_,true);
+                //interp_->mk" + production.RefName + @"((clang::Stmt*)materializeTemporaryExpr_);
+                interp_->mkNode(""LIT_" + production.RefName + @""",(clang::Stmt*)materializeTemporaryExpr_,true);
                 return;
             }
         }
@@ -1370,7 +1425,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         " + (true ?@"
             else{
                 this->childExprStore_ = (clang::Stmt*)exprWithCleanups_;
-                //interp_->mk" + production.DefaultCase + @"((clang::Stmt*)exprWithCleanups_);
+                //interp_->mk" + production.RefName + @"((clang::Stmt*)exprWithCleanups_);
                 return;
             }
         }
@@ -1406,7 +1461,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
             else{
 
                 this->childExprStore_ = (clang::Stmt*)cxxFunctionalCastExpr_;
-               // interp_->mk" + production.DefaultCase + @"((clang::Stmt*)cxxFunctionalCastExpr_);
+               // interp_->mk" + production.RefName + @"((clang::Stmt*)cxxFunctionalCastExpr_);
                 return;
             }
         }
@@ -1513,7 +1568,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                
             };
 
-            if (production.GrammarType.Cases.Exists(pc => pc.Name.Contains("VAR")))
+            if (!string.IsNullOrEmpty(production.RefName))
             {
                 retval.Add(new MatcherCase()
                 {
@@ -1523,13 +1578,13 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                     BuildMatcher = (prod) => "declRefExpr().bind(\"DeclRefExpr\")",
                     BuildCallbackHandler = (prod) =>
                     {
-                        var refexpr = prod.GrammarType.Cases.Single(pcase => pcase.Name.Contains("VAR"));
+                        //var refexpr = prod.GrammarType.Cases.Single(pcase => pcase.Name.Contains("VAR"));
 
                         return @"
     if(declRefExpr_){
         if(auto dc = clang::dyn_cast<clang::VarDecl>(declRefExpr_->getDecl())){
             interp_->buffer_link(dc);
-            interp_->mkNode(""REF_" + prod.DefaultCase + @""",declRefExpr_);
+            interp_->mkNode(""REF_" + prod.RefName + @""",declRefExpr_);
             this->childExprStore_ = (clang::Stmt*)declRefExpr_;
             return;
 
@@ -1831,11 +1886,11 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                                     TypeName = toks[0].Contains("~") ? cn : toks[0],
                                     InheritStr = toks[0].Contains("~") ? inherits : null,
                                     ClassName = toks[1],
-                                    GrammarType = ParsePeirce.Instance.Grammar.Productions.Single(p_ => p_.Name == toks[2]),
+                                    //GrammarType = ParsePeirce.Instance.Grammar.Productions.Single(p_ => p_.Name == toks[2]),
                                     Cases = new List<MatcherProduction.MatcherCase>(),
                                     InheritGroup = new List<MatcherProduction>(),
                                     RawCases = new List<string>()
-                                    ,DefaultCase = toks.Count() > 3 ? toks[3] : "",
+                                    ,RefName = toks.Count() > 3 ? toks[3] : "",
                                       //  toks.Count() > 3 ?
                                        //   ParsePeirce.Instance.Grammar
                                        //     .Productions.Single(p_ => p_.Name == toks[3].Split('.')[0])

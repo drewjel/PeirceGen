@@ -158,6 +158,11 @@ void ROSStatementMatcher::setup(){
     StatementMatcher
         tryStmt_ = cxxTryStmt().bind(""TryStmt"");
 
+    StatementMatcher
+        cxxMemberCallExpr_ = cxxMemberCallExpr().bind(""CXXMemberCallExpr"");
+
+    localFinder_.addMatcher(exprWithCleanups_,this);
+    localFinder_.addMatcher(cxxMemberCallExpr_,this);
     localFinder_.addMatcher(decl_, this);
     localFinder_.addMatcher(assign_, this);
     localFinder_.addMatcher(expr_, this);
@@ -167,11 +172,10 @@ void ROSStatementMatcher::setup(){
     localFinder_.addMatcher(whileStmt_, this);
     localFinder_.addMatcher(forStmt_, this);
     localFinder_.addMatcher(tryStmt_, this);
+    this->childExprStore_ = nullptr;
 };
 
 void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
-
-    this->childExprStore_ = nullptr;
 
     const auto declStmt = Result.Nodes.getNodeAs<clang::DeclStmt>(""DeclStmt"");
 
@@ -193,6 +197,7 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
 
     const auto tryStmt_ = Result.Nodes.getNodeAs<clang::CXXTryStmt>(""TryStmt"");
 
+    const auto cxxMemberCallExpr_ = Result.Nodes.getNodeAs<clang::CXXMemberCallExpr>(""CXXMemberCallExpr"");
     
     if(whileStmt_){
         auto wcond = whileStmt_->getCond();
@@ -357,7 +362,7 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                     for(int i = 0; i<stack.back().size();i++){
                         if(recptr.back() > i) continue;
                         auto c = 
-                        ROSStatementMatcher inner{this->context_,this->interp_};
+                            ROSStatementMatcher inner{this->context_,this->interp_};
                         inner.setup();
                         inner.visit(*c);
                         if(inner.getChildExprStore()){
@@ -498,6 +503,7 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
     }
 ";
             }) + @"
+    auto vec_str = std::string(""std::vector<"");
     if (declStmt)
     {
         if (declStmt->isSingleDecl())
@@ -506,6 +512,44 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
              {
                 auto typestr = ((clang::QualType)vd->getType()).getAsString();
                 if(false){}
+                else if(typestr.substr(0,vec_str.length())==vec_str){
+                    //std::cout<<typestr.substr(vec_str.length(), typestr.length()-vec_str.length()-1)<<""\n"";
+                    std::string param_type = typestr.substr(vec_str.length(), typestr.length()-vec_str.length()-1);
+                    if(false){}                
+"
+                +
+                Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length),
+                    p_ =>
+                    {
+                        //var withInit = p_.SearchForDecl(true);
+                        //var woInit = p_.SearchForDecl(t)
+                        //if (p_.SearchForDecl(true) == null)
+                        //    return "";
+                        return @"
+                        else if(param_type == """ + p_.TypeName + @""" or param_type == ""const " + p_.TypeName + @""" or param_type == ""class " + p_.TypeName + @"""){
+                            
+                            interp_->mkNode(""IDENT_LIST_" + p_.RefName + @""",vd, true);
+                            if (vd->hasInit()){
+                                //" + p_.ClassName + @" argm{this->context_,this->interp_};
+                                //argm.setup();
+                               // argm.visit(*vd->getInit());
+                               // auto argstmt = argm.getChildExprStore();
+                               //interp_->buffer_operand(argstmt);
+                                interp_->buffer_operand(vd);
+                                interp_->mkNode(""DECL_LIST_" + p_.RefName + @""",declStmt, false);
+                                this->childExprStore_= (clang::Stmt*) declStmt;
+                                return;
+                            }
+                            else{
+                                interp_->buffer_operand(vd);
+                                interp_->mkNode(""DECL_LIST_" + p_.RefName + @""",declStmt, false);
+                                this->childExprStore_ = (clang::Stmt*) declStmt;
+                                return;
+                            }
+                        }
+                    ";
+                    }) + @"
+                }
 "
                 +
                 Peirce.Join("",ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_=>p_.TypeName.Length), 
@@ -513,14 +557,14 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                     {
                         //var withInit = p_.SearchForDecl(true);
                         //var woInit = p_.SearchForDecl(t)
-                        if (p_.SearchForDecl(true) == null)
-                            return "";
+                        //if (p_.SearchForDecl(true) == null)
+                        //    return "";
 
 
                         return @"
-                else if (typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos*/){
-                    //interp_->mk" + p_.SearchForIdent().Production.Name + @"(vd);
-                    interp_->mkNode(""IDENT_" + p_.DefaultCase + @""",vd, true);
+                else if (typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""){
+                    //interp_->mk" + @"(vd);
+                    interp_->mkNode(""IDENT_" + p_.RefName + @""",vd, true);
                     if (vd->hasInit())
                     {
                         " + p_.ClassName + @" m{ this->context_, this->interp_};
@@ -528,27 +572,27 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                         m.visit((*vd->getInit()));
                         if (m.getChildExprStore())
                         {
-                            //interp_->mk" + p_.SearchForDecl(true).Name + @"(declStmt, vd, m.getChildExprStore());
+                            //interp_->mk" + @"(declStmt, vd, m.getChildExprStore());
                             interp_->buffer_operand(vd);
                             interp_->buffer_operand(m.getChildExprStore());
-                            interp_->mkNode(""DECL_INIT_" + p_.DefaultCase + @""", declStmt);
+                            interp_->mkNode(""DECL_INIT_" + p_.RefName + @""", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                         else
                         {
-                            //interp_->mk" + p_.SearchForDecl(false).Name + @"(declStmt, vd);
+                            //interp_->mk" + @"(declStmt, vd);
                             interp_->buffer_operand(vd);
-                            interp_->mkNode(""DECL_" + p_.DefaultCase + @""", declStmt);
+                            interp_->mkNode(""DECL_" + p_.RefName + @""", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                             return;
                         }
                     }
                     else
                     {
-                        //interp_->mk" + p_.SearchForDecl(false).Name + @"(declStmt, vd);
+                        //interp_->mk" +  @"(declStmt, vd);
                         interp_->buffer_operand(vd);
-                        interp_->mkNode(""DECL_" + p_.DefaultCase + @""", declStmt);
+                        interp_->mkNode(""DECL_" + p_.RefName + @""", declStmt);
                         this->childExprStore_ = (clang::Stmt*)declStmt;
                         return;
                     }
@@ -573,13 +617,13 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                 Peirce.Join("",ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length), 
                     p_=>
                     {
-                        if (p_.SearchForDecl(true) == null) return "";
+                        //if (p_.SearchForDecl(true) == null) return "";
 
                         return @"
                     else if(typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos*/){
-                        //interp_->mk" + p_.SearchForIdent().Production.Name + @"(vd);
+                        //interp_->mk" + @"(vd);
                         
-                        interp_->mkNode(""IDENT_" + p_.DefaultCase + @""",vd, true);
+                        interp_->mkNode(""IDENT_" + p_.RefName + @""",vd, true);
                         if (vd->hasInit())
                         {
                             " + p_.ClassName + @" m{ this->context_, this->interp_};
@@ -587,25 +631,25 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                             m.visit((*vd->getInit()));
                             if (m.getChildExprStore())
                             {
-                                //interp_->mk" + p_.SearchForDecl(true).Name + @"(declStmt, vd, m.getChildExprStore());
+                                //interp_->mk" + @"(declStmt, vd, m.getChildExprStore());
                                 interp_->buffer_operand(vd);
                                 interp_->buffer_operand(m.getChildExprStore());
-                                interp_->mkNode(""DECL_INIT_" + p_.DefaultCase + @""", declStmt);
+                                interp_->mkNode(""DECL_INIT_" + p_.RefName + @""", declStmt);
                                 this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                             else
                             {
-                                //interp_->mk" + p_.SearchForDecl(false).Name + @"(declStmt, vd);
+                                //interp_->mk" + @"(declStmt, vd);
                                 interp_->buffer_operand(vd);
-                                interp_->mkNode(""DECL_" + p_.DefaultCase + @""", declStmt);
+                                interp_->mkNode(""DECL_" + p_.RefName + @""", declStmt);
                                 this->childExprStore_ =  (clang::Stmt*)declStmt;
                             }
                         }
                         else
                         {
-                            //interp_->mk" + p_.SearchForDecl(false).Name + @"(declStmt, vd);
+                            //interp_->mk" + @"(declStmt, vd);
                             interp_->buffer_operand(vd);
-                            interp_->mkNode(""DECL_" + p_.DefaultCase + @""", declStmt);
+                            interp_->mkNode(""DECL_" + p_.RefName + @""", declStmt);
                             this->childExprStore_ =  (clang::Stmt*)declStmt;
                         }
                         anyfound = true;
@@ -624,6 +668,62 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
     else if (assignStmt)
     {
         //not implemented!!
+    }
+    else if (exprWithCleanupsDiscard)
+    {//matches fluff node to discard
+        ROSStatementMatcher innerMatcher{ this->context_, this->interp_};
+        innerMatcher.setup();
+        innerMatcher.visit(*exprWithCleanupsDiscard->getSubExpr());
+        if (innerMatcher.getChildExprStore()){
+            this->childExprStore_ = const_cast<clang::Stmt*>(innerMatcher.getChildExprStore());
+            return;
+        }
+    }
+    else if (cxxMemberCallExpr_)
+    {
+        auto decl_ = cxxMemberCallExpr_->getMethodDecl();
+        if(auto dc = clang::dyn_cast<clang::NamedDecl>(decl_)){
+            auto name = dc->getNameAsString();
+            auto obj= cxxMemberCallExpr_->getImplicitObjectArgument();
+            auto objstr = ((clang::QualType)obj->getType()).getAsString();
+            if(objstr.substr(0,vec_str.length())==vec_str and name.find(""push_back"") != string::npos){
+                if(auto dc2 = clang::dyn_cast<clang::DeclRefExpr>(obj)){
+                    auto objdecl = clang::dyn_cast<clang::VarDecl>(dc2->getDecl());
+                    //interp_->buffer_link(objdecl);
+                    //interp_->mkNode(""APPEND_LIST_R1"",cxxMemberCallExpr_,false);
+                    std::string param_type = objstr.substr(vec_str.length(), objstr.length()-vec_str.length()-1);
+                    if(false){}                
+"
+                +
+                Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length),
+                    p_ =>
+                    {
+                        //var withInit = p_.SearchForDecl(true);
+                        //var woInit = p_.SearchForDecl(t)
+                        //if (p_.SearchForDecl(true) == null)
+                        //    return "";
+                        return @"
+                    else if(param_type == """ + p_.TypeName + @""" or param_type == ""const " + p_.TypeName + @""" or param_type == ""class " + p_.TypeName + @"""){
+                        
+                        auto arg_=cxxMemberCallExpr_->getArg(0);
+                        " + p_.ClassName + @" argm{this->context_,this->interp_};
+                        argm.setup();
+                        argm.visit(*arg_);
+                        auto argstmt = argm.getChildExprStore();
+                        interp_->buffer_link(objdecl);
+                        interp_->buffer_operand(argstmt);
+                        interp_->mkNode(""APPEND_LIST_" + p_.RefName + @""",cxxMemberCallExpr_, false);
+                        this->childExprStore_ = (clang::Stmt*)cxxMemberCallExpr_;
+                        return;
+                    }
+                    ";
+                    }) + @"
+                }
+                else {
+                    std::cout<<""Warning : Not a DeclRefExpr"";
+                }
+            }
+        }
     }
     else if (exprStmt)
     {
@@ -655,16 +755,6 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
             this->childExprStore_ = (clang::Stmt*)tryStmt_;//const_cast<clang::Stmt*>(innerMatcher.getChildExprStore());
             interp_->buffer_operand(innerMatcher.getChildExprStore());
             interp_->mkNode(""TRY_STMT"",tryStmt_);//,innerMatcher.getChildExprStore());
-            return;
-        }
-    }
-    else if (exprWithCleanupsDiscard)
-    {//matches fluff node to discard
-        ROSStatementMatcher innerMatcher{ this->context_, this->interp_};
-        innerMatcher.setup();
-        innerMatcher.visit(*exprWithCleanupsDiscard->getSubExpr());
-        if (innerMatcher.getChildExprStore()){
-            this->childExprStore_ = const_cast<clang::Stmt*>(innerMatcher.getChildExprStore());
             return;
         }
     }
@@ -819,6 +909,7 @@ Peirce.Join("", new List<MatcherProduction>() { this.Production }.Select(cowboyc
 }).ToList(), p => p)
 +
 @"
+    this->childExprStore_ = nullptr;
 };
 
 void " + this.Production.ClassName + @"::run(const MatchFinder::MatchResult &Result){" +
@@ -837,7 +928,6 @@ Peirce.Join("", new List<MatcherProduction>() { this.Production }.Select(cowboyc
 @"
     std::unordered_map<std::string,std::function<bool(std::string)>> arg_decay_exist_predicates;
     std::unordered_map<std::string,std::function<std::string(std::string)>> arg_decay_match_predicates;
-    this->childExprStore_ = nullptr;
 "
 +
 Peirce.Join("", new List<MatcherProduction>() { this.Production }.Select(cowboycode =>
