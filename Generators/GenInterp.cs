@@ -12,12 +12,12 @@ namespace PeirceGen.Generators
     {
         public override string GetCPPLoc()
         {
-            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "/interp_modules/January21Interp.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "/January21Interp.cpp";
         }
 
         public override string GetHeaderLoc()
         {
-            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "/interp_modules/January21Interp.h";
+            return PeirceGen.MonoConfigurationManager.Instance["GenPath"] + "/January21Interp.h";
         }
         public override void GenCpp()
         {
