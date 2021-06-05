@@ -38,8 +38,8 @@ namespace PeirceGen.Generators
         {
             GenMatcher.GenStatementHeader();
             GenMatcher.GenStatementCpp();
-            //GenMatcher.GenFunctionHeader();
-           // GenMatcher.GenFunctionCpp();
+            GenMatcher.GenFunctionHeader();
+            GenMatcher.GenFunctionCpp();
             if (!Directory.Exists(PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + "ros_matchers"))
                 Directory.CreateDirectory(PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + "ros_matchers");
             System.IO.File.WriteAllText(GenMatcher.GetStatementHeaderLoc(), GenMatcher.StatementHeaderFile);
@@ -50,12 +50,12 @@ namespace PeirceGen.Generators
 
         private static string GetFunctionCPPLoc()
         {
-            return PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + "ROSFunctionMatcher.cpp";
+            return PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + "ROS1ProgramMatcher.cpp";
         }
 
         private static string GetFunctionHeaderLoc()
         {
-            return PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + "ROSFunctionMatcher.h";
+            return PeirceGen.MonoConfigurationManager.Instance["MatcherPath"] + "ROS1ProgramMatcher.h";
         }
 
         private static string GetStatementCPPLoc()
@@ -161,6 +161,9 @@ void ROSStatementMatcher::setup(){
     StatementMatcher
         cxxMemberCallExpr_ = cxxMemberCallExpr().bind(""CXXMemberCallExpr"");
 
+    //StatementMatcher
+    //    functionDecl_ = functionDecl().bind(""FunctionDecl"");
+
     localFinder_.addMatcher(exprWithCleanups_,this);
     localFinder_.addMatcher(cxxMemberCallExpr_,this);
     localFinder_.addMatcher(decl_, this);
@@ -172,6 +175,7 @@ void ROSStatementMatcher::setup(){
     localFinder_.addMatcher(whileStmt_, this);
     localFinder_.addMatcher(forStmt_, this);
     localFinder_.addMatcher(tryStmt_, this);
+    //localFinder_.addMatcher(functionDecl_, this);
     this->childExprStore_ = nullptr;
 };
 
@@ -199,6 +203,8 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
 
     const auto cxxMemberCallExpr_ = Result.Nodes.getNodeAs<clang::CXXMemberCallExpr>(""CXXMemberCallExpr"");
     
+    //const auto functionDecl_ = Result.Nodes.getNodeAs<clang::FunctionDecl>(""FunctionDecl"");
+
     if(whileStmt_){
         auto wcond = whileStmt_->getCond();
         auto wbody = whileStmt_->getBody();
@@ -264,6 +270,9 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
         this->childExprStore_ = (clang::Stmt*)forStmt_;
         return;
     }
+
+    //if(functionDecl_){
+        
 
     /*
     if(returnStmt_){
@@ -382,9 +391,11 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
             }
         }
         //this->interp_->mkCOMPOUND_STMT(cmpdStmt_, stmts);
-        interp_->buffer_operands(stmts);
-        interp_->mkNode(""COMPOUND_STMT"", cmpdStmt_);
-        this->childExprStore_ = (clang::Stmt*)cmpdStmt_;
+        if(stmts.size()>0){
+            interp_->buffer_body(stmts);
+            interp_->mkNode(""COMPOUND_STMT"", cmpdStmt_);
+            this->childExprStore_ = (clang::Stmt*)cmpdStmt_;
+        }
         return;
         
     }
@@ -771,19 +782,23 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
         public static void GenFunctionHeader()
         {
             GenMatcher.FunctionHeaderFile = @"
-#include "".. / BaseMatcher.h""
+#include ""../BaseMatcher.h""
 #include ""../Interpretation.h""
 /*
 See BaseMatcher.h for method details
 Starting point entry for matching Clang AST. Searches for main method
 */
-class ROSFunctionMatcher : public BaseMatcher {
+class ROS1ProgramMatcher : public BaseMatcher {
 public:
-    ROSFunctionMatcher(clang::ASTContext* context, interp::Interpretation* interp) : BaseMatcher(context, interp) { }
+    ROS1ProgramMatcher(
+        clang::ASTContext* context,
+        interp::Interpretation* interp)
+        : BaseMatcher(context, interp) { }
 
         virtual void setup();
         virtual void run(const MatchFinder::MatchResult &Result);
-
+protected:
+    
 };
 ";
         }
@@ -798,72 +813,194 @@ public:
 #include <vector>
 #include <iostream>
 
-#include ""ROSFunctionMatcher.h""
+#include ""ROS1ProgramMatcher.h""
 #include ""ROSStatementMatcher.h""
 
-#include ""../ASTToCoords.h""
+//#include ""../ASTToCoords.h""
 
+int TUDCount;
 
 using namespace clang::ast_matchers;
 
-void ROSFunctionMatcher::setup()
+void ROS1ProgramMatcher::setup()
     {
-        DeclarationMatcher root =
-            functionDecl(has(compoundStmt().bind(""MainCompoundStatement"")
-            )).bind(""MainCandidate"");
+        //valid without pointers!
+        /*  DeclarationMatcher root =//isMain() <-- certain __important__ matchers like this are missing. find them.
+              functionDecl(has(compoundStmt().bind(""MainCompoundStatement"")
+              )).bind(""MainCandidate"");
+      */
+        DeclarationMatcher roott =
+            translationUnitDecl().bind(""MainProg"");
 
-        localFinder_.addMatcher(root, this);
+        //localFinder_.addMatcher(root, this);
+        localFinder_.addMatcher(roott, this);
     };
 
     /*
     This is a callback method that gets called when Clang matches on a pattern set up in the search method above.
     */
-    void ROSFunctionMatcher::run(const MatchFinder::MatchResult &Result)
+    void ROS1ProgramMatcher::run(const MatchFinder::MatchResult &Result)
     {
-        auto mainCompoundStatement = Result.Nodes.getNodeAs<clang::CompoundStmt>(""MainCompoundStatement"");
-        auto mainCandidate = Result.Nodes.getNodeAs<clang::FunctionDecl>(""MainCandidate"");
+        //auto mainCompoundStatement = Result.Nodes.getNodeAs<clang::CompoundStmt>(""MainCompoundStatement"");
+        //auto mainCandidate = Result.Nodes.getNodeAs<clang::FunctionDecl>(""MainCandidate"");
 
-        if (mainCandidate->isMain())
+        auto tud = Result.Nodes.getNodeAs<clang::TranslationUnitDecl>(""MainProg"");
+
+        auto srcs = this->interp_->getSources();
+        /*
+            std::cout<<""Sources:\n"";
+            for(auto src:srcs)
+            {
+                std::cout<<src<<""\n"";
+            }*/
+
+        if (tud)
         {
-
-            // stmts gets converted into a SEQ construct in lang.
-            std::vector <const clang::Stmt*> stmts;
-
-            //visit each statement in the main procedure
-            for (auto it = mainCompoundStatement->body_begin(); it != mainCompoundStatement->body_end(); it++)
+            std::cout << ""TranslationUnitDeclCounter:"" << std::to_string(TUDCount++) << ""\n"";
+            if (TUDCount > 1)
             {
-                ROSStatementMatcher rootMatcher{ this->context_, this->interp_};
-                rootMatcher.setup();
-                rootMatcher.visit(**it);
-                auto h = *it;
-
-                if (rootMatcher.getChildExprStore())
-                {
-                    stmts.push_back(rootMatcher.getChildExprStore());
-                }
-                if (auto dc = clang::dyn_cast<clang::DeclStmt>(h))
+                std::cout << ""WARNING : UPDATE  LOGIC TO HANDLE MULTIPLE TRANSLATION UNITS."";
+                throw ""Bad Code!"";
+            }
+        }
+        std::vector <const clang::FunctionDecl*> globals;
+        if (tud)
+        {
+            //auto tud = clang::TranslationUnitDecl::castFromDeclContext(mainCandidate->getParent());
+            auto & srcm = this->context_->getSourceManager();
+            for (auto d : tud->decls())
             {
-                auto decl = dc->getSingleDecl();
-                if (auto ddc = clang::dyn_cast<clang::VarDecl>(decl))
+
+                if (auto fn = clang::dyn_cast<clang::FunctionDecl>(d))
+            {
+                auto loc = fn->getLocation();
+
+                auto srcloc = srcm.getFileLoc(loc);
+                auto locstr = srcloc.printToString(srcm);
+
+                for (auto & src: srcs)
                 {
+                    if (locstr.find(src) != string::npos)
+                    {
+                        std::vector <const clang::Stmt*> stmts;
+                        if (fn->isMain())
+                        {
+                            if (auto cmpd = clang::dyn_cast<clang::CompoundStmt>(fn->getBody())){
+
+                                for (auto it = cmpd->body_begin(); it != cmpd->body_end(); it++)
+                                {
+                                    ROSStatementMatcher rootMatcher{ this->context_, this->interp_};
+                                    rootMatcher.setup();
+                                    //std::cout<<""dumping\n"";
+                                    //(*it)->dump();
+                                    //std::cout<<""dumped\n"";
+                                    rootMatcher.visit(**it);
+                                    if (rootMatcher.getChildExprStore())
+                                    {
+                                        //rootMatcher.getChildExprStore()->dump();
+                                        stmts.push_back(rootMatcher.getChildExprStore());
+                                    }
+                                }
+                                this->interp_->buffer_body(stmts);
+                                this->interp_->mkNode(""COMPOUND_STMT"", cmpd, false);
+                                this->interp_->buffer_body(cmpd);
+                                this->interp_->mkNode(""FUNCTION_MAIN"", fn, false);
+                                globals.push_back(fn);
+
+                            }
+                            else
+                            {
+                                std::cout << ""Warning : Unable to parse main function? \n"";
+                                fn->getBody()->dump();
+                            }
+                        }
+                        else{
+                            auto retType = (clang::QualType)fn->getReturnType();
+        
+                            auto fbody = fn->getBody();
+
+                            auto typeDetector = [=](std::string typenm){
+                                if(false){return false;}
+                        " +
+                             Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length), a_ =>
+                                "\n\t\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"){ return true; }")
+                             + @"
+                                else { return false;}
+                            };
+
+                            ROSStatementMatcher bodym{ this->context_, this->interp_};
+                            bodym.setup();
+                            bodym.visit(*fbody);
+
+                            if(!bodym.getChildExprStore()){
+                                std::cout<<""No detected nodes in body of function\n"";
+                                return;
+                            }
+
+                            std::vector<const clang::ParmVarDecl*> valid_params_;
+                            auto params_ = fn->parameters();
+                            if(params_.size() > 0){
+                                for(auto param_ : params_){
+                                    auto typestr = param_->getType().getAsString();
+                                    if(false){}
+                                 "
+                                    +
+                                    Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length),
+                                        p_ =>
+                                        {
+                                            return @"
+                                    else if(typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos*/){
+                                        //interp_->mkFunctionParam(""" + p_.RefName + @""", param_);
+
+                                        if(auto dc = clang::dyn_cast<clang::ParmVarDecl>(param_)){
+                                            interp_->mkNode(""FUNCTION_PARAM"", param_,false);
+                                            valid_params_.push_back(const_cast<clang::ParmVarDecl*>(param_));
+                                        }
+                                        else
+                                        {
+                                            std::cout << ""Warning : Param is not a ParmVarDecl\n"";
+                                            param_->dump();
+                                        }
+                                        valid_params_.push_back(param_);
+                                    }";
+                                        }) + @"
+                                }
+                            }
+                            bool hasReturn = false;
+                            auto nodePrefix = std::string("""");
+                            auto typenm = retType.getAsString();
+                            if(false){}
+                        " +
+                             Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length), a_ =>
+                                "\n\t\t\t\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"){ hasReturn = true; nodePrefix = \"" + a_.RefName + @"""; }")
+                             + @"
+                            else {}
+        
+
+                            if(valid_params_.size()>0){
+                                interp_->buffer_operands(valid_params_);
+            
+                            }
+                            interp_->buffer_body(bodym.getChildExprStore());
+                            if(hasReturn){
+                                interp_->mkFunctionWithReturn(nodePrefix, fn);
+                            }
+                            else{
+                                interp_->mkFunction(fn);
+                            }
+                            globals.push_back(fn);
+                                    
+                        }
+                    }
                 }
             }
         }
-        interp_->buffer_operands(stmts);
-        interp_>mkNode(""COMPOUND_STMT"",mainCompoundStatement, false, true);
-        interp_->buffer_operand(mainCompoundStatement);
-        interp_->mkNode(""MAIN_STMT"", mainCandidate);
-        //this->interp_->mkCOMPOUND_STMT(mainCompoundStatement, stmts);
-        //this->interp_->mkMAIN_STMT(mainCandidate, mainCompoundStatement);
-        auto tud = clang::TranslationUnitDecl::castFromDeclContext(mainCandidate->getParent());
-        std::vector <const clang::FunctionDecl*> globals;
-        globals.push_back(mainCandidate);
-        interp_->buffer_operands(globals);
-        interp_->mkNode(""SEQ_GLOBAL"",tud);
+
         //this->interp_->mkSEQ_GLOBALSTMT(tud, globals);
+        this->interp_->buffer_body(globals);
+        this->interp_->mkNode(""COMPOUND_GLOBAL"", tud, false, true);
     }
 };
-
 ";
         }
 
