@@ -313,7 +313,7 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                 stmts.push_back(stmti.getChildExprStore());
             }
             else{
-                auto current = st;
+                //auto current = st;
                 std::vector<std::vector<clang::Stmt*>> stack;
                 std::vector<int> recptr;
 
@@ -918,7 +918,7 @@ void ROS1ProgramMatcher::setup()
                             auto retType = (clang::QualType)fn->getReturnType();
         
                             auto fbody = fn->getBody();
-
+                            /*
                             auto typeDetector = [=](std::string typenm){
                                 if(false){return false;}
                         " +
@@ -926,7 +926,7 @@ void ROS1ProgramMatcher::setup()
                                 "\n\t\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"){ return true; }")
                              + @"
                                 else { return false;}
-                            };
+                            };*/
 
                             ROSStatementMatcher bodym{ this->context_, this->interp_};
                             bodym.setup();

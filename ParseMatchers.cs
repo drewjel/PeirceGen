@@ -644,10 +644,10 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             return prodexistpreds + @"
     if(binaryOperator_){
         auto bostr = binaryOperator_->getOpcodeStr().str();
-        auto lhs = binaryOperator_->getLHS();
-        auto rhs = binaryOperator_->getRHS();
-        clang::Stmt* lhsstmt;
-        clang::Stmt* rhsstmt;
+        //auto lhs = binaryOperator_->getLHS();
+        //auto rhs = binaryOperator_->getRHS();
+        //clang::Stmt* lhsstmt;
+        //clang::Stmt* rhsstmt;
             
 
         if(bostr==""" + asttoks[1] + @""" or bostr == ""const " + asttoks[1] + @""" or bostr == ""class " + asttoks[1] + @"""/*bostr.find(""" + asttoks[1] + @""") != string::npos*/){
@@ -958,8 +958,11 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                     std::vector<const clang::ParmVarDecl*> valid_params_;
                     auto params_ = consDecl_->parameters();
                     if(params_.size() > 0){
-                        int param_i = 0;
-                        auto param_ = params_[0];
+
+                        " + (allArgs.Count > 1 ? @"int param_i = 0;
+                        " : "") + @"
+                        " + (prodArgs.Count > 0 ? @"auto param_ = params_[0];
+                        " : "") + @"
                         " + 
                         Peirce.Join("param_i++;\n",allArgs, a =>
                         {
