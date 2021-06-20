@@ -246,6 +246,17 @@ double DoubleMatcher REAL1_EXPR R1
     }
 }
 
+tfScalar ROSTFScalarMatcher REAL1_EXPR R1
+{
+	Capture:
+    {
+		CXXConstructExpr(IGNORE)@REAL1_LITERAL.? LIT_R1
+		BinaryOperator(tfScalar?FORCE,tfScalar?FORCE).+@$.ADD ADD_R1_R1
+		BinaryOperator(tfScalar?FORCE,tfScalar?FORCE).*@$.MUL MUL_R1_R1
+    }
+}
+
+
 #ros::Time ROSTFTimeMatcher REAL1_EXPR R1
 {
 	Capture:
@@ -276,6 +287,9 @@ tf::Vector3 ROSTFVector3Matcher REAL3_EXPR R3
 	Capture:
     {	
 		CXXConstructExpr(IGNORE,IGNORE,IGNORE)@REAL3_LITERAL.? LIT_R3
+		CXXOperatorCallExpr(tfScalar,tf::Vector3?FORCE).*@$.MUL MUL_R1_R3
+		CXXOperatorCallExpr(tf::Vector3?FORCE,tf::Vector3?FORCE).+@$.ADD ADD_R3_R3
+		CXXOperatorCallExpr(tf::Transform,tf::Vector3).*@$.MUL MUL_R4X4_R3
     }
 }
 
@@ -292,5 +306,14 @@ tf2::Duration ROSTF2DurationMatcher REAL1_EXPR R1
 		--CXXConstructExpr(double)@REAL1_LITERAL.?
 		--CXXConstructExpr(float)@REAL1_LITERAL.?
 	}
-	
+}
+
+
+tf::Transform ROSTFTransformMatcher REAL4X4_EXPR R4X4
+{
+	Capture:
+	{
+		CXXConstructExpr()@REAL4X4_LITERAL.? LIT_R4X4
+		CXXOperatorCallExpr(tf::Transform,tf::Transform).*@$.ADD MUL_R4X4_R4X4
+	}
 }

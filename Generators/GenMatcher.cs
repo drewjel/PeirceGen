@@ -288,7 +288,7 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                         //var woInit = p_.SearchForDecl(t)
 
                         return @"
-        else if (typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @"""  or typestr == ""class " + p_.TypeName + @""" /*typestr.find(""" + p_.TypeName + @""") != string::npos) != string::npos){
+        else if (typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @"""  or typestr == ""class " + p_.TypeName + @"""  or typestr == ""const class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos) != string::npos){
             " + p_.ClassName + @" m{ this->context_, this->interp_};
             m.setup();
             m.visit(*_expr);
@@ -537,7 +537,7 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                         //if (p_.SearchForDecl(true) == null)
                         //    return "";
                         return @"
-                        else if(param_type == """ + p_.TypeName + @""" or param_type == ""const " + p_.TypeName + @""" or param_type == ""class " + p_.TypeName + @"""){
+                        else if(param_type == """ + p_.TypeName + @""" or param_type == ""const " + p_.TypeName + @""" or param_type == ""class " + p_.TypeName + @""" or param_type == ""const class " + p_.TypeName + @"""){
                             
                             interp_->mkNode(""IDENT_LIST_" + p_.RefName + @""",vd, true);
                             if (vd->hasInit()){
@@ -573,7 +573,7 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
 
 
                         return @"
-                else if (typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""){
+                else if (typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @""" or typestr == ""const class " + p_.TypeName + @"""){
                     //interp_->mk" + @"(vd);
                     interp_->mkNode(""IDENT_" + p_.RefName + @""",vd, true);
                     if (vd->hasInit())
@@ -631,7 +631,7 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                         //if (p_.SearchForDecl(true) == null) return "";
 
                         return @"
-                    else if(typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos*/){
+                    else if(typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @""" or typestr == ""const class " + p_.TypeName + @"""){
                         //interp_->mk" + @"(vd);
                         
                         interp_->mkNode(""IDENT_" + p_.RefName + @""",vd, true);
@@ -714,7 +714,7 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                         //if (p_.SearchForDecl(true) == null)
                         //    return "";
                         return @"
-                    else if(param_type == """ + p_.TypeName + @""" or param_type == ""const " + p_.TypeName + @""" or param_type == ""class " + p_.TypeName + @"""){
+                    else if(param_type == """ + p_.TypeName + @""" or param_type == ""const " + p_.TypeName + @""" or param_type == ""class " + p_.TypeName + @""" or param_type == ""const class " + p_.TypeName + @"""){
                         
                         auto arg_=cxxMemberCallExpr_->getArg(0);
                         " + p_.ClassName + @" argm{this->context_,this->interp_};
@@ -745,7 +745,7 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
                     p_ =>
                     {
                         return @"
-        if(typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos*/){
+        if(typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @""" or typestr == ""const class " + p_.TypeName + @"""){
             " + p_.ClassName + @" m{ this->context_, this->interp_};
             m.setup();
             m.visit(*exprStmt);
@@ -923,7 +923,7 @@ void ROS1ProgramMatcher::setup()
                                 if(false){return false;}
                         " +
                              Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length), a_ =>
-                                "\n\t\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"){ return true; }")
+                                "\n\t\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\" or typestr == \"const class " + a_.TypeName + @"""){ return true; }")
                              + @"
                                 else { return false;}
                             };*/
@@ -949,7 +949,7 @@ void ROS1ProgramMatcher::setup()
                                         p_ =>
                                         {
                                             return @"
-                                    else if(typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos*/){
+                                    else if(typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @""" or typestr == ""class " + p_.TypeName + @""" or typestr == ""const class " + p_.TypeName + @"""){
                                         //interp_->mkFunctionParam(""" + p_.RefName + @""", param_);
 
                                         if(auto dc = clang::dyn_cast<clang::ParmVarDecl>(param_)){
@@ -972,7 +972,7 @@ void ROS1ProgramMatcher::setup()
                             if(false){}
                         " +
                              Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length), a_ =>
-                                "\n\t\t\t\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"){ hasReturn = true; nodePrefix = \"" + a_.RefName + @"""; }")
+                                "\n\t\t\t\t\t\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\" or typenm == \"const class " + a_.TypeName + @"""){ hasReturn = true; nodePrefix = """ + a_.RefName + @"""; }")
                              + @"
                             else {}
         

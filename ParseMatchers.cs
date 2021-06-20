@@ -293,7 +293,7 @@ body
                             var prodexistpreds = string.Join("",
                                 prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.Prod.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-        Peirce.Join("", a.Prod.InheritGroup, a_ => "\n\t\telse if(typenm == \"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"){ return true; }")
+        Peirce.Join("", a.Prod.InheritGroup, a_ => "\n\t\telse if(typenm == \"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + @""" or typestr == ""const class " + a_.TypeName + @"""){ return true; }")
         + @"
         else {return false;}
     };"));
@@ -320,7 +320,7 @@ body
                     if(false){}
                     "
 + Peirce.Join(@"
-                    ", p_.Prod.InheritGroup, p__ => "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + "\"/*arg" + y + @"str.find(""" + p__.TypeName + @""")!=string::npos*/){
+                    ", p_.Prod.InheritGroup, p__ => "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + @""" or arg" + y + @"str == ""const class " + p__.TypeName + @"""){
                         "
 +
 p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
@@ -370,7 +370,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
             auto name = dc->getNameAsString();
             
 
-            if(" + (asttoks[1] == "IGNORE" ? "true" : @"(name==""" + asttoks[1] + @""" or name == ""const " + asttoks[1] + @""" or name == ""class " + asttoks[1] + @""")") + @"){"
+            if(" + (asttoks[1] == "IGNORE" ? "true" : @"(name==""" + asttoks[1] + @""" or name == ""const " + asttoks[1] + @""" or name == ""class " + asttoks[1] + @""" or name == ""const class " + asttoks[1] + @""")") + @"){"
     +
     Peirce.Join("", prodArgs, p_ => l == 0 ? @"
                 auto arg" + l++ + @" = cxxMemberCallExpr_->getImplicitObjectArgument();
@@ -400,8 +400,8 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                     }"
     :
     Peirce.Join(@"
-                    ", p_.Prod.InheritGroup, p__ => "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + @"""){
-                        "+p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
+                    ", p_.Prod.InheritGroup, p__ => "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + @""" or arg" + y + @"str == ""const class " + p__.TypeName + @"""){
+                        " + p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         arg" + m + @"m.setup();
                         arg" + m + @"m.visit(*arg" + m + @");
                         arg" + m + @"stmt = arg" + m + @"m.getChildExprStore();
@@ -466,7 +466,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             var prodexistpreds = string.Join("",
                                 prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.Prod.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-        Peirce.Join("", a.Prod.InheritGroup, a_ => "\n\t\telse if(typenm == \"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
+        Peirce.Join("", a.Prod.InheritGroup, a_ => "\n\t\telse if(typenm == \"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\" or typenm == \"const class " + a_.TypeName + "\"){ return true; }")
         + @"
         else {return false;}
     };"));
@@ -497,7 +497,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                     if(false){}
                     "
 + Peirce.Join(@"
-                    ", p_.Prod.InheritGroup, p__ => "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + "\"/*arg" + y + @"str.find(""" + p__.TypeName + @""")!=string::npos*/){
+                    ", p_.Prod.InheritGroup, p__ => "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + @""" or arg" + y + @"str == ""class " + p__.TypeName + @"""){
                         "
 +
 p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
@@ -540,7 +540,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
             auto name = dc->getNameAsString();
             
 
-            if(" + (asttoks[1] == "IGNORE" ? "true" : @"(name==""" + asttoks[1] + @""" or name == ""const " + asttoks[1] + @""" or name == ""class " + asttoks[1] + @""")") + @"){"
+            if(" + (asttoks[1] == "IGNORE" ? "true" : @"(name==""" + asttoks[1] + @""" or name == ""const " + asttoks[1] + @""" or name == ""class " + asttoks[1] + @""" or name == ""const class " + asttoks[1] + @""")") + @"){"
     +
     Peirce.Join("", prodArgs, p_ => true ? @"
                 auto arg" + l + @"=callExpr_->getArg(" + l++ + @"-1);
@@ -567,7 +567,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                     }"
     :
     Peirce.Join(@"
-                    ", p_.Prod.InheritGroup, p__ => "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + @"""){
+                    ", p_.Prod.InheritGroup, p__ => "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str == ""const " + p__.TypeName + "\" or arg" + y + @"str == ""class " + p__.TypeName + @""" or arg" + y + @"str == ""const class " + p__.TypeName + @"""){
                         " + p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         arg" + m + @"m.setup();
                         arg" + m + @"m.visit(*arg" + m + @");
@@ -636,7 +636,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             var prodexistpreds = string.Join("",
                                 prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.Prod.TypeName + @"""] = [=](std::string typenm){
     if(false){return false;}" +
-        Peirce.Join("", a.Prod.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
+        Peirce.Join("", a.Prod.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\" or typenm == \"const class " + a_.TypeName + "\"){ return true; }")
         + @"
     else { return false; }
     };"));
@@ -671,7 +671,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
 "
         :
         Peirce.Join(@"
-            ", (prodArgs[0].Prod.InheritGroup.Select(ig => new ProductionArg() { Prod = ig })).ToList(), p_ => @"else if(lhsstr==""" + p_.Prod.TypeName + @""" or lhsstr==""const " + p_.Prod.TypeName + @""" or lhsstr==""class " + p_.Prod.TypeName + @"""" + @"){
+            ", (prodArgs[0].Prod.InheritGroup.Select(ig => new ProductionArg() { Prod = ig })).ToList(), p_ => @"else if(lhsstr==""" + p_.Prod.TypeName + @""" or lhsstr==""const " + p_.Prod.TypeName + @""" or lhsstr==""class " + p_.Prod.TypeName + @""" or lhsstr==""const class " + p_.Prod.TypeName + @"""" + @"){
                 " + p_.Prod.ClassName + @" lhsm{this->context_,this->interp_};
                 lhsm.setup();
                 lhsm.visit(*lhs);
@@ -695,7 +695,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
 "
         : Peirce.Join(@"
             ", (prodArgs[1].Prod.InheritGroup.Select(ig => new ProductionArg() { Prod = ig })).ToList(), p_ => @"
-            else if(rhsstr==""" + p_.Prod.TypeName + @""" or rhsstr==""const " + p_.Prod.TypeName + @""" or rhsstr==""class " + p_.Prod.TypeName + @"""/*rhsstr.find(""" + p_.Prod.TypeName + @""") != string::npos*/){
+            else if(rhsstr==""" + p_.Prod.TypeName + @""" or rhsstr==""const " + p_.Prod.TypeName + @""" or rhsstr==""class " + p_.Prod.TypeName + @""" or rhsstr==""const class " + p_.Prod.TypeName + @"""){
                 " + p_.Prod.ClassName + @" rhsm{this->context_,this->interp_};
                 rhsm.setup();
                 rhsm.visit(*rhs);
@@ -761,7 +761,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             var prodexistpreds = string.Join("",
                                    prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.Prod.TypeName + @"""] = [=](std::string typenm){
         if(false){ return false;}" +
-           Peirce.Join("", a.Prod.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
+           Peirce.Join("", a.Prod.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\" or typenm == \"const class " + a_.TypeName + @"""){ return true; }")
            + @"
         else { return false; }
     };"));
@@ -771,7 +771,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         if(auto dc = clang::dyn_cast<clang::NamedDecl>(decl_)){
             auto name = dc->getNameAsString();
 
-            if(name==""operator" + asttoks[1] + @""" or name==""" + asttoks[1] + @""" or name==""const " + asttoks[1] + @""" or name==""class " + asttoks[1] + @"""/*name.find(""" + asttoks[1] + @""") != string::npos*/){"
+            if(name==""operator" + asttoks[1] + @""" or name==""" + asttoks[1] + @""" or name==""const " + asttoks[1] + @""" or name==""class " + asttoks[1] + @"""  or name == ""const class " + asttoks[1] + @"""){"
  +
  Peirce.Join("", prodArgs, p_ => @"
                 auto arg" + l + "=cxxOperatorCallExpr_->getArg(" + l++ + @");
@@ -797,7 +797,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                     :Peirce.Join(@"
                     ", p_.Prod.InheritGroup, p__ =>
                    {
-                       return "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str==""const " + p__.TypeName + @""" or arg" + y + @"str==""class " + p__.TypeName + @"""){
+                       return "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str==""const " + p__.TypeName + @""" or arg" + y + @"str==""class " + p__.TypeName + @""" or arg" + y + @"str == ""const class " + p__.TypeName + @"""){
             "
            + @"
                         " +
@@ -882,7 +882,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                                  prodArgs.Select(a => "\n\targ_decay_exist_predicates[\"" + raw + a.Prod.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}
     " +
-         Peirce.Join("", a.Prod.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"){ return true; }")
+         Peirce.Join("", a.Prod.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + @""" or typestr == ""const class " + a_.TypeName + @"""){ return true; }")
          + @"
         else { return false;}
     };"));
@@ -924,7 +924,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                     : Peirce.Join(@"
                     ", p_.Prod.InheritGroup, p__ =>
                     {
-                        return "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str==""const " + p__.TypeName + @""" or arg" + y + @"str==""class " + p__.TypeName + @"""){
+                        return "else if(arg" + y + @"str==""" + p__.TypeName + @""" or arg" + y + @"str==""const " + p__.TypeName + @""" or arg" + y + @"str==""class " + p__.TypeName + @""" or typestr == ""const class " + p__.TypeName + @"""){
             "
             + @"
                         " +
@@ -1027,7 +1027,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                                    new List<MatcherProduction>() { prod },
                                    a => "\n\targ_decay_exist_predicates[\"cxxBoolLiteralExpr__" + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
+           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + @""" or typenm == ""const class " + a_.TypeName + @"""){ return true; }")
            + @"
         else { return false; }
     };");
@@ -1060,7 +1060,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                                    new List<MatcherProduction>() { prod },
                                    a => "\n\targ_decay_exist_predicates[\"integerLiteral__" + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
+           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + @""" or typestr == ""const class " + a_.TypeName + @"""){ return true; }")
            + @"
         else { return false; }
     };");
@@ -1098,7 +1098,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                                    new List<MatcherProduction>() { prod },
                                    a => "\n\targ_decay_exist_predicates[\"floatLiteral_" + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
+           Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + @""" or typestr == ""const class " + a_.TypeName + @"""){ return true; }")
            + @"
         else { return false; }
     };");
@@ -1195,7 +1195,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             new List<MatcherProduction>(){prod},
                             a => "\n\targ_decay_exist_predicates[\"memberExpr_"  + a.TypeName + @"""] = [=](std::string typenm){
     if(false){return false;}" +
-    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
+    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + @""" or typenm == ""const class " + a_.TypeName + @"""){ return true; }")
     + @"
     else { return false; }
     };");
@@ -1205,7 +1205,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         auto inner = memberExpr_->getBase();
         auto typestr = ((clang::QualType)inner->getType()).getAsString();
         if(false){}
-        "+ Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"else if(typestr=="""+p__.TypeName+@""" or typestr == ""const " + p__.TypeName + @""" or typestr == ""const " + p__.TypeName + @"""/*typestr.find("""+p__.TypeName+@""") != string::npos*/){
+        "+ Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"else if(typestr=="""+p__.TypeName+@""" or typestr == ""const " + p__.TypeName + @""" or typestr == ""const " + p__.TypeName + @""" or typestr == ""const class " + p__.TypeName + @"""){
             "
       +
       p__.ClassName + @" innerm{this->context_,this->interp_};
@@ -1234,7 +1234,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             new List<MatcherProduction>(){prod},
                             a => "\n\targ_decay_exist_predicates[\"implicitCastExpr_"  + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false; }" +
-    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
+    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + @""" or typenm == ""const class " + a_.TypeName + @"""){ return true; }")
     + @"
         else { return false; } 
     };");
@@ -1247,7 +1247,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         auto typestr = inner->getType().getAsString();
 
         if(false){}
-        "+ Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"else if(typestr=="""+p__.TypeName+@""" or typestr == ""const " + p__.TypeName + @""" or typestr == ""class " + p__.TypeName + @"""/*typestr.find("""+p__.TypeName+@""") != string::npos*/){
+        "+ Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"else if(typestr=="""+p__.TypeName+@""" or typestr == ""const " + p__.TypeName + @""" or typestr == ""class " + p__.TypeName + @""" or typestr == ""const class " + p__.TypeName + @"""){
             "
       +
       p__.ClassName + @" innerm{this->context_,this->interp_};
@@ -1287,7 +1287,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             new List<MatcherProduction>(){prod},
                             a => "\n\targ_decay_exist_predicates[\"cxxBindTemporaryExpr_"  + a.TypeName + @"""] = [=](std::string typenm){
         if(false){ return false; }" +
-    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
+    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + @""" or typenm == ""const class " + a_.TypeName + @"""){ return true; }")
     + @"
         else { return false; }
     };");
@@ -1334,7 +1334,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             new List<MatcherProduction>(){prod},
                             a => "\n\targ_decay_exist_predicates[\"materializeTemporaryExpr_"  + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
+    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + @""" or typenm == ""const class " + a_.TypeName + @"""){ return true; }")
     + @"
         else { return false; }
     };");
@@ -1382,7 +1382,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                             new List<MatcherProduction>(){prod},
                             a => "\n\targ_decay_exist_predicates[\"parenExpr_"  + a.TypeName + @"""] = [=](std::string typenm){
         if(false){return false;}" +
-    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + "\"/*typenm.find(\"" + a_.TypeName + "\") != string::npos*/){ return true; }")
+    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(typenm==\"" + a_.TypeName + "\" or typenm == \"const " + a_.TypeName + "\" or typenm == \"class " + a_.TypeName + @""" or typenm == ""const class " + a_.TypeName + @"""){ return true; }")
     + @"
         else { return false; } 
     };");
