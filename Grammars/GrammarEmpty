@@ -221,8 +221,7 @@ bool ROSBooleanMatcher BOOL_EXPR BOOL
 {
 	Capture:
 	{
-		CXXBoolLiteralExpr()@$.REF
-		--CXXMemberCallExpr(IGNORE).IGNORE@DEFAULT
+		CXXBoolLiteralExpr()@@
 	}
 }
 
@@ -230,9 +229,9 @@ float FloatMatcher REAL1_EXPR R1
 {
 	Capture:
     {
-		CXXConstructExpr(IGNORE)@REAL1_LITERAL.? LIT_R1
-		BinaryOperator(float?FORCE,float?FORCE).+@$.ADD ADD_R1_R1
-		BinaryOperator(float?FORCE,float?FORCE).*@$.MUL MUL_R1_R1
+		CXXConstructExpr(IGNORE)@@ LIT_R1
+		BinaryOperator(float?FORCE,float?FORCE)@+@ ADD_R1_R1
+		BinaryOperator(float?FORCE,float?FORCE)@*@ MUL_R1_R1
     }
 }
 
@@ -240,9 +239,9 @@ double DoubleMatcher REAL1_EXPR R1
 {
 	Capture:
     {
-		CXXConstructExpr(IGNORE)@REAL1_LITERAL.? LIT_R1
-		BinaryOperator(double?FORCE,double?FORCE).+@$.ADD ADD_R1_R1
-		BinaryOperator(double?FORCE,double?FORCE).*@$.MUL MUL_R1_R1
+		CXXConstructExpr(IGNORE)@@ LIT_R1
+		BinaryOperator(double?FORCE,double?FORCE)@+@ ADD_R1_R1
+		BinaryOperator(double?FORCE,double?FORCE)@*@ MUL_R1_R1
     }
 }
 
@@ -250,9 +249,9 @@ tfScalar ROSTFScalarMatcher REAL1_EXPR R1
 {
 	Capture:
     {
-		CXXConstructExpr(IGNORE)@REAL1_LITERAL.? LIT_R1
-		BinaryOperator(tfScalar?FORCE,tfScalar?FORCE).+@$.ADD ADD_R1_R1
-		BinaryOperator(tfScalar?FORCE,tfScalar?FORCE).*@$.MUL MUL_R1_R1
+		CXXConstructExpr(IGNORE)@@ LIT_R1
+		BinaryOperator(tfScalar?FORCE,tfScalar?FORCE)@+@ ADD_R1_R1
+		BinaryOperator(tfScalar?FORCE,tfScalar?FORCE)@*@ MUL_R1_R1
     }
 }
 
@@ -261,9 +260,8 @@ tfScalar ROSTFScalarMatcher REAL1_EXPR R1
 {
 	Capture:
 	{
-		CXXConstructExpr(IGNORE)@REAL1_LITERAL.? LIT_R1
-		--CXXConstructExpr(float)@REAL1_LITERAL.? 
-		CXXOperatorCallExpr(ros::Time?FORCE,ros::Duration?FORCE).+@$.ADD ADD_R1_R1
+		CXXConstructExpr(IGNORE)@@ LIT_R1
+		CXXOperatorCallExpr(ros::Time?FORCE,ros::Duration?FORCE)@+@ ADD_R1_R1
 	}
 }
 
@@ -271,12 +269,9 @@ ros::Duration ROSDurationMatcher REAL1_EXPR R1
 {
 	Capture:
 	{
-		CXXConstructExpr(IGNORE)@REAL1_LITERAL.? LIT_R1
-		CXXOperatorCallExpr(ros::Duration?FORCE,ros::Duration?FORCE).+@$.ADD ADD_R1_R1
-		CXXOperatorCallExpr(ros::Duration?FORCE,double).*@$.MUL MUL_R1_R1
-		--CXXConstructExpr(int)@REAL1_LITERAL.?
-		--CXXConstructExpr(double)@REAL1_LITERAL.?
-		--CXXConstructExpr(float)@REAL1_LITERAL.?
+		CXXConstructExpr(IGNORE)@@ LIT_R1
+		CXXOperatorCallExpr(ros::Duration?FORCE,ros::Duration?FORCE)@+@ ADD_R1_R1
+		CXXOperatorCallExpr(ros::Duration?FORCE,double)@*@ MUL_R1_R1
 	}
 	
 }
@@ -286,10 +281,10 @@ tf::Vector3 ROSTFVector3Matcher REAL3_EXPR R3
 {
 	Capture:
     {	
-		CXXConstructExpr(IGNORE,IGNORE,IGNORE)@REAL3_LITERAL.? LIT_R3
-		CXXOperatorCallExpr(tfScalar,tf::Vector3?FORCE).*@$.MUL MUL_R1_R3
-		CXXOperatorCallExpr(tf::Vector3?FORCE,tf::Vector3?FORCE).+@$.ADD ADD_R3_R3
-		CXXOperatorCallExpr(tf::Transform,tf::Vector3).*@$.MUL MUL_R4X4_R3
+		CXXConstructExpr(IGNORE,IGNORE,IGNORE)@@ LIT_R3
+		CXXOperatorCallExpr(tfScalar,tf::Vector3?FORCE)@*@ MUL_R1_R3
+		CXXOperatorCallExpr(tf::Vector3?FORCE,tf::Vector3?FORCE)@+@ ADD_R3_R3
+		CXXOperatorCallExpr(tf::Transform,tf::Vector3)@*@ MUL_R4X4_R3
     }
 }
 
@@ -298,13 +293,10 @@ tf2::Duration ROSTF2DurationMatcher REAL1_EXPR R1
 {
 	Capture:
 	{
-		CXXConstructExpr()@REAL1_LITERAL.? LIT_R1
-		CXXConstructExpr(IGNORE)@REAL1_LITERAL.? LIT_R1
-		CXXOperatorCallExpr(ros::Duration?FORCE,ros::Duration?FORCE).+@$.ADD ADD_R1_R1
-		CXXOperatorCallExpr(ros::Duration?FORCE,double).*@$.MUL MUL_R1_R1
-		--CXXConstructExpr(int)@REAL1_LITERAL.?
-		--CXXConstructExpr(double)@REAL1_LITERAL.?
-		--CXXConstructExpr(float)@REAL1_LITERAL.?
+		CXXConstructExpr()@@ LIT_R1
+		CXXConstructExpr(IGNORE)@@ LIT_R1
+		CXXOperatorCallExpr(ros::Duration?FORCE,ros::Duration?FORCE)@+@ ADD_R1_R1
+		CXXOperatorCallExpr(ros::Duration?FORCE,double)@*@ MUL_R1_R1
 	}
 }
 
@@ -313,7 +305,17 @@ tf::Transform ROSTFTransformMatcher REAL4X4_EXPR R4X4
 {
 	Capture:
 	{
-		CXXConstructExpr()@REAL4X4_LITERAL.? LIT_R4X4
-		CXXOperatorCallExpr(tf::Transform,tf::Transform).*@$.ADD MUL_R4X4_R4X4
+		CXXConstructExpr()@@ LIT_R4X4
+		CXXOperatorCallExpr(tf::Transform,tf::Transform)@*@ MUL_R4X4_R4X4
+		CXXMemberCallExpr(tf::Transform)@inverse@Capture=false INV_R4X4
+		CXXMemberCallExpr(tf::Transform,tf::Transform,tf::Transform)@mult@Capture=false ASSIGN_MUL_R4X4_R4X4
+	}
+}
+
+!void VoidMatcher Void VOID
+{
+	Capture:
+	{
+		CXXMemberCallExpr(tf::Transform,tf::Transform,tf::Transform)@mult@Capture=false ASSIGN_MUL_R4X4_R4X4
 	}
 }
