@@ -57,7 +57,7 @@
     <Compile Include="Generators\GenInterpretation.cs" />
     <Compile Include="Generators\GenInterpToDomain.cs" />
     <Compile Include="Generators\GenInterpUpdate.cs" />
-    <Compile Include="Generators\GenMatcher.cs" />
+    <Compile Include="GenMatcher.cs" />
     <Compile Include="Generators\GenOracle.cs" />
     <Compile Include="Grammar.cs" />
     <None Include="Grammars\GrammarEmpty" />

@@ -317,5 +317,64 @@ tf::Transform ROSTFTransformMatcher REAL4X4_EXPR R4X4
 	Capture:
 	{
 		CXXMemberCallExpr(tf::Transform,tf::Transform,tf::Transform)@mult@Capture=false ASSIGN_MUL_R4X4_R4X4
+		CXXMemberCallExpr(tf2::Transform,tf2::Vector3)@setOrigin@Capture=false ASSIGN_R4X4_AT_R3
+		CXXMemberCallExpr(tf2::Transform,tf2::Quaternion)@setRotation@Capture=false ASSIGN_R4X4_AT_R4
+		CallExpr(geometry_msgs::Quaternion,tf2::Quaternion)@fromMsg@Capture=false ASSIGN_R4_SWAP
+	}
+}
+
+geometry_msgs::PoseWithCovarianceStamped ROSGeometryPoseWithCovarianceStamped R4X4
+{
+	Capture:
+	{
+		CXXConstructExpr()@@ LIT_R4X4
+	}
+}
+
+geometry_msgs::Quaternion ROSGeomQuaternion R4
+{
+	Capture:
+	{
+		CXXConstructExpr()@@ LIT_R4
+	}
+}
+
+tf::Quaternion ROSTFQuaternion R4
+{
+	Capture:
+	{
+		CXXConstructExpr()@@ LIT_R4
+	}
+}
+
+tf2::Quaternion ROSTF2Quaternion R4
+{
+	Capture:
+	{
+		CXXConstructExpr()@@ LIT_R4
+	}
+}
+
+tf2::Vector3 ROSTF2Vector3Matcher REAL3_EXPR R3
+{
+	Capture:
+    {	
+		CXXConstructExpr(IGNORE,IGNORE,IGNORE)@@ LIT_R3
+    }
+}
+
+tf2::Stamped<tf2::Transform>~tf2::Transform ROSTF2TransformStamped R4X4
+{
+	Capture:
+	{
+		CXXConstructExpr()@@ LIT_R4X4
+	}
+}
+
+tf2::Transform ROSTF2Transform R4X4
+{
+	Capture:
+	{
+		CXXConstructExpr()@@ LIT_R4X4
 	}
 }
