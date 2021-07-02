@@ -217,7 +217,7 @@ Base
     }
 }
 
-bool ROSBooleanMatcher BOOL_EXPR BOOL
+bool ROSBooleanMatcher BOOL
 {
 	Capture:
 	{
@@ -225,7 +225,7 @@ bool ROSBooleanMatcher BOOL_EXPR BOOL
 	}
 }
 
-float FloatMatcher REAL1_EXPR R1
+float FloatMatcher R1
 {
 	Capture:
     {
@@ -235,7 +235,7 @@ float FloatMatcher REAL1_EXPR R1
     }
 }
 
-double DoubleMatcher REAL1_EXPR R1
+double DoubleMatcher R1
 {
 	Capture:
     {
@@ -245,7 +245,7 @@ double DoubleMatcher REAL1_EXPR R1
     }
 }
 
-tfScalar ROSTFScalarMatcher REAL1_EXPR R1
+tfScalar ROSTFScalarMatcher R1
 {
 	Capture:
     {
@@ -256,7 +256,7 @@ tfScalar ROSTFScalarMatcher REAL1_EXPR R1
 }
 
 
-#ros::Time ROSTFTimeMatcher REAL1_EXPR R1
+#ros::Time ROSTFTimeMatcher R1
 {
 	Capture:
 	{
@@ -265,7 +265,7 @@ tfScalar ROSTFScalarMatcher REAL1_EXPR R1
 	}
 }
 
-ros::Duration ROSDurationMatcher REAL1_EXPR R1
+ros::Duration ROSDurationMatcher R1
 {
 	Capture:
 	{
@@ -277,7 +277,7 @@ ros::Duration ROSDurationMatcher REAL1_EXPR R1
 }
 
 
-tf::Vector3 ROSTFVector3Matcher REAL3_EXPR R3
+tf::Vector3 ROSTFVector3Matcher R3
 {
 	Capture:
     {	
@@ -289,7 +289,7 @@ tf::Vector3 ROSTFVector3Matcher REAL3_EXPR R3
 }
 
 
-tf2::Duration ROSTF2DurationMatcher REAL1_EXPR R1
+tf2::Duration ROSTF2DurationMatcher R1
 {
 	Capture:
 	{
@@ -301,7 +301,7 @@ tf2::Duration ROSTF2DurationMatcher REAL1_EXPR R1
 }
 
 
-tf::Transform ROSTFTransformMatcher REAL4X4_EXPR R4X4
+tf::Transform ROSTFTransformMatcher R4X4
 {
 	Capture:
 	{
@@ -355,7 +355,7 @@ tf2::Quaternion ROSTF2Quaternion R4
 	}
 }
 
-tf2::Vector3 ROSTF2Vector3Matcher REAL3_EXPR R3
+tf2::Vector3 ROSTF2Vector3Matcher R3
 {
 	Capture:
     {	
