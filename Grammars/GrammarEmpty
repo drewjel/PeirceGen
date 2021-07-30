@@ -222,6 +222,15 @@ bool ROSBooleanMatcher BOOL
 	Capture:
 	{
 		CXXBoolLiteralExpr()@@
+		BinaryOperator(double?FORCE,double?FORCE)@<@Capture=false LT_R1_R1
+	}
+}
+
+
+_Bool~bool ROSBoolMatcher BOOL
+{
+	Capture:
+	{
 	}
 }
 
@@ -242,6 +251,7 @@ double DoubleMatcher R1
 		CXXConstructExpr(IGNORE)@@ LIT_R1
 		BinaryOperator(double?FORCE,double?FORCE)@+@ ADD_R1_R1
 		BinaryOperator(double?FORCE,double?FORCE)@*@ MUL_R1_R1
+		CXXMemberCallExpr(ros::Duration?FORCE)@toSec@Capture=true COORDS_R1
     }
 }
 
@@ -256,14 +266,24 @@ tfScalar ROSTFScalarMatcher R1
 }
 
 
-#ros::Time ROSTFTimeMatcher R1
+#ros::Time ROSTimeMatcher R1
 {
 	Capture:
 	{
 		CXXConstructExpr(IGNORE)@@ LIT_R1
 		CXXOperatorCallExpr(ros::Time?FORCE,ros::Duration?FORCE)@+@ ADD_R1_R1
+		CallExpr()@now@ LIT_R1
 	}
 }
+
+ros::TimeBase~ros::Time ROSTimeBaseMatcher R1
+{
+	Capture:
+	{
+		CXXConstructExpr(IGNORE)@@ LIT_R1
+	}
+}
+
 
 ros::Duration ROSDurationMatcher R1
 {
@@ -271,9 +291,20 @@ ros::Duration ROSDurationMatcher R1
 	{
 		CXXConstructExpr(IGNORE)@@ LIT_R1
 		CXXOperatorCallExpr(ros::Duration?FORCE,ros::Duration?FORCE)@+@ ADD_R1_R1
+		CXXOperatorCallExpr(ros::Time,ros::Time)@-@ SUB_R1_R1
+		CXXOperatorCallExpr(ros::Duration,ros::Duration)@-@ SUB_R1_R1
 		CXXOperatorCallExpr(ros::Duration?FORCE,double)@*@ MUL_R1_R1
 	}
 	
+}
+
+
+ros::DurationBase~ros::Duration ROSDurationBaseMatcher R1
+{
+	Capture:
+	{
+		CXXConstructExpr(IGNORE)@@ LIT_R1
+	}
 }
 
 
@@ -308,7 +339,6 @@ tf::Transform ROSTFTransformMatcher R4X4
 		CXXConstructExpr()@@ LIT_R4X4
 		CXXOperatorCallExpr(tf::Transform,tf::Transform)@*@ MUL_R4X4_R4X4
 		CXXMemberCallExpr(tf::Transform)@inverse@Capture=false INV_R4X4
-		CXXMemberCallExpr(tf::Transform,tf::Transform,tf::Transform)@mult@Capture=false ASSIGN_MUL_R4X4_R4X4
 	}
 }
 
@@ -320,6 +350,7 @@ tf::Transform ROSTFTransformMatcher R4X4
 		CXXMemberCallExpr(tf2::Transform,tf2::Vector3)@setOrigin@Capture=false ASSIGN_R4X4_AT_R3
 		CXXMemberCallExpr(tf2::Transform,tf2::Quaternion)@setRotation@Capture=false ASSIGN_R4X4_AT_R4
 		CallExpr(geometry_msgs::Quaternion,tf2::Quaternion)@fromMsg@Capture=false ASSIGN_R4_SWAP
+		CallExpr(geometry_msgs::PoseStamped,geometry_msgs::PoseStamped,geometry_msgs::TransformStamped)@doTransform@Capture=false ASSIGN_MUL_R4X4_R4X4_2
 	}
 }
 
@@ -372,6 +403,22 @@ tf2::Stamped<tf2::Transform>~tf2::Transform ROSTF2TransformStamped R4X4
 }
 
 tf2::Transform ROSTF2Transform R4X4
+{
+	Capture:
+	{
+		CXXConstructExpr()@@ LIT_R4X4
+	}
+}
+
+geometry_msgs::PoseStamped ROSGeomPoseStamped R4X4
+{
+	Capture:
+	{
+		CXXConstructExpr()@@ LIT_R4X4
+	}
+}
+
+geometry_msgs::TransformStamped ROSGeomTransformStamped R4X4
 {
 	Capture:
 	{

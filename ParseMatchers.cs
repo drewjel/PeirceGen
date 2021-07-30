@@ -103,7 +103,7 @@ namespace PeirceGen
             public bool Force;
             public static ProductionArg Parse(MatcherProduction prod, string pa)
             {
-                if(pa.Contains(" ? "))
+                if(pa.Contains("?"))
                 {
                     var spl = pa.Split(new string[] { "?" }, StringSplitOptions.None);
 
@@ -136,6 +136,8 @@ body
 
         public static List<MatcherCase> BuildMatcherCaseFromRegister(MatcherProduction production, string raw, List<MatcherProduction> allProductions)
         {
+            Console.WriteLine("Building Matcher:");
+            Console.WriteLine(raw);
             var retval = new List<MatcherCase>();
             try
             {
@@ -228,14 +230,14 @@ body
 
             if((name==""transformPoint"" or name == ""const transformPoint"" or name == ""class transformPoint"")/*name.find(""transformPoint"") != string::npos*/){
                 auto arg0 = cxxMemberCallExpr_->getArg(0 + 1);
-        auto arg0str = ((clang::QualType)arg0->getType()).getAsString();
+        auto arg0str = this->getTypeAsString(arg0," + (prod.TypeName.Contains("<") ? "false" : "true") + @");
 
         auto arg1 = clang::dyn_cast<clang::VarDecl>(clang::dyn_cast<clang::DeclRefExpr>(cxxMemberCallExpr_->getArg(1 + 1))->getFoundDecl());
 
         clang::Stmt* arg0stmt = nullptr;
                 if (true" + (prodArgs.Count > 0 ? " and " : " ") + Peirce.Join(@" and 
-                    ", prodArgs.Take(1), p_ => "arg_decay_exist_predicates[\"" + raw + p_.Prod.TypeName + @"""](arg" + x++ + "str)") + @"){" +
-     Peirce.Join("", prodArgs.Take(1), p_ => {
+                    ", prodArgs.Skip(0), p_ => p_.Force ? "true" : "arg_decay_exist_predicates[\"" + raw + p_.Prod.TypeName + @"""](arg" + x++ + "str)") + @"){" +
+     Peirce.Join("", prodArgs.Skip(0), p_ => {
          var retstr = @"
                     if(false){}
                     "
@@ -294,11 +296,11 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     +
     Peirce.Join("", prodArgs, p_ => l == 0 ? @"
                 auto arg" + l++ + @" = cxxMemberCallExpr_->getImplicitObjectArgument();
-                auto arg0str = ((clang::QualType)arg0->getType()).getAsString();
+                auto arg0str = this->getTypeAsString(arg0," + (prod.TypeName.Contains("<") ? "false" : "true") + @");
                 " :
         @"
                 auto arg" + l + @"=cxxMemberCallExpr_->getArg(" + l++ + @"-1);
-                auto arg" + ++q + "str = ((clang::QualType)arg" + q + "->getType()).getAsString();\n") +
+                auto arg" + ++q + "str = this->getTypeAsString(arg" + q + "," + (prod.TypeName.Contains("<") ? "false" : "true") + @");" + "\n" + @"") +
                 Peirce.Join("", prodArgs, p_ => @"
                 clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
     +
@@ -355,7 +357,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                 }
                 else if (atsplit[0].StartsWith("CallExpr"))
                 {
-                    var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(',');
+                    var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
                     //var method = atsplit[0].Substring(0, atsplit[0].IndexOf('('));
                     var numargs = args.Length;
 
@@ -405,8 +407,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     +
     Peirce.Join("", prodArgs, p_ => true ? @"
                 auto arg" + l + @"=callExpr_->getArg(" + l++ + @");
-                auto arg" + q + "str = ((clang::QualType)arg" + q++ + @"->getType()).getSingleStepDesugaredType(*this->context_).getAtomicUnqualifiedType()
-                    .stripObjCKindOfType(*this->context_).getAsString();
+                auto arg" + q + "str = this->getTypeAsString(arg" + q++ + @"," + (prod.TypeName.Contains("<") ? "false" : "true") + @");
 " : "") +
                 Peirce.Join("", prodArgs, p_ => @"
                 clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
@@ -467,8 +468,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     +
     Peirce.Join("", prodArgs, p_ => true ? @"
                 auto arg" + l + @"=callExpr_->getArg(" + l++ + @");
-                auto arg" + q + "str = ((clang::QualType)arg" + q++ + @"->getType()).getSingleStepDesugaredType(*this->context_).getAtomicUnqualifiedType()
-                    .stripObjCKindOfType(*this->context_).getAsString();
+                auto arg" + q + "str = this->getTypeAsString(arg" + q++ + @"," + (prod.TypeName.Contains("<") ? "false" : "true") + @");
 " : "") +
                 Peirce.Join("", prodArgs, p_ => @"
                 clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
@@ -578,9 +578,9 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
 
         if(" + MatcherCase.GetTypeMatchCondition("bostr", atsplit[1]) + @"){
             auto lhs = binaryOperator_->getLHS();
-            auto lhsstr = ((clang::QualType)lhs->getType()).getAsString();
+            auto lhsstr = this->getTypeAsString(lhs," + (prod.TypeName.Contains("<") ? "false" : "true") + @");
             auto rhs = binaryOperator_->getRHS();
-            auto rhsstr = ((clang::QualType)rhs->getType()).getAsString();
+            auto rhsstr = this->getTypeAsString(rhs," + (prod.TypeName.Contains("<") ? "false" : "true") + @");
             clang::Stmt* lhsresult = nullptr;
             clang::Stmt* rhsresult = nullptr;
             if(false){}
@@ -702,7 +702,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
  +
  Peirce.Join("", prodArgs, p_ => @"
                 auto arg" + l + "=cxxOperatorCallExpr_->getArg(" + l++ + @");
-                auto arg" + q + "str = ((clang::QualType)arg" + q++ + "->getType()).getAsString();\n") +
+                auto arg" + q + "str = this->getTypeAsString(arg" + q++ + "," + (prod.TypeName.Contains("<") ? "false" : "true") + @");" + "\n" + @"") +
              Peirce.Join("", prodArgs, p_ => @"
                 clang::Stmt* arg" + i++ + "stmt = nullptr;\n")
  + @"              
@@ -832,7 +832,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
           +
           Peirce.Join("", prodArgs, p_ => @"
         auto arg" + l + "=cxxConstructExpr_->getArg(" + l++ + @");
-        auto arg" + q + "str = ((clang::QualType)arg" + q++ + "->getType()).getAsString();\n")
+        auto arg" + q + "str = this->getTypeAsString(arg" + q++ + "," + (prod.TypeName.Contains("<") ? "false" : "true") + @");" + "\n" + @"")
           + @"
         if(true " + (prodArgs.Count > 0 ? " and " : "") + Peirce.Join(@" and 
             ", prodArgs, p_ => "arg_decay_exist_predicates[\"" + raw + p_.Prod.TypeName + @"""](arg" + x++ + "str)") + @"){
@@ -1135,7 +1135,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                          return prodexistpreds+@"
     if(memberExpr_){
         auto inner = memberExpr_->getBase();
-        auto typestr = ((clang::QualType)inner->getType()).getAsString();
+        auto typestr = this->getTypeAsString(inner," + (prod.TypeName.Contains("<") ? "false" : "true") + @");
         if(false){}
         "+ Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"else if(" + MatcherCase.GetTypeMatchCondition("typestr", p__.TypeName) + @"){
             "
@@ -1176,10 +1176,50 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     if (implicitCastExpr_)
     {
         auto inner = implicitCastExpr_->getSubExpr();
-        auto typestr = inner->getType().getAsString();
-
+        auto typestr = this->getTypeAsString(inner," + (prod.TypeName.Contains("<") ? "false" : "true")+ @");
+        auto hasmemb = clang::dyn_cast<clang::MemberExpr>(inner);
         if(false){}
-        "+ Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"else if(" + MatcherCase.GetTypeMatchCondition("typestr", p__.TypeName) + @"){
+        else if(hasmemb){
+            while(auto memb = clang::dyn_cast<clang::MemberExpr>(inner))
+                {
+                    inner = memb->getBase();                
+                }
+
+                auto typestr = this->getTypeAsString(inner," + (prod.TypeName.Contains("<") ? "false" : "true") + @");
+                if(auto asRef = clang::dyn_cast<clang::DeclRefExpr>(inner))
+                {
+            "
+                    +
+                    Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length),
+                        p_ =>
+                        {
+                            return @"
+                    if(" + GoNext.GetTypeMatchCondition("typestr", p_.TypeName) + @"){
+                        if(auto vardecl_ = clang::dyn_cast<clang::VarDecl>(asRef->getDecl())){
+                            interp_->buffer_container(vardecl_);
+                            this->childExprStore_ = (clang::Stmt*)implicitCastExpr_;
+                            interp_->mkNode(""REF_" + production.RefName + @""",(clang::Stmt*)implicitCastExpr_);
+                            return;
+                        }
+                        else if(auto paramdecl_ = clang::dyn_cast<clang::ParmVarDecl>(asRef->getDecl())){
+                            interp_->buffer_container(paramdecl_);
+                            this->childExprStore_ = (clang::Stmt*)implicitCastExpr_;
+                            interp_->mkNode(""REF_" + production.RefName + @""",(clang::Stmt*)implicitCastExpr_);
+                            return;
+                        }
+                        else {
+                            std::cout<<""Can't find declaration\n"";
+                            asRef->getDecl()->dump();
+                        }
+                    }
+    "; }) + @" 
+            }
+            "+(production.HasDefault ? @"this->childExprStore_ = (clang::Stmt*)implicitCastExpr_;
+            interp_->mkNode(""LIT_" + production.RefName + @""",(clang::Stmt*)implicitCastExpr_,true);" : "") +@"
+            return;
+
+        }
+        " + Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"else if(" + MatcherCase.GetTypeMatchCondition("typestr", p__.TypeName) + @"){
             "
       +
       p__.ClassName + @" innerm{this->context_,this->interp_};
@@ -1189,6 +1229,11 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
             return;
         }") + (true ?@"
         else{
+            " + (production.HasDefault ? @"this->childExprStore_ = (clang::Stmt*)implicitCastExpr_;
+            interp_->mkNode(""LIT_" + production.RefName + @""",(clang::Stmt*)implicitCastExpr_,true);" : "") + @"
+            return;
+        }
+        /*else{
             " + (production.HasDefault ? @"
             if(auto hasmemb = clang::dyn_cast<clang::MemberExpr>(inner)){
                 while(auto memb = clang::dyn_cast<clang::MemberExpr>(inner))
@@ -1196,7 +1241,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                     inner = memb->getBase();                
                 }
 
-                auto typestr = ((clang::QualType)inner->getType()).getAsString();
+                auto typestr = this->getTypeAsString(inner," + (prod.TypeName.Contains("<") ? "false" : "true") + @");
                 if(auto asRef = clang::dyn_cast<clang::DeclRefExpr>(inner))
                 {
             "
@@ -1229,7 +1274,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
             this->childExprStore_ = (clang::Stmt*)implicitCastExpr_;
             interp_->mkNode(""LIT_" + production.RefName + @""",(clang::Stmt*)implicitCastExpr_,true);" : "") + @"
             return;
-        }
+        }*/
     }
 " : @"
         else{

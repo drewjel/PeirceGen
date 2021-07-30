@@ -1080,10 +1080,10 @@ Peirce.Join("", new List<MatcherProduction>() { this.Production }.Select(cowboyc
 
 
 
-     Peirce.Join("\n\t", distinctcases, pcase => pcase.BuildCallbackHandler(this.Production));
+     //Peirce.Join("\n\t", distinctcases, pcase => pcase.BuildCallbackHandler(this.Production));
 
 
-     return Peirce.Join("\n\t", this.Production.Cases, pcase => pcase.BuildCallbackHandler(this.Production));
+     return Peirce.Join("\n\t", this.Production.Cases.OrderBy(c_=>!c_.Args.Any(a_=>a_.Force)).ToList(), pcase => pcase.BuildCallbackHandler(this.Production));
  }).ToList(), p => p)
             +""
        + @"
