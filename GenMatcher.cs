@@ -161,6 +161,9 @@ void ROSStatementMatcher::setup(){
     StatementMatcher
         cxxMemberCallExpr_ = cxxMemberCallExpr().bind(""CXXMemberCallExpr"");
 
+    StatementMatcher
+        callExpr_ = callExpr().bind(""CallExpr"");
+
     //StatementMatcher
     //    functionDecl_ = functionDecl().bind(""FunctionDecl"");
 
@@ -175,6 +178,7 @@ void ROSStatementMatcher::setup(){
     localFinder_.addMatcher(whileStmt_, this);
     localFinder_.addMatcher(forStmt_, this);
     localFinder_.addMatcher(tryStmt_, this);
+    localFinder_.addMatcher(callExpr_, this);
     //localFinder_.addMatcher(functionDecl_, this);
     this->childExprStore_ = nullptr;
 };
@@ -196,7 +200,7 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
 
     const auto cmpdStmt_ = Result.Nodes.getNodeAs<clang::CompoundStmt>(""CompoundStmt"");
 
-    //const auto returnStmt_ = Result.Nodes.getNodeAs<clang::ReturnStmt>(""ReturnStmt"");
+    const auto returnStmt_ = Result.Nodes.getNodeAs<clang::ReturnStmt>(""ReturnStmt"");
 
     const auto whileStmt_ = Result.Nodes.getNodeAs<clang::WhileStmt>(""WhileStmt"");
 
@@ -207,6 +211,8 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
     const auto cxxMemberCallExpr_ = Result.Nodes.getNodeAs<clang::CXXMemberCallExpr>(""CXXMemberCallExpr"");
     
     //const auto functionDecl_ = Result.Nodes.getNodeAs<clang::FunctionDecl>(""FunctionDecl"");
+
+    const auto callExpr_ = Result.Nodes.getNodeAs<clang::CallExpr>(""CallExpr"");
 
     if(whileStmt_){
         auto wcond = whileStmt_->getCond();
@@ -277,7 +283,7 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
     //if(functionDecl_){
         
 
-    /*
+    
     if(returnStmt_){
         auto _expr = returnStmt_->getRetValue();
         auto typestr = ((clang::QualType)_expr->getType()).getAsString();
@@ -291,19 +297,23 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                         //var woInit = p_.SearchForDecl(t)
 
                         return @"
-        else if (typestr == """ + p_.TypeName + @""" or typestr == ""const " + p_.TypeName + @"""  or typestr == ""class " + p_.TypeName + @"""  or typestr == ""const class " + p_.TypeName + @"""/*typestr.find(""" + p_.TypeName + @""") != string::npos) != string::npos){
+        else if (" + GoNext.GetTypeMatchCondition("typestr",p_.TypeName) +@"){
             " + p_.ClassName + @" m{ this->context_, this->interp_};
             m.setup();
             m.visit(*_expr);
             if(m.getChildExprStore()){
-                this->childExprStore_ = (clang::Stmt*)_expr;
+                interp_->buffer_operand(m.getChildExprStore());
+                //this->childExprStore_ = (clang::Stmt*)_expr;
+                interp_->mkNode(""RETURN_" + p_.RefName + @""",(clang::Stmt*)returnStmt_,false);
+                this->childExprStore_ = (clang::Stmt*)returnStmt_;
             }
             return;
         }
             ";
                     })
                 + @"
-    }*/
+        return;//no reason for control to fall thru?
+    }
 
     if(cmpdStmt_){
         std::vector<const clang::Stmt*> stmts;
@@ -772,6 +782,37 @@ IFTHENELSE +BOOL_EXPR +STMT +STMT ~An If-Then-Else Statement
             return;
         }
     }
+    else if(callExpr_){
+        auto func_ = callExpr_->getDirectCallee();
+        if(interp_->checkFuncExists(func_)){
+            std::vector<const clang::Stmt*> operands_;
+            for(auto arg : callExpr_->arguments()){
+                std::string typestr = """";
+                if(false){}
+    "
+                +
+                Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length),
+                    p_ =>
+                    {
+                        return @"
+                typestr = this->getTypeAsString(arg," + (p_.TypeName.Contains("<") ? "false" : "true") + @");
+                if(" + GoNext.GetTypeMatchCondition("typestr", p_.TypeName) + @"){
+                    " + p_.ClassName + @" m{ this->context_, this->interp_};
+                    m.setup();
+                    m.visit(*arg);
+                    if (m.getChildExprStore())
+                        operands_.push_back(m.getChildExprStore());
+                    continue;
+                }";
+                    }) + @"
+            }
+            interp_->buffer_link(func_);
+            interp_->buffer_operands(operands_);
+            interp_->mkFunctionCall(callExpr_,true);
+            this->childExprStore_ = (clang::Stmt*)callExpr_;
+            return;
+        }
+    }
     else
     {
         //log error
@@ -922,15 +963,6 @@ void ROS1ProgramMatcher::setup()
                             auto retType = (clang::QualType)fn->getReturnType();
         
                             auto fbody = fn->getBody();
-                            /*
-                            auto typeDetector = [=](std::string typenm){
-                                if(false){return false;}
-                        " +
-                             Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length), a_ =>
-                                "\n\t\t\telse if(" + GoNext.GetTypeMatchCondition("typenm", a_.TypeName) + @"){ return true; }")
-                             + @"
-                                else { return false;}
-                            };*/
 
                             ROSStatementMatcher bodym{ this->context_, this->interp_};
                             bodym.setup();
@@ -938,7 +970,6 @@ void ROS1ProgramMatcher::setup()
 
                             if(!bodym.getChildExprStore()){
                                 std::cout<<""No detected nodes in body of function\n"";
-                                return;
                             }
 
                             std::vector<const clang::ParmVarDecl*> valid_params_;
@@ -965,7 +996,7 @@ void ROS1ProgramMatcher::setup()
                                             std::cout << ""Warning : Param is not a ParmVarDecl\n"";
                                             param_->dump();
                                         }
-                                        valid_params_.push_back(param_);
+                                        //valid_params_.push_back(param_);
                                     }";
                                         }) + @"
                                 }
@@ -985,7 +1016,8 @@ void ROS1ProgramMatcher::setup()
                                 interp_->buffer_operands(valid_params_);
             
                             }
-                            interp_->buffer_body(bodym.getChildExprStore());
+                            if(bodym.getChildExprStore())
+                                interp_->buffer_body(bodym.getChildExprStore());
                             if(hasReturn){
                                 interp_->mkFunctionWithReturn(nodePrefix, fn);
                             }

@@ -313,6 +313,7 @@ tf::Vector3 ROSTFVector3Matcher R3
 	Capture:
     {	
 		CXXConstructExpr(IGNORE,IGNORE,IGNORE)@@ LIT_R3
+		CXXConstructExpr()@@ LIT_R3
 		CXXOperatorCallExpr(tfScalar,tf::Vector3?FORCE)@*@ MUL_R1_R3
 		CXXOperatorCallExpr(tf::Vector3?FORCE,tf::Vector3?FORCE)@+@ ADD_R3_R3
 		CXXOperatorCallExpr(tf::Transform,tf::Vector3)@*@ MUL_R4X4_R3

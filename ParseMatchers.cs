@@ -53,7 +53,7 @@ namespace PeirceGen
             }
             allprods = allprods.Distinct().ToList();
 
-            return Peirce.Join("", allprods, p_ => "\n#include \"" + p_.Prod.ClassName + ".h\"");
+            return Peirce.Join("", ParsePeirce.Instance.MatcherProductions, p_ => "\n#include \"" + p_.ClassName + ".h\"");//Peirce.Join("", allprods, p_ => "\n#include \"" + p_.Prod.ClassName + ".h\"");
         }
 
         public class MatcherCase
@@ -136,8 +136,8 @@ body
 
         public static List<MatcherCase> BuildMatcherCaseFromRegister(MatcherProduction production, string raw, List<MatcherProduction> allProductions)
         {
-            Console.WriteLine("Building Matcher:");
-            Console.WriteLine(raw);
+            //Console.WriteLine("Building Matcher:");
+            //Console.WriteLine(raw);
             var retval = new List<MatcherCase>();
             try
             {
@@ -1111,6 +1111,61 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
     }
 ");
                          }
+                },
+                new MatcherCase()
+                {
+                    ClangName = "CallExpr",
+                    LocalName = "callExpr_",
+                            Args = new List<ProductionArg>(),
+                   //  TargetGrammarCase = null,
+                    // TargetGrammarProduction = null,
+                        BuildMatcher = (prod) => "callExpr().bind(\"CallExpr\")",
+                     BuildCallbackHandler = (prod) =>
+                     {
+                         var prodexistpreds =
+                            Peirce.Join("",
+                            new List<MatcherProduction>(){prod},
+                            a => "\n\targ_decay_exist_predicates[\"callExpr_"  + a.TypeName + @"""] = [=](std::string typenm){
+    if(false){return false;}" +
+    Peirce.Join("", a.InheritGroup, a_ => "\n\t\telse if(" + MatcherCase.GetTypeMatchCondition("typenm", a_.TypeName) + @"){ return true; }")
+    + @"
+    else { return false; }
+    };");
+                         //int y = 0, m = 0;
+                         return prodexistpreds+@"
+    if(callExpr_){
+        auto func_ = callExpr_->getDirectCallee();
+        if(interp_->checkFuncExists(func_)){
+            std::vector<const clang::Stmt*> operands_;
+            for(auto arg : callExpr_->arguments()){
+                std::string typestr = """";
+                if(false){}
+    "
+                +
+                Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length),
+                    p_ =>
+                    {
+                        return @"
+                typestr = this->getTypeAsString(arg," + (p_.TypeName.Contains("<") ? "false" : "true") + @");
+                if(" + GoNext.GetTypeMatchCondition("typestr", p_.TypeName) + @"){
+                    " + p_.ClassName + @" m{ this->context_, this->interp_};
+                    m.setup();
+                    m.visit(*arg);
+                    if (m.getChildExprStore())
+                        operands_.push_back(m.getChildExprStore());
+                    continue;
+                }";
+                    }) + @"
+            }
+            interp_->buffer_link(func_);
+            interp_->buffer_operands(operands_);
+            interp_->mkNode(""CALL_" + production.RefName + @""",callExpr_,true);
+            this->childExprStore_ = (clang::Stmt*)callExpr_;
+            return;
+        }
+    }
+";
+                     }
                 },
                 new MatcherCase()
                 {
