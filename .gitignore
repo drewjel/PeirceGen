@@ -2,3 +2,6 @@
 *.pdb
 *.cache
 symlinkme/
+bin/
+
+obj/
