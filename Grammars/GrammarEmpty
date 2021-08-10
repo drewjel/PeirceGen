@@ -251,7 +251,8 @@ double DoubleMatcher R1
 		CXXConstructExpr(IGNORE)@@ LIT_R1
 		BinaryOperator(double?FORCE,double?FORCE)@+@ ADD_R1_R1
 		BinaryOperator(double?FORCE,double?FORCE)@*@ MUL_R1_R1
-		CXXMemberCallExpr(ros::Duration?FORCE)@toSec@Capture=true COORDS_R1
+		CXXMemberCallExpr(ros::Duration)@toSec@Capture=true COORDS_R1
+		CXXMemberCallExpr(ros::Time)@toSec@Capture=true COORDS_R1
     }
 }
 
@@ -277,6 +278,14 @@ tfScalar ROSTFScalarMatcher R1
 }
 
 ros::TimeBase~ros::Time ROSTimeBaseMatcher R1
+{
+	Capture:
+	{
+		CXXConstructExpr(IGNORE)@@ LIT_R1
+	}
+}
+
+ros::DurationBase~ros::Duration ROSDurationBaseMatcher R1
 {
 	Capture:
 	{

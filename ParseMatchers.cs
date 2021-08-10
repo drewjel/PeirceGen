@@ -11,8 +11,34 @@ namespace PeirceGen
     {
         public static string GetTypeMatchCondition(string varStr, string matchStr)
         {
-            return varStr + " == \"operator" + matchStr + @""" or " + varStr + " ==\"" + matchStr + "\" or " + varStr + " == \"const " + matchStr + "\" or " + varStr + " == \"class " + matchStr + @""" or "
-            + varStr + @" == ""const class " + matchStr + @""" or " + varStr + " ==  \"::" + matchStr + "_<allocator<void> >\"";//geometry_msgs::Quaternion_<allocator<void> >
+            var retStr =  varStr + " == \"operator" + matchStr + @""" or " + varStr + " ==\"" + matchStr + "\" or " + varStr + " == \"const " + matchStr + "\" or " + varStr + " == \"class " + matchStr + @""" or "
+            + varStr + @" == ""const class " + matchStr + @""" or " + varStr + " ==  \"::" + matchStr + "_<allocator<void> >\"";
+
+            //geometry_msgs::Quaternion_<allocator<void> >
+
+            int firstColon = -1, secondColon = -1;
+            for(int i = 0; i < matchStr.Length; i++)
+            {
+                if (matchStr[i] == '<')
+                    return retStr;
+                if(matchStr[i] == ':')
+                {
+                    if (firstColon == -1)
+                        firstColon = i;
+                    else
+                    {
+                        secondColon = i;
+                        break;
+                    }
+                }
+            }
+            if (secondColon > 0)
+            {
+                matchStr = matchStr.Substring(secondColon + 1);
+                retStr += " or " + varStr + " == \"operator" + matchStr + @""" or " + varStr + " ==\"" + matchStr + "\" or " + varStr + " == \"const " + matchStr + "\" or " + varStr + " == \"class " + matchStr + @""" or "
+            + varStr + @" == ""const class " + matchStr + @""" or " + varStr + " ==  \"::" + matchStr + "_<allocator<void> >\"";
+            }
+            return retStr;
         }
     }
 
@@ -1236,37 +1262,38 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
         if(false){}
         else if(hasmemb){
             while(auto memb = clang::dyn_cast<clang::MemberExpr>(inner))
-                {
-                    inner = memb->getBase();                
-                }
+            {
+                inner = memb->getBase();                
+            }
 
-                auto typestr = this->getTypeAsString(inner," + (prod.TypeName.Contains("<") ? "false" : "true") + @");
-                if(auto asRef = clang::dyn_cast<clang::DeclRefExpr>(inner))
-                {
-            "
-                    +
-                    Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length),
-                        p_ =>
-                        {
-                            return @"
-                    if(" + GoNext.GetTypeMatchCondition("typestr", p_.TypeName) + @"){
-                        if(auto vardecl_ = clang::dyn_cast<clang::VarDecl>(asRef->getDecl())){
-                            interp_->buffer_container(vardecl_);
-                            this->childExprStore_ = (clang::Stmt*)implicitCastExpr_;
-                            interp_->mkNode(""REF_" + production.RefName + @""",(clang::Stmt*)implicitCastExpr_);
-                            return;
-                        }
-                        else if(auto paramdecl_ = clang::dyn_cast<clang::ParmVarDecl>(asRef->getDecl())){
-                            interp_->buffer_container(paramdecl_);
-                            this->childExprStore_ = (clang::Stmt*)implicitCastExpr_;
-                            interp_->mkNode(""REF_" + production.RefName + @""",(clang::Stmt*)implicitCastExpr_);
-                            return;
-                        }
-                        else {
-                            std::cout<<""Can't find declaration\n"";
-                            asRef->getDecl()->dump();
-                        }
+            auto typestr = this->getTypeAsString(inner," + (prod.TypeName.Contains("<") ? "false" : "true") + @");
+            if(auto asRef = clang::dyn_cast<clang::DeclRefExpr>(inner))
+            {
+        "
+                +
+                Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length),
+                    p_ =>
+                    {
+                        return @"
+                typestr = this->getTypeAsString(inner," + (p_.TypeName.Contains("<") ? "false" : "true") + @");
+                if(" + GoNext.GetTypeMatchCondition("typestr", p_.TypeName) + @"){
+                    if(auto vardecl_ = clang::dyn_cast<clang::VarDecl>(asRef->getDecl())){
+                        interp_->buffer_container(vardecl_);
+                        this->childExprStore_ = (clang::Stmt*)implicitCastExpr_;
+                        interp_->mkNode(""REF_" + production.RefName + @""",(clang::Stmt*)implicitCastExpr_);
+                        return;
                     }
+                    else if(auto paramdecl_ = clang::dyn_cast<clang::ParmVarDecl>(asRef->getDecl())){
+                        interp_->buffer_container(paramdecl_);
+                        this->childExprStore_ = (clang::Stmt*)implicitCastExpr_;
+                        interp_->mkNode(""REF_" + production.RefName + @""",(clang::Stmt*)implicitCastExpr_);
+                        return;
+                    }
+                    else {
+                        std::cout<<""Can't find declaration\n"";
+                        asRef->getDecl()->dump();
+                    }
+                }
     "; }) + @" 
             }
             "+(production.HasDefault ? @"this->childExprStore_ = (clang::Stmt*)implicitCastExpr_;
@@ -1274,7 +1301,9 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
             return;
 
         }
-        " + Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"else if(" + MatcherCase.GetTypeMatchCondition("typestr", p__.TypeName) + @"){
+        " + Peirce.Join("\n\t\t", prod.InheritGroup, p__ => @"
+        typestr = this->getTypeAsString(inner," + (p__.TypeName.Contains("<") ? "false" : "true") + @");
+        if(" + MatcherCase.GetTypeMatchCondition("typestr", p__.TypeName) + @"){
             "
       +
       p__.ClassName + @" innerm{this->context_,this->interp_};
@@ -1543,7 +1572,87 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
             }
 
     }");               }
-                }/*,
+                },
+                new MatcherCase()
+                {
+                     ClangName = "CXXOperatorCallExpr",
+                      LocalName = "cxxOperatorCallExpr_",
+                            Args = new List<ProductionArg>(),
+                       BuildMatcher = (prod) => "cxxOperatorCallExpr().bind(\"CXXOperatorCallExpr\")",
+                       BuildCallbackHandler = (prod) =>
+                     {
+                        return @"
+    if (cxxOperatorCallExpr_){
+        auto decl_ = cxxOperatorCallExpr_->getCalleeDecl();
+        if(auto dc = clang::dyn_cast<clang::NamedDecl>(decl_)){
+            auto name = dc->getNameAsString();
+            if(name == ""operator=""){
+
+                auto rhs = cxxOperatorCallExpr_->getArg(1);
+                " + prod.ClassName + @" rhsMatcher{ context_, interp_};
+                rhsMatcher.setup();
+                rhsMatcher.visit(*rhs);
+                    
+                auto lhs = cxxOperatorCallExpr_->getArg(0);
+                auto hasmemb = clang::dyn_cast<clang::MemberExpr>(lhs);
+                if(hasmemb){
+                    while(auto memb = clang::dyn_cast<clang::MemberExpr>(lhs))
+                    {
+                        lhs = memb->getBase();                
+                    }
+                    auto typestr = this->getTypeAsString(lhs," + (prod.TypeName.Contains("<") ? "false" : "true") + @");
+                    if(auto asRef = clang::dyn_cast<clang::DeclRefExpr>(lhs)){
+                "
+                        +
+                        Peirce.Join("", ParsePeirce.Instance.MatcherProductions.OrderByDescending(p_ => p_.TypeName.Length),
+                            p_ =>
+                            {
+                                return @"
+                        typestr = this->getTypeAsString(lhs," + (p_.TypeName.Contains("<") ? "false" : "true") + @");
+                        if(" + GoNext.GetTypeMatchCondition("typestr", p_.TypeName) + @"){
+                            if(auto vardecl_ = clang::dyn_cast<clang::VarDecl>(asRef->getDecl())){
+                                interp_->buffer_link(vardecl_);
+                                interp_->mkNode(""REF_" + p_.RefName + @""",(clang::Stmt*)lhs);
+                                interp_->buffer_operand(lhs);
+                                interp_->buffer_operand(rhsMatcher.getChildExprStore());
+                                
+                                interp_->mkNode(""ASSIGN_" + p_.RefName + @"_AT_" + production.RefName + @""",(clang::Stmt*)cxxOperatorCallExpr_);
+                                this->childExprStore_ = (clang::Stmt*)cxxOperatorCallExpr_;
+                                return;
+                            }
+                            else if(auto paramdecl_ = clang::dyn_cast<clang::ParmVarDecl>(asRef->getDecl())){
+                                interp_->buffer_link(paramdecl_);
+                                interp_->mkNode(""REF_" + p_.RefName + @""",(clang::Stmt*)lhs);
+                                interp_->buffer_operand(lhs);
+                                interp_->buffer_operand(rhsMatcher.getChildExprStore());
+                                
+                                interp_->mkNode(""ASSIGN_" + p_.RefName + @"_AT_" + production.RefName + @""",(clang::Stmt*)cxxOperatorCallExpr_);
+                                this->childExprStore_ = (clang::Stmt*)cxxOperatorCallExpr_;
+                                return;
+                            }
+                            else {
+                                std::cout<<""Can't find declaration\n"";
+                                asRef->getDecl()->dump();
+                            }
+                        }
+            "; }) + @" 
+                    }
+                }
+                else if(auto asRef = clang::dyn_cast<clang::DeclRefExpr>(lhs)){
+                    interp_->mkNode(""REF_" + production.RefName + @""",(clang::Stmt*)lhs);
+                    interp_->buffer_operand(lhs);
+                    interp_->buffer_operand(rhs);
+                                
+                    interp_->mkNode(""ASSIGN_" + production.RefName + @""",(clang::Stmt*)cxxOperatorCallExpr_);
+                    return;
+                }
+            }
+        }
+    }";               }
+                },
+                
+                
+                /*,
                 new MatcherCase()
                 {
                     ClangName = "ArraySubscriptExpr",

@@ -3,5 +3,4 @@
 *.cache
 symlinkme/
 bin/
-
 obj/
