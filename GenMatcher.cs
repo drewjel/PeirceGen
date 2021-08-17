@@ -223,9 +223,12 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
         condm.visit(*wcond);
 
         if(!condm.getChildExprStore()){
-            std::cout<<""Unable to parse While condition!!\n"";
-            wcond->dump();
-            throw ""Broken Parse"";
+            //std::cout<<""Unable to parse While condition!!\n"";
+            //wcond->dump();
+            //throw ""Broken Parse"";
+            interp_->mkNode(""LIT_BOOL"",wcond,true);
+
+
         }
 
         ROSStatementMatcher bodym{ this->context_, this->interp_};
@@ -249,17 +252,23 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
     }
 
     if(forStmt_){
+        auto init = forStmt_->getInit();
         auto wcond = forStmt_->getCond();
         auto wbody = forStmt_->getBody();
+        
+        ROSStatementMatcher initm{ this->context_, this->interp_};
+        initm.setup();
+        initm.visit(*init);
         
         ROSBooleanMatcher condm{ this->context_, this->interp_};
         condm.setup();
         condm.visit(*wcond);
 
         if(!condm.getChildExprStore()){
-            std::cout<<""Unable to parse For condition!!\n"";
-            wcond->dump();
-            throw ""Broken Parse"";
+            //std::cout<<""Unable to parse For condition!!\n"";
+            //wcond->dump();
+            //throw ""Broken Parse"";
+            interp_->mkNode(""LIT_BOOL"",wcond,true);
         }
 
         ROSStatementMatcher bodym{ this->context_, this->interp_};
@@ -267,9 +276,10 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
         bodym.visit(*wbody);
 
         if(!bodym.getChildExprStore()){
-            std::cout<<""Unable to parse For block!!\n"";
-            wbody->dump();
-            throw ""Broken Parse"";
+            //std::cout<<""Unable to parse For block!!\n"";
+            //wbody->dump();
+            //throw ""Broken Parse"";
+            interp_->mkNode(""COMPOUND_STMT"", wbody);
         }
 
         //this->interp_->mkFOR_BOOL_EXPR_STMT(forStmt_, condm.getChildExprStore(), bodym.getChildExprStore());
@@ -286,6 +296,10 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
     
     if(returnStmt_){
         auto _expr = returnStmt_->getRetValue();
+        if(!_expr){
+            interp_->mkNode(""RETURN"",(clang::Stmt*)returnStmt_,false);
+            return;
+        }
         auto typestr = ((clang::QualType)_expr->getType()).getAsString();
         if(false){}
         "
@@ -332,9 +346,12 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
 
                 /*search up to depth 3 for now. this is not sound, but a sound approach may lead to other issues
                 */
+/*
                 for(auto c1 : st->children()){
                     ROSStatementMatcher i1{this->context_,this->interp_};
                     i1.setup();
+                    if(!c1)
+                        continue;
                     i1.visit(*c1);
                     if(i1.getChildExprStore()){
                         stmts.push_back(i1.getChildExprStore());
@@ -343,6 +360,8 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                         for(auto c2 : c1->children()){
                             ROSStatementMatcher i2{this->context_,this->interp_};
                             i2.setup();
+                            if(!c2)
+                                continue;
                             i2.visit(*c2);
                             if(i2.getChildExprStore()){
                                 stmts.push_back(i2.getChildExprStore());
@@ -351,6 +370,8 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                                 for(auto c3 : c2->children()){
                                     ROSStatementMatcher i3{this->context_,this->interp_};
                                     i3.setup();
+                                    if(!c3)
+                                        continue;
                                     i3.visit(*c3);
                                     if(i3.getChildExprStore()){
                                         stmts.push_back(i3.getChildExprStore());
@@ -359,6 +380,8 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                                         for(auto c4 : c3->children()){
                                             ROSStatementMatcher i4{this->context_,this->interp_};
                                             i4.setup();
+                                            if(!c4)
+                                                continue;
                                             i4.visit(*c4);
                                             if(i4.getChildExprStore()){
                                                 stmts.push_back(i4.getChildExprStore());
@@ -373,7 +396,7 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
                         }
                     }
                 }
-
+*/
                 /*
                 restart:
                 std::vector<clang::Stmt*> current_stack;
@@ -404,7 +427,7 @@ void ROSStatementMatcher::run(const MatchFinder::MatchResult &Result){
             }
         }
         //this->interp_->mkCOMPOUND_STMT(cmpdStmt_, stmts);
-        if(stmts.size()>0){
+        if(stmts.size()>0 or true){//okay for now?
             interp_->buffer_body(stmts);
             interp_->mkNode(""COMPOUND_STMT"", cmpdStmt_);
             this->childExprStore_ = (clang::Stmt*)cmpdStmt_;
@@ -961,16 +984,6 @@ void ROS1ProgramMatcher::setup()
                         }
                         else{
                             auto retType = (clang::QualType)fn->getReturnType();
-        
-                            auto fbody = fn->getBody();
-
-                            ROSStatementMatcher bodym{ this->context_, this->interp_};
-                            bodym.setup();
-                            bodym.visit(*fbody);
-
-                            if(!bodym.getChildExprStore()){
-                                std::cout<<""No detected nodes in body of function\n"";
-                            }
 
                             std::vector<const clang::ParmVarDecl*> valid_params_;
                             auto params_ = fn->parameters();
@@ -1011,6 +1024,15 @@ void ROS1ProgramMatcher::setup()
                              + @"
                             else {}
         
+                            auto fbody = fn->getBody();
+
+                            ROSStatementMatcher bodym{ this->context_, this->interp_};
+                            bodym.setup();
+                            bodym.visit(*fbody);
+
+                            if(!bodym.getChildExprStore()){
+                                std::cout<<""No detected nodes in body of function\n"";
+                            }
 
                             if(valid_params_.size()>0){
                                 interp_->buffer_operands(valid_params_);

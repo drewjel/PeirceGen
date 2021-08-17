@@ -360,7 +360,7 @@ tf::Transform ROSTFTransformMatcher R4X4
 		CXXMemberCallExpr(tf2::Transform,tf2::Vector3)@setOrigin@Capture=false ASSIGN_R4X4_AT_R3
 		CXXMemberCallExpr(tf2::Transform,tf2::Quaternion)@setRotation@Capture=false ASSIGN_R4X4_AT_R4
 		CallExpr(geometry_msgs::Quaternion,tf2::Quaternion)@fromMsg@Capture=false ASSIGN_R4_SWAP
-		CallExpr(geometry_msgs::PoseStamped,geometry_msgs::PoseStamped,geometry_msgs::TransformStamped)@doTransform@Capture=false ASSIGN_MUL_R4X4_R4X4_2
+		CallExpr(3-geometry_msgs::PoseStamped,1-geometry_msgs::PoseStamped,2-geometry_msgs::TransformStamped)@doTransform@Capture=false ASSIGN_MUL_R4X4_R4X4
 	}
 }
 

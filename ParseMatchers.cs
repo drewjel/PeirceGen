@@ -104,6 +104,11 @@ namespace PeirceGen
 
             public Func<MatcherProduction, string> BuildMatcher { get; set; }
 
+            public bool HasOrdering { get; set; }
+
+            public List<int> Ordering { get; set; }
+
+
             public List<ProductionArg> Args;
 
             public int CustomMatcher { get; set; }
@@ -143,9 +148,18 @@ namespace PeirceGen
 
             public static string StripFlags(string pa)
             {
-                var spl = pa.Split(new string[] { "?" }, StringSplitOptions.None);
-                return spl[0];
-
+                try
+                {
+                    var spl = pa.Split(new string[] { "?" }, StringSplitOptions.None);
+                    var spl2 = spl[0].Split(new string[] { "-" }, StringSplitOptions.None);
+                    if (spl2.Length > 1)
+                        return spl2[1];
+                    return spl2[0];
+                }
+                catch(Exception ex)
+                {
+                    return "";
+                }
             }
         }
 
@@ -200,13 +214,60 @@ body
                 }
                 //var grammartoks = grammartype.Split('.');
 
+                var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+
+                bool hasOrdering = args.Any(arg_ =>
+                    {
+                        var dashArg = arg_.IndexOf('-');
+                        if (dashArg < 0)
+                            return false;
+                        var indexStr = arg_.Substring(0, dashArg);
+                        int orderIndex = 0;
+                        return int.TryParse(indexStr, out orderIndex);
+                    }
+                );
+
+                List<int> ordering = default(List<int>);
+
+                if (hasOrdering)
+                {
+                    ordering = new List<int>();
+                    args.ToList().ForEach(arg_ =>
+                    {
+                        var dashArg = arg_.IndexOf('-');
+                        if (dashArg < 0)
+                            throw new Exception("Invalid Argument Order Specification");
+                        var indexStr = arg_.Substring(0, dashArg);
+                        int orderIndex = 0;
+                        var res = int.TryParse(indexStr, out orderIndex);
+                        if (!res)
+                            throw new Exception("Invalid Argument Order Specification");
+                        ordering.Add(orderIndex);
+                    });
+                    int current = 0;
+                    for (int i = 1; i < args.Length+1; i++) {
+                        current = i;
+                        for (int j = 0; j < args.Length; j++)
+                        {
+                            if (ordering[j] == current)
+                            {
+                                current++;
+                                break;
+                            }
+                        }
+                        if(current == i)
+                            throw new Exception("Invalid Argument Order Specification");
+
+                    }
+
+                }
                 //Console.WriteLine(raw + " " + grammartype);
 
                 //var targetProd = MatcherProduction.FindProduction(production, grammartype);
 
                 if (atsplit[0].Contains("CXXMemberCallExpr"))
                 {
-                    var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(',');
+                    //var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(',');
                     //var method = atsplit[0].Substring(0, atsplit[0].IndexOf('('));
                     var numargs = args.Length;
 
@@ -383,7 +444,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                 }
                 else if (atsplit[0].StartsWith("CallExpr"))
                 {
-                    var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+                    //var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
                     //var method = atsplit[0].Substring(0, atsplit[0].IndexOf('('));
                     var numargs = args.Length;
 
@@ -536,8 +597,19 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         ", prodArgs, p_ => "arg" + n++ + "stmt")
      + @"){
                         //interp_->mk" + /*targetCase.P.Name +*/ "(callExpr_" + (prodArgs.Count > 0 ? "," : "") + Peirce.Join(",", prodArgs, p_ => "arg" + o++ + "stmt") + @");
-                        " + Peirce.Join("", prodArgs, p_ => @"
-                        interp_->buffer_operand(arg" + t++ + "stmt);") + @"
+                        " + (ordering == default(List<int>) ? Peirce.Join("", prodArgs, p_ => @"
+                        interp_->buffer_operand(arg" + t++ + "stmt);") 
+                        : Peirce.Join("",ordering,
+                            s =>
+                            {
+                                var current = ordering.IndexOf(++t);
+                                return @"
+                        interp_->buffer_operand(arg" + current + @"stmt);
+";
+                            }
+                        )
+                            
+                        )+ @"
                         interp_->mkNode(""" + nodeName + @""",callExpr_," +(hasCapture).ToString().ToLower()+ @");
                         this->childExprStore_ = (clang::Stmt*)callExpr_;
                         return;
@@ -553,7 +625,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                 }
                 else if (atsplit[0].Contains("BinaryOperator"))
                 {
-                    var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(',');
+                    //var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(',');
 
                     var numargs = args.Length;
 
@@ -673,7 +745,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                 }
                 else if (atsplit[0].Contains("CXXOperatorCallExpr"))
                 {
-                    var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(',');
+                    //var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(',');
 
                     var numargs = args.Length;
 
@@ -793,7 +865,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                     //                var numargs = atsplit[0]
                     //try
                     //{
-                    var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
+                    //var args = atsplit[0].Substring(atsplit[0].IndexOf('(') + 1, atsplit[0].Length - atsplit[0].IndexOf('(') - 2).Split(new string[] { "," }, StringSplitOptions.RemoveEmptyEntries);
 
                     var numargs = args.Length;
 
@@ -991,7 +1063,7 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                                 return prodexistpreds + @"
     if (cxxBoolLiteralExpr_)
     {
-        interp_->mkNode(""BOOL_LIT"",cxxBoolLiteralExpr_);
+        interp_->mkNode(""LIT_BOOL"",cxxBoolLiteralExpr_);
         this->childExprStore_ = (clang::Stmt*)cxxBoolLiteralExpr_;
         return;
     }";
@@ -1761,6 +1833,13 @@ p__.ClassName + @" arg" + m + @"m{this->context_,this->interp_};
                         return @"
     if(declRefExpr_){
         if(auto dc = clang::dyn_cast<clang::VarDecl>(declRefExpr_->getDecl())){
+            interp_->buffer_link(dc);
+            interp_->mkNode(""REF_" + prod.RefName + @""",declRefExpr_);
+            this->childExprStore_ = (clang::Stmt*)declRefExpr_;
+            return;
+
+        }
+        else if(auto dc = clang::dyn_cast<clang::ParmVarDecl>(declRefExpr_->getDecl())){
             interp_->buffer_link(dc);
             interp_->mkNode(""REF_" + prod.RefName + @""",declRefExpr_);
             this->childExprStore_ = (clang::Stmt*)declRefExpr_;
